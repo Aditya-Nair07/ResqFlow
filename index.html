@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResQFlow</title>
+    <style>
+        :root {
+            --bg: #08111f;
+            --panel: #101c2f;
+            --panel-soft: #16243a;
+            --border: #263a57;
+            --text: #eef6ff;
+            --muted: #a8b7ca;
+            --accent: #38bdf8;
+            --accent-2: #22c55e;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --purple: #a78bfa;
+            --shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 34%),
+                radial-gradient(circle at top right, rgba(239, 68, 68, 0.14), transparent 30%),
+                var(--bg);
+            color: var(--text);
+        }
+
+        header {
+            padding: 22px 28px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 17, 31, 0.86);
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            backdrop-filter: blur(12px);
+        }
+
+        .header-row {
+            max-width: 1700px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .brand {
+            font-size: 1.35rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            color: var(--text);
+        }
+
+        .brand span {
+            color: var(--accent);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.88rem;
+        }
+
+        .nav-links a.active,
+        .nav-links a:hover {
+            color: var(--text);
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.12);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(94px, 1fr));
+            gap: 10px;
+            min-width: 430px;
+        }
+
+        .stat {
+            border: 1px solid var(--border);
+            background: rgba(16, 28, 47, 0.76);
+            border-radius: 14px;
+            padding: 10px 12px;
+        }
+
+        .stat span {
+            display: block;
+            color: var(--muted);
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 20px;
+            color: var(--accent);
+        }
+
+        main {
+            max-width: 1700px;
+            margin: 0 auto;
+            padding: 22px;
+            display: grid;
+            grid-template-columns: 310px minmax(520px, 1fr) 380px;
+            gap: 18px;
+        }
+
+        .panel {
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(16, 28, 47, 0.96), rgba(13, 24, 41, 0.96));
+            box-shadow: var(--shadow);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 15px 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+
+        .panel-title {
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        .panel-body {
+            padding: 16px;
+        }
+
+        .stack {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .controls {
+            display: grid;
+            gap: 10px;
+        }
+
+        button,
+        select,
+        input {
+            width: 100%;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 12px;
+            color: var(--text);
+            background: var(--panel-soft);
+            font: inherit;
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
+            align-items: end;
+        }
+
+        .row-2 button {
+            padding: 10px 12px;
+            white-space: nowrap;
+        }
+
+        button {
+            cursor: pointer;
+            font-weight: 800;
+            background: linear-gradient(135deg, #0ea5e9, #2563eb);
+            border-color: rgba(56, 189, 248, 0.45);
+            transition: transform 0.16s ease, filter 0.16s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.08);
+        }
+
+        button.secondary {
+            background: var(--panel-soft);
+            color: var(--text);
+        }
+
+        button.green {
+            background: linear-gradient(135deg, #16a34a, #15803d);
+        }
+
+        button.warn {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+        }
+
+        label {
+            display: grid;
+            gap: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .canvas-wrap {
+            padding: 16px;
+            min-height: 640px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        canvas {
+            width: 100%;
+            height: 580px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background:
+                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
+                #0b1525;
+            background-size: 20px 20px;
+        }
+
+        .legend {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.6;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .card {
+            border: 1px solid var(--border);
+            background: rgba(22, 36, 58, 0.76);
+            border-radius: 14px;
+            padding: 12px;
+        }
+
+        .card + .card {
+            margin-top: 10px;
+        }
+
+        .card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .card-title {
+            font-weight: 800;
+            font-size: 14px;
+        }
+
+        .meta {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-top: 6px;
+        }
+
+        .pill {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            color: #eaf7ff;
+            background: rgba(56, 189, 248, 0.16);
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            white-space: nowrap;
+        }
+
+        .pill.red {
+            background: rgba(239, 68, 68, 0.18);
+            border-color: rgba(239, 68, 68, 0.32);
+        }
+
+        .pill.green {
+            background: rgba(34, 197, 94, 0.18);
+            border-color: rgba(34, 197, 94, 0.32);
+        }
+
+        .pill.warn {
+            background: rgba(245, 158, 11, 0.18);
+            border-color: rgba(245, 158, 11, 0.32);
+        }
+
+        .bar {
+            height: 8px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .bar > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, var(--accent-2), var(--accent));
+        }
+
+        .scroll {
+            max-height: 340px;
+            overflow: auto;
+            padding-right: 4px;
+        }
+
+        .alloc-section {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px solid var(--border);
+        }
+
+        .alloc-section:first-child {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        .alloc-section-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 10px;
+        }
+
+        .alloc-trace-meta {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 8px;
+            margin-bottom: 10px;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .alloc-trace-id {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 12px;
+        }
+
+        .alloc-verdict {
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(167, 139, 250, 0.06));
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            margin-bottom: 10px;
+        }
+
+        .alloc-verdict-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .alloc-verdict-pick {
+            font-size: 15px;
+            font-weight: 700;
+            line-height: 1.35;
+            color: var(--text);
+        }
+
+        .alloc-verdict-target {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .alloc-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+
+        .alloc-chip {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(8, 17, 31, 0.6);
+            color: var(--muted);
+        }
+
+        .alloc-chip.ok {
+            color: var(--accent-2);
+            border-color: rgba(34, 197, 94, 0.35);
+            background: rgba(34, 197, 94, 0.1);
+        }
+
+        .alloc-chip.warn {
+            color: #fcd34d;
+            border-color: rgba(245, 158, 11, 0.35);
+            background: rgba(245, 158, 11, 0.08);
+        }
+
+        .alloc-explainer {
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .score {
+            background: rgba(8, 17, 31, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 8px 10px;
+        }
+
+        .score.total {
+            grid-column: 1 / -1;
+            border-color: rgba(56, 189, 248, 0.35);
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .score span {
+            display: block;
+            color: var(--muted);
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+
+        .score strong {
+            display: block;
+            margin-top: 4px;
+            color: var(--accent);
+            font-size: 18px;
+        }
+
+        .score.total strong {
+            font-size: 22px;
+        }
+
+        .verify-list {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .verify-item {
+            font-size: 11px;
+            line-height: 1.4;
+            padding: 6px 8px;
+            border-radius: 8px;
+            background: rgba(8, 17, 31, 0.45);
+            border: 1px solid var(--border);
+            color: var(--muted);
+        }
+
+        .verify-item.pass::before {
+            content: "✓ ";
+            color: var(--accent-2);
+            font-weight: 700;
+        }
+
+        .verify-item.fail::before {
+            content: "✗ ";
+            color: var(--danger);
+            font-weight: 700;
+        }
+
+        .graph-path {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(8, 17, 31, 0.55);
+            border: 1px solid var(--border);
+            margin-bottom: 8px;
+        }
+
+        .graph-path-steps {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 2px;
+            margin-top: 6px;
+        }
+
+        .graph-path-step {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        .graph-path-arrow {
+            color: var(--muted);
+            font-size: 10px;
+        }
+
+        .graph-detail {
+            font-size: 11px;
+            line-height: 1.5;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .graph-detail strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .graph-callout {
+            padding: 8px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: rgba(245, 158, 11, 0.08);
+            font-size: 11px;
+            line-height: 1.45;
+            color: #fde68a;
+            margin-bottom: 8px;
+        }
+
+        .graph-link {
+            display: inline-block;
+            margin-top: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .alt-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .alt-row {
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(8, 17, 31, 0.45);
+            border: 1px solid var(--border);
+        }
+
+        .alt-row-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 4px;
+        }
+
+        .alt-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text);
+        }
+
+        .alt-score {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--muted);
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .alt-reason {
+            font-size: 11px;
+            line-height: 1.45;
+            color: var(--muted);
+        }
+
+        .alt-more {
+            font-size: 11px;
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        .council-verdict {
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(34, 197, 94, 0.06));
+            border: 1px solid rgba(56, 189, 248, 0.28);
+            margin-bottom: 12px;
+        }
+
+        .council-verdict-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+
+        .council-verdict-pick {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text);
+            line-height: 1.3;
+        }
+
+        .council-score-flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 8px;
+            margin-top: 8px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+
+        .council-score-flow strong {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .council-score-flow .delta-pill {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 700;
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--accent-2);
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+
+        .council-score-flow .delta-pill.neg {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.35);
+        }
+
+        .council-summary {
+            font-size: 12px;
+            line-height: 1.55;
+            color: var(--muted);
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .council-agents-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--muted);
+            margin-bottom: 8px;
+        }
+
+        .council-agents {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .agent-row {
+            display: grid;
+            grid-template-columns: 4px 1fr auto;
+            grid-template-rows: auto auto;
+            gap: 4px 10px;
+            align-items: start;
+            padding: 10px 12px 10px 0;
+            border-radius: 10px;
+            background: rgba(8, 17, 31, 0.5);
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .agent-row-stripe {
+            grid-column: 1;
+            grid-row: 1 / -1;
+            align-self: stretch;
+            border-radius: 10px 0 0 10px;
+        }
+
+        .agent-row.medical .agent-row-stripe { background: #fb7185; }
+        .agent-row.logistics .agent-row-stripe { background: #fbbf24; }
+        .agent-row.route .agent-row-stripe { background: #a78bfa; }
+
+        .agent-row-name {
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--text);
+        }
+
+        .agent-row.medical .agent-row-name { color: #fda4af; }
+        .agent-row.logistics .agent-row-name { color: #fcd34d; }
+        .agent-row.route .agent-row-name { color: #c4b5fd; }
+
+        .agent-row-role {
+            font-size: 10px;
+            color: var(--muted);
+            font-weight: 500;
+        }
+
+        .agent-row-head {
+            grid-column: 2;
+            grid-row: 1;
+            min-width: 0;
+        }
+
+        .agent-row-delta {
+            grid-column: 3;
+            grid-row: 1;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 8px;
+            background: rgba(34, 197, 94, 0.12);
+            color: var(--accent-2);
+            white-space: nowrap;
+        }
+
+        .agent-row-delta.neg {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+        }
+
+        .agent-row-note {
+            grid-column: 2 / 4;
+            font-size: 11px;
+            line-height: 1.45;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .council-compact .agent-row {
+            padding: 8px 8px 8px 0;
+        }
+
+        .council-compact .agent-row-note {
+            margin-top: 2px;
+        }
+
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .toggle-row input { width: auto; margin: 0; }
+
+        .whatif-row {
+            display: grid;
+            grid-template-columns: 92px repeat(4, 1fr);
+            gap: 6px;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 12px;
+        }
+
+        .whatif-row:first-child {
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        .briefing {
+            white-space: pre-wrap;
+            color: #dceeff;
+            line-height: 1.5;
+            font-size: 12px;
+        }
+
+        .note {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        @media (max-width: 1300px) {
+            main {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                min-width: 0;
+            }
+
+            .header-row {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-row">
+            <div class="brand">ResQ<span>Flow</span></div>
+            <nav class="nav-links">
+                <a href="index.html" class="active">Operations demo</a>
+                <a href="#" id="openGraphNav">Knowledge graph</a>
+            </nav>
+            <div class="stats">
+                <div class="stat"><span>Open Incidents</span><strong id="statOpen">0</strong></div>
+                <div class="stat"><span>Resources Free</span><strong id="statFree">0</strong></div>
+                <div class="stat"><span>Resolved</span><strong id="statResolved">0</strong></div>
+                <div class="stat"><span>Avg Score</span><strong id="statScore">0</strong></div>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="stack">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Controls</div>
+                </div>
+                <div class="panel-body controls">
+                    <button class="green" id="startDemoBtn">Start scenario</button>
+                    <button class="secondary" id="toggleRunBtn">Pause</button>
+                    <button class="secondary" id="addIncidentBtn">Add incident</button>
+                    <button class="secondary" id="resetBtn">Reset</button>
+                    <label>
+                        Strategy
+                        <select id="strategySelect">
+                            <option value="balanced">Balanced</option>
+                            <option value="urgency">Urgency First</option>
+                            <option value="nearest">Nearest First</option>
+                            <option value="risk">Risk Aware</option>
+                            <option value="saving">Resource Saving</option>
+                        </select>
+                    </label>
+                    <label class="toggle-row">
+                        <input type="checkbox" id="agentCouncilToggle" checked>
+                        Agent council (graph-grounded)
+                    </label>
+                    <label>
+                        Speed
+                        <select id="speedSelect">
+                            <option value="0.35" selected>Demo</option>
+                            <option value="0.6">Slow</option>
+                            <option value="1">Normal</option>
+                            <option value="1.6">Fast</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Resources</div>
+                    <span class="pill" id="resourceCount">0 active</span>
+                </div>
+                <div class="panel-body scroll" id="resourceList"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Agent council</div>
+                    <span class="pill" id="councilSourceBadge">—</span>
+                </div>
+                <div class="panel-body scroll" id="councilPanel" style="max-height:420px;">
+                    <div class="note">Turn on <strong>Agent council</strong> in Controls. After each allocation, three specialists review the top pick using the knowledge graph.</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="panel">
+            <div class="panel-header">
+                <div class="panel-title">Operations map</div>
+                <span class="pill" id="strategyBadge">Balanced</span>
+            </div>
+            <div class="canvas-wrap">
+                <canvas id="simCanvas" width="960" height="580"></canvas>
+                <div class="legend">
+                    <span><span style="color: #22c55e;">■</span> Base camp</span>
+                    <span><span style="color: #38bdf8;">●</span> Available resource</span>
+                    <span><span style="color: #f59e0b;">●</span> Assigned resource</span>
+                    <span><span style="color: #ef4444;">▲</span> Critical incident</span>
+                    <span><span style="color: #a78bfa;">■</span> Risk zone</span>
+                    <span><span style="color: #dceeff;">-</span> Planned route</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="stack">
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Pending Incidents</div>
+                </div>
+                <div class="panel-body scroll" id="incidentList"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Latest allocation</div>
+                    <button class="secondary" id="openGraphBtn" type="button" style="width:auto;padding:7px 10px;font-size:0.8rem;">Graph view</button>
+                </div>
+                <div class="panel-body scroll" id="decisionPanel" style="max-height:520px;">
+                    <div class="note">Run a scenario to see the latest assignment, scores, graph evidence, and alternatives.</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Strategy compare</div>
+                    <button class="secondary" id="previewBtn" style="width:auto;padding:7px 10px;">Preview</button>
+                </div>
+                <div class="panel-body" id="whatIfPanel">
+                    <div class="note">Preview pending incidents across strategies.</div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-header">
+                    <div class="panel-title">Summary</div>
+                    <div style="display:flex;gap:8px;flex-shrink:0;">
+                        <button class="secondary" id="briefingBtn" type="button" style="width:auto;padding:7px 10px;">Briefing</button>
+                        <button class="secondary" id="reportBtn" type="button" style="width:auto;padding:7px 10px;">Report</button>
+                    </div>
+                </div>
+                <div class="panel-body">
+                    <div class="note" id="apiStatus" style="margin-bottom:8px;">Backend: checking…</div>
+                    <div class="briefing" id="briefingText">Tap Briefing or Report.</div>
+                    <div class="briefing" id="reportText" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);color:var(--muted);"></div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const GRID_SIZE = 50;
+        const MAX_INCIDENTS = 10;
+        const API_BASE = "http://localhost:8000";
+        const canvas = document.getElementById("simCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const resourceTypes = [
+            { type: "Ambulance", short: "AMB", color: "#38bdf8", capabilities: ["medical", "evacuation"], capacity: 2, speed: 1.35 },
+            { type: "Rescue Boat", short: "BOAT", color: "#22c55e", capabilities: ["flood", "evacuation"], capacity: 6, speed: 1.05 },
+            { type: "Drone", short: "DRN", color: "#a78bfa", capabilities: ["survey", "medical"], capacity: 1, speed: 1.8 },
+            { type: "Food Truck", short: "FOOD", color: "#f59e0b", capabilities: ["food", "shelter"], capacity: 12, speed: 0.9 },
+            { type: "Medical Team", short: "MED", color: "#fb7185", capabilities: ["medical", "shelter"], capacity: 4, speed: 0.8 },
+            { type: "Volunteer Team", short: "VOL", color: "#e2e8f0", capabilities: ["food", "evacuation", "shelter"], capacity: 8, speed: 0.95 }
+        ];
+
+        const incidentTypes = [
+            { type: "Flood Rescue", need: "flood", urgency: 95, people: 5 },
+            { type: "Medical Emergency", need: "medical", urgency: 90, people: 2 },
+            { type: "Food Delivery", need: "food", urgency: 62, people: 18 },
+            { type: "Shelter Overflow", need: "shelter", urgency: 72, people: 25 },
+            { type: "Evacuation Help", need: "evacuation", urgency: 84, people: 8 },
+            { type: "Damage Survey", need: "survey", urgency: 55, people: 1 }
+        ];
+
+        const strategyWeights = {
+            balanced: { urgency: 0.26, distance: 0.23, capability: 0.24, fuel: 0.14, risk: 0.13 },
+            urgency: { urgency: 0.42, distance: 0.16, capability: 0.22, fuel: 0.10, risk: 0.10 },
+            nearest: { urgency: 0.18, distance: 0.42, capability: 0.20, fuel: 0.12, risk: 0.08 },
+            risk: { urgency: 0.20, distance: 0.16, capability: 0.22, fuel: 0.12, risk: 0.30 },
+            saving: { urgency: 0.18, distance: 0.16, capability: 0.20, fuel: 0.34, risk: 0.12 }
+        };
+
+        const state = {
+            running: false,
+            speed: 0.35,
+            strategy: "balanced",
+            resources: [],
+            incidents: [],
+            decisionTrace: null,
+            traceStore: [],
+            playbooks: [],
+            nextTraceId: 1,
+            repairCount: 0,
+            resolved: 0,
+            totalScore: 0,
+            decisions: 0,
+            tick: 0,
+            useAgentCouncil: true,
+            lastCouncil: null,
+            bases: [
+                { x: 5, y: 5, label: "North Base" },
+                { x: 45, y: 7, label: "Medical Depot" },
+                { x: 8, y: 44, label: "Relief Hub" },
+                { x: 43, y: 43, label: "Rescue Camp" }
+            ],
+            riskZones: [
+                { x: 25, y: 18, r: 6, level: 72, label: "Flooded road" },
+                { x: 35, y: 32, r: 5, level: 64, label: "Debris zone" },
+                { x: 15, y: 29, r: 4, level: 58, label: "Congestion" }
+            ]
+        };
+
+        class Resource {
+            constructor(id, definition, x, y) {
+                this.id = id;
+                this.type = definition.type;
+                this.short = definition.short;
+                this.color = definition.color;
+                this.capabilities = definition.capabilities;
+                this.capacity = definition.capacity;
+                this.speed = definition.speed;
+                this.x = x;
+                this.y = y;
+                this.fuel = 78 + Math.floor(Math.random() * 22);
+                this.status = "available";
+                this.assignedIncidentId = null;
+                this.route = [];
+                this.completed = 0;
+            }
+        }
+
+        class Incident {
+            constructor(id, definition, x, y) {
+                this.id = id;
+                this.type = definition.type;
+                this.need = definition.need;
+                this.urgency = clamp(definition.urgency + randomInt(-8, 7), 35, 100);
+                this.people = Math.max(1, definition.people + randomInt(-2, 4));
+                this.x = x;
+                this.y = y;
+                this.status = "pending";
+                this.assignedResourceId = null;
+                this.createdAt = Date.now();
+                this.sourceText = "";
+            }
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        function randomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function distance(a, b) {
+            return Math.hypot(a.x - b.x, a.y - b.y);
+        }
+
+        function gridToCanvas(point) {
+            return {
+                x: (point.x / GRID_SIZE) * canvas.width,
+                y: (point.y / GRID_SIZE) * canvas.height
+            };
+        }
+
+        function getRouteRisk(from, to) {
+            let risk = 0;
+            for (const zone of state.riskZones) {
+                const midpoint = { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 };
+                const distMid = Math.hypot(midpoint.x - zone.x, midpoint.y - zone.y);
+                const distEnd = Math.hypot(to.x - zone.x, to.y - zone.y);
+                const exposure = Math.max(0, zone.r + 4 - Math.min(distMid, distEnd));
+                risk += exposure * (zone.level / 12);
+            }
+            return clamp(risk, 0, 100);
+        }
+
+        function buildRoute(from, to) {
+            const steps = Math.max(6, Math.ceil(distance(from, to)));
+            const route = [];
+            const risk = getRouteRisk(from, to);
+            const bend = risk > 35 ? 3.5 : 0;
+            for (let i = 1; i <= steps; i++) {
+                const t = i / steps;
+                const sway = Math.sin(t * Math.PI) * bend;
+                route.push({
+                    x: from.x + (to.x - from.x) * t + sway,
+                    y: from.y + (to.y - from.y) * t - sway * 0.5
+                });
+            }
+            return route;
+        }
+
+        function scoreResource(resource, incident, strategy = state.strategy) {
+            const dist = distance(resource, incident);
+            const routeRisk = getRouteRisk(resource, incident);
+            const capabilityScore = resource.capabilities.includes(incident.need)
+                ? 100
+                : resource.capabilities.some(cap => relatedNeeds(cap, incident.need))
+                    ? 62
+                    : 18;
+            const capacityScore = clamp((resource.capacity / Math.max(incident.people, 1)) * 100, 20, 100);
+            const distanceScore = clamp(100 - dist * 2.1, 0, 100);
+            const urgencyScore = incident.urgency;
+            const fuelCost = Math.ceil(dist / 2.5);
+            const fuelScore = resource.fuel > fuelCost + 8 ? clamp(resource.fuel - fuelCost, 0, 100) : 8;
+            const riskScore = clamp(100 - routeRisk, 0, 100);
+            const availabilityPenalty = resource.status === "available" ? 0 : 45;
+            const capabilityCombined = capabilityScore * 0.78 + capacityScore * 0.22;
+            const memoryBoost = getPlaybookBoost(resource, incident);
+            const weights = strategyWeights[strategy];
+            const total = (
+                urgencyScore * weights.urgency +
+                distanceScore * weights.distance +
+                capabilityCombined * weights.capability +
+                fuelScore * weights.fuel +
+                riskScore * weights.risk
+            ) + memoryBoost - availabilityPenalty;
+            const reasons = buildReasons({ resource, incident, dist, routeRisk, capabilityScore, fuelCost, total });
+            if (memoryBoost > 0) reasons.push("matched procedural playbook");
+
+            return {
+                total: clamp(Math.round(total), 0, 100),
+                urgencyScore: Math.round(urgencyScore),
+                distanceScore: Math.round(distanceScore),
+                capabilityScore: Math.round(capabilityCombined),
+                fuelScore: Math.round(fuelScore),
+                riskScore: Math.round(riskScore),
+                memoryBoost,
+                routeRisk: Math.round(routeRisk),
+                fuelCost,
+                distance: Math.round(dist),
+                checks: verifyCandidate(resource, incident, { fuelCost, capabilityScore, routeRisk }),
+                canCommit: verifyCandidate(resource, incident, { fuelCost, capabilityScore, routeRisk }).passed,
+                reasons
+            };
+        }
+
+        function verifyCandidate(resource, incident, details) {
+            const checks = [
+                { label: "resource available", passed: resource.status === "available" },
+                { label: "fuel margin sufficient", passed: resource.fuel > details.fuelCost + 8 },
+                { label: "capability acceptable", passed: details.capabilityScore >= 50 },
+                { label: "route risk acceptable", passed: details.routeRisk < 72 },
+                { label: "not double-booked", passed: !resource.assignedIncidentId },
+                { label: "high-priority request not ignored", passed: !hasHigherPriorityPending(incident) }
+            ];
+            return {
+                passed: checks.every(check => check.passed),
+                checks,
+                failed: checks.filter(check => !check.passed).map(check => check.label)
+            };
+        }
+
+        function hasHigherPriorityPending(incident) {
+            return state.incidents.some(item =>
+                item.status === "pending" &&
+                item.id !== incident.id &&
+                item.urgency >= 90 &&
+                item.urgency > incident.urgency + 12
+            );
+        }
+
+        function getPlaybookBoost(resource, incident) {
+            const match = state.playbooks.find(playbook =>
+                playbook.need === incident.need &&
+                playbook.resourceType === resource.type
+            );
+            return match ? Math.min(8, 3 + match.uses * 2) : 0;
+        }
+
+        function relatedNeeds(capability, need) {
+            const pairs = {
+                evacuation: ["flood", "medical", "shelter"],
+                medical: ["evacuation", "shelter"],
+                shelter: ["food", "evacuation"],
+                food: ["shelter"],
+                survey: ["flood", "evacuation"]
+            };
+            return (pairs[capability] || []).includes(need);
+        }
+
+        function buildReasons(data) {
+            const reasons = [];
+            if (data.resource.capabilities.includes(data.incident.need)) {
+                reasons.push("direct capability match");
+            } else {
+                reasons.push("partial capability match");
+            }
+            if (data.dist < 12) reasons.push("close to incident");
+            if (data.routeRisk > 45) reasons.push("route has elevated risk");
+            if (data.resource.fuel < data.fuelCost + 12) reasons.push("fuel margin is low");
+            if (data.resource.capacity >= data.incident.people) reasons.push("capacity can cover affected people");
+            return reasons;
+        }
+
+        function resetDemo(shouldRun = false) {
+            sessionStorage.removeItem("resqflow_live");
+            state.resources = [];
+            state.incidents = [];
+            state.decisionTrace = null;
+            state.traceStore = [];
+            state.playbooks = [];
+            state.nextTraceId = 1;
+            state.repairCount = 0;
+            state.resolved = 0;
+            state.totalScore = 0;
+            state.decisions = 0;
+            state.tick = 0;
+            state.running = shouldRun;
+            state.lastCouncil = null;
+            document.getElementById("toggleRunBtn").textContent = shouldRun ? "Pause" : "Resume";
+            seedResources();
+            seedIncidents();
+            updateBriefing("Tap Briefing or Report.");
+            document.getElementById("reportText").textContent = "";
+            updateWhatIf();
+            renderAll();
+        }
+
+        function seedResources() {
+            const placements = [
+                { x: 5, y: 5 }, { x: 7, y: 8 }, { x: 45, y: 7 },
+                { x: 43, y: 43 }, { x: 8, y: 44 }, { x: 11, y: 41 },
+                { x: 46, y: 11 }, { x: 4, y: 39 }
+            ];
+            placements.forEach((pos, index) => {
+                const def = resourceTypes[index % resourceTypes.length];
+                state.resources.push(new Resource(index + 1, def, pos.x, pos.y));
+            });
+        }
+
+        function seedIncidents() {
+            const incidentSeeds = [
+                { def: incidentTypes[0], x: 21, y: 15 },
+                { def: incidentTypes[1], x: 38, y: 29 },
+                { def: incidentTypes[2], x: 18, y: 38 },
+                { def: incidentTypes[3], x: 31, y: 10 },
+                { def: incidentTypes[4], x: 12, y: 27 }
+            ];
+            incidentSeeds.forEach((item, index) => {
+                state.incidents.push(new Incident(index + 1, item.def, item.x, item.y));
+            });
+        }
+
+        function addRandomIncident() {
+            if (state.incidents.filter(i => i.status !== "resolved").length >= MAX_INCIDENTS) return;
+            const def = incidentTypes[randomInt(0, incidentTypes.length - 1)];
+            const incident = new Incident(
+                Date.now(),
+                def,
+                randomInt(7, 43),
+                randomInt(8, 44)
+            );
+            state.incidents.push(incident);
+            renderAll();
+        }
+
+        async function applyAgentCouncil(incident, bids) {
+            if (!state.useAgentCouncil || !bids.length) return bids;
+            try {
+                const council = await postJson("/agents/council", {
+                    snapshot: buildSnapshot(),
+                    incident_id: incident.id,
+                    candidates: bids.slice(0, 3).map(bid => ({
+                        resource_id: bid.resource.id,
+                        resource_type: bid.resource.type,
+                        score: {
+                            total: bid.score.total,
+                            capabilityScore: bid.score.capabilityScore,
+                            fuelScore: bid.score.fuelScore,
+                            riskScore: bid.score.riskScore,
+                            routeRisk: bid.score.routeRisk,
+                            urgencyScore: bid.score.urgencyScore,
+                            distanceScore: bid.score.distanceScore
+                        }
+                    }))
+                });
+                state.lastCouncil = council;
+                renderCouncilPanel(council);
+                return bids.map(bid => {
+                    const row = (council.candidates || []).find(
+                        c => String(c.resource_id) === String(bid.resource.id)
+                    );
+                    if (!row) return bid;
+                    const adjusted = { ...bid.score, total: row.adjusted_total, councilDelta: row.merged_delta };
+                    return { resource: bid.resource, score: adjusted, council: row };
+                }).sort((a, b) => b.score.total - a.score.total);
+            } catch {
+                renderCouncilPanel(null);
+                return bids;
+            }
+        }
+
+        async function runAuction() {
+            const pending = state.incidents
+                .filter(incident => incident.status === "pending")
+                .sort((a, b) => b.urgency - a.urgency);
+
+            if (!pending.length) return;
+
+            for (const incident of pending.slice(0, 2)) {
+                let bids = state.resources.map(resource => ({
+                    resource,
+                    score: scoreResource(resource, incident)
+                })).sort((a, b) => b.score.total - a.score.total);
+
+                bids = await applyAgentCouncil(incident, bids);
+
+                const initialCandidate = bids[0];
+                const winner = bids.find(bid => bid.score.canCommit);
+                if (!winner) {
+                    const trace = createTrace(incident, null, bids, "No safe resource could be committed yet.");
+                    state.decisionTrace = trace;
+                    attachGraphEvidence(trace, incident.id);
+                    continue;
+                }
+
+                const repairNote = initialCandidate && initialCandidate.resource.id !== winner.resource.id
+                    ? `Transactional repair: top candidate ${initialCandidate.resource.type} R${initialCandidate.resource.id} failed verification, so the planner selected the next safe candidate.`
+                    : "";
+                if (repairNote) state.repairCount += 1;
+
+                commitAssignment(incident, winner.resource, winner.score, bids, repairNote);
+            }
+        }
+
+        function commitAssignment(incident, resource, score, bids, repairNote = "") {
+            const bid = bids.find(b => b.resource.id === resource.id);
+            incident.status = "assigned";
+            incident.assignedResourceId = resource.id;
+            resource.status = "assigned";
+            resource.assignedIncidentId = incident.id;
+            resource.route = buildRoute(resource, incident);
+            resource.fuel = clamp(resource.fuel - score.fuelCost, 0, 100);
+            state.totalScore += score.total;
+            state.decisions += 1;
+            const trace = createTrace(incident, { resource, score, council: bid?.council }, bids, repairNote || "Assignment committed.");
+            state.decisionTrace = trace;
+            attachGraphEvidence(trace, incident.id, resource.id);
+        }
+
+        function createTrace(incident, winner, bids, outcome) {
+            const topRejected = bids
+                .filter(bid => !winner || bid.resource.id !== winner.resource.id)
+                .slice(0, 3)
+                .map(bid => ({
+                    label: `${bid.resource.type} R${bid.resource.id}`,
+                    score: bid.score.total,
+                    reason: bid.score.canCommit ? bid.score.reasons.join(", ") : rejectionReason(bid.score)
+                }));
+
+            const trace = {
+                traceId: `TR-${state.nextTraceId++}`,
+                incident,
+                winner,
+                topRejected,
+                outcome,
+                strategy: state.strategy,
+                time: new Date().toLocaleTimeString(),
+                checks: winner ? winner.score.checks.checks : [],
+                stateSnapshot: getStateSnapshot(),
+                playbookHint: getPlaybookHint(incident),
+                council: state.lastCouncil,
+                winnerCouncil: winner?.council || null
+            };
+            state.traceStore.unshift(trace);
+            state.traceStore = state.traceStore.slice(0, 8);
+            return trace;
+        }
+
+        function rejectionReason(score) {
+            if (score.fuelScore < 15) return "rejected: low fuel margin";
+            if (score.capabilityScore < 50) return "rejected: weak capability match";
+            if (score.riskScore < 45) return "rejected: unsafe route";
+            if (score.checks && score.checks.failed.length) return `rejected: ${score.checks.failed[0]}`;
+            return "rejected: lower total suitability";
+        }
+
+        function getStateSnapshot() {
+            return {
+                openIncidents: state.incidents.filter(item => item.status !== "resolved").length,
+                availableResources: state.resources.filter(item => item.status === "available").length,
+                strategy: state.strategy,
+                activeRiskZones: state.riskZones.length,
+                traceCount: state.traceStore.length,
+                playbookCount: state.playbooks.length
+            };
+        }
+
+        function getPlaybookHint(incident) {
+            const match = state.playbooks.find(playbook => playbook.need === incident.need);
+            if (!match) return "No prior playbook matched; using live simulation scoring.";
+            return `Matched playbook: ${match.need} -> ${match.resourceType}, used ${match.uses} time(s).`;
+        }
+
+        function rememberPlaybook(incident, resource) {
+            const existing = state.playbooks.find(playbook =>
+                playbook.need === incident.need &&
+                playbook.resourceType === resource.type
+            );
+            if (existing) {
+                existing.uses += 1;
+                existing.lastUsed = new Date().toLocaleTimeString();
+                return;
+            }
+            state.playbooks.unshift({
+                need: incident.need,
+                resourceType: resource.type,
+                pattern: `${incident.need} request -> ${resource.type} preferred when verified safe`,
+                uses: 1,
+                lastUsed: new Date().toLocaleTimeString()
+            });
+            state.playbooks = state.playbooks.slice(0, 6);
+        }
+
+        function movementInterval() {
+            return Math.max(8, Math.round(18 / state.speed));
+        }
+
+        function moveResources() {
+            for (const resource of state.resources) {
+                if (resource.status !== "assigned" || resource.route.length === 0) continue;
+
+                const next = resource.route.shift();
+                resource.x = next.x;
+                resource.y = next.y;
+
+                if (resource.route.length === 0) {
+                    completeIncident(resource);
+                }
+            }
+        }
+
+        function completeIncident(resource) {
+            const incident = state.incidents.find(item => item.id === resource.assignedIncidentId);
+            if (incident) {
+                incident.status = "resolved";
+                state.resolved += 1;
+                rememberPlaybook(incident, resource);
+            }
+            resource.status = "available";
+            resource.assignedIncidentId = null;
+            resource.completed += 1;
+        }
+
+        function updateWhatIf() {
+            const panel = document.getElementById("whatIfPanel");
+            const pending = state.incidents.filter(incident => incident.status === "pending");
+            if (!pending.length) {
+                panel.innerHTML = '<div class="note">Nothing pending to compare.</div>';
+                return;
+            }
+
+            const strategies = Object.keys(strategyWeights);
+            const rows = strategies.map(strategy => {
+                let response = 0;
+                let risk = 0;
+                let fuel = 0;
+                let unmet = 0;
+
+                for (const incident of pending) {
+                    const bids = state.resources
+                        .map(resource => ({ resource, score: scoreResource(resource, incident, strategy) }))
+                        .filter(bid => bid.resource.status === "available")
+                        .sort((a, b) => b.score.total - a.score.total);
+                    const best = bids[0];
+                    if (!best) {
+                        unmet += incident.urgency;
+                        continue;
+                    }
+                    response += best.score.distance;
+                    risk += best.score.routeRisk;
+                    fuel += best.score.fuelCost;
+                    unmet += best.score.canCommit ? 0 : incident.urgency * 0.4;
+                }
+
+                const count = Math.max(pending.length, 1);
+                return {
+                    strategy,
+                    response: Math.round(response / count),
+                    risk: Math.round(risk / count),
+                    fuel,
+                    unmet: Math.round(unmet)
+                };
+            });
+
+            panel.innerHTML = `
+                <div class="whatif-row">
+                    <div>Strategy</div><div>Resp.</div><div>Risk</div><div>Fuel</div><div>Unmet</div>
+                </div>
+                ${rows.map(row => `
+                    <div class="whatif-row">
+                        <div><strong>${formatStrategy(row.strategy)}</strong></div>
+                        <div>${row.response}</div>
+                        <div>${row.risk}</div>
+                        <div>${row.fuel}</div>
+                        <div>${row.unmet}</div>
+                    </div>
+                `).join("")}
+                <div class="note" style="margin-top:8px;">Lower numbers are better for response, risk, fuel, and unmet urgency.</div>
+            `;
+        }
+
+        function serializeTrace(trace) {
+            if (!trace) return null;
+            const winner = trace.winner ? {
+                resource: { id: trace.winner.resource.id, type: trace.winner.resource.type },
+                score: { ...trace.winner.score }
+            } : null;
+            return {
+                traceId: trace.traceId,
+                time: trace.time || "",
+                strategy: trace.strategy || "",
+                outcome: trace.outcome || "",
+                playbookHint: trace.playbookHint || "",
+                incident: trace.incident ? {
+                    id: trace.incident.id,
+                    type: trace.incident.type,
+                    need: trace.incident.need,
+                    urgency: trace.incident.urgency,
+                    people: trace.incident.people
+                } : null,
+                winner,
+                topRejected: trace.topRejected || [],
+                checks: trace.checks || [],
+                graphEvidence: trace.graphEvidence || null
+            };
+        }
+
+        function serializeLiveState() {
+            return {
+                v: 1,
+                running: state.running,
+                speed: state.speed,
+                strategy: state.strategy,
+                tick: state.tick,
+                useAgentCouncil: state.useAgentCouncil,
+                nextTraceId: state.nextTraceId,
+                repairCount: state.repairCount,
+                resolved: state.resolved,
+                totalScore: state.totalScore,
+                decisions: state.decisions,
+                bases: state.bases,
+                riskZones: state.riskZones,
+                playbooks: state.playbooks,
+                lastCouncil: state.lastCouncil,
+                resources: state.resources.map(r => ({
+                    id: r.id,
+                    type: r.type,
+                    short: r.short,
+                    color: r.color,
+                    capabilities: r.capabilities,
+                    capacity: r.capacity,
+                    speed: r.speed,
+                    x: r.x,
+                    y: r.y,
+                    fuel: r.fuel,
+                    status: r.status,
+                    assignedIncidentId: r.assignedIncidentId,
+                    route: r.route || [],
+                    completed: r.completed
+                })),
+                incidents: state.incidents.map(i => ({
+                    id: i.id,
+                    type: i.type,
+                    need: i.need,
+                    urgency: i.urgency,
+                    people: i.people,
+                    x: i.x,
+                    y: i.y,
+                    status: i.status,
+                    assignedResourceId: i.assignedResourceId,
+                    createdAt: i.createdAt,
+                    sourceText: i.sourceText || ""
+                })),
+                decisionTrace: serializeTrace(state.decisionTrace),
+                traceStore: state.traceStore.map(serializeTrace)
+            };
+        }
+
+        function persistLiveSession() {
+            if (!state.resources.length && !state.incidents.length) return;
+            sessionStorage.setItem("resqflow_live", JSON.stringify(serializeLiveState()));
+            sessionStorage.setItem("resqflow_snapshot", JSON.stringify(buildSnapshot()));
+        }
+
+        function restoreLiveSession() {
+            const raw = sessionStorage.getItem("resqflow_live");
+            if (!raw) return false;
+            try {
+                const data = JSON.parse(raw);
+                if (!data.v || !data.resources?.length) return false;
+
+                state.running = !!data.running;
+                state.speed = data.speed ?? 0.35;
+                state.strategy = data.strategy || "balanced";
+                state.tick = data.tick || 0;
+                state.useAgentCouncil = data.useAgentCouncil !== false;
+                state.nextTraceId = data.nextTraceId || 1;
+                state.repairCount = data.repairCount || 0;
+                state.resolved = data.resolved || 0;
+                state.totalScore = data.totalScore || 0;
+                state.decisions = data.decisions || 0;
+                state.bases = data.bases || state.bases;
+                state.riskZones = data.riskZones || state.riskZones;
+                state.playbooks = data.playbooks || [];
+                state.lastCouncil = data.lastCouncil || null;
+                state.resources = data.resources;
+                state.incidents = data.incidents;
+                state.decisionTrace = data.decisionTrace || null;
+                state.traceStore = data.traceStore || [];
+
+                document.getElementById("strategySelect").value = state.strategy;
+                document.getElementById("speedSelect").value = String(state.speed);
+                document.getElementById("agentCouncilToggle").checked = state.useAgentCouncil;
+                document.getElementById("toggleRunBtn").textContent = state.running ? "Pause" : "Resume";
+                renderCouncilPanel(state.lastCouncil);
+                updateWhatIf();
+                renderAll();
+                return true;
+            } catch {
+                return false;
+            }
+        }
+
+        function buildSnapshot() {
+            return {
+                strategy: state.strategy,
+                resolved: state.resolved,
+                repairCount: state.repairCount,
+                decisions: state.decisions,
+                totalScore: state.totalScore,
+                bases: state.bases,
+                riskZones: state.riskZones,
+                resources: state.resources.map(resource => ({
+                    id: resource.id,
+                    type: resource.type,
+                    x: resource.x,
+                    y: resource.y,
+                    fuel: resource.fuel,
+                    status: resource.status,
+                    capabilities: resource.capabilities,
+                    capacity: resource.capacity,
+                    assignedIncidentId: resource.assignedIncidentId,
+                    completed: resource.completed
+                })),
+                incidents: state.incidents.map(incident => ({
+                    id: incident.id,
+                    type: incident.type,
+                    need: incident.need,
+                    urgency: incident.urgency,
+                    people: incident.people,
+                    x: incident.x,
+                    y: incident.y,
+                    status: incident.status,
+                    assignedResourceId: incident.assignedResourceId,
+                    sourceText: incident.sourceText || ""
+                })),
+                latestTrace: serializeTrace(state.decisionTrace),
+                recentTraces: state.traceStore.slice(0, 5).map(serializeTrace)
+            };
+        }
+
+        function localBriefingText() {
+            const open = state.incidents.filter(item => item.status !== "resolved");
+            const critical = open.filter(item => item.urgency >= 85);
+            const freeResources = state.resources.filter(item => item.status === "available");
+            const latest = state.decisionTrace;
+            const topNeeds = countNeeds(open);
+
+            return [
+                "Situation briefing (local):",
+                `- Open incidents: ${open.length}; critical: ${critical.length}; available resources: ${freeResources.length}.`,
+                `- Dominant needs: ${topNeeds || "none"}.`,
+                `- Active strategy: ${formatStrategy(state.strategy)}.`,
+                latest && latest.winner
+                    ? `- Latest: ${latest.traceId} assigned ${latest.winner.resource.type} R${latest.winner.resource.id} to ${latest.incident.type} (score ${latest.winner.score.total}).`
+                    : "- Latest: no committed assignment yet.",
+                latest ? `- Context: ${latest.playbookHint}` : "",
+                "- Scoring weighs urgency, distance, capability, fuel margin, and route risk before commit."
+            ].filter(Boolean).join("\n");
+        }
+
+        function localReportText() {
+            const open = state.incidents.filter(item => item.status !== "resolved");
+            const assigned = state.incidents.filter(item => item.status === "assigned");
+            const pending = state.incidents.filter(item => item.status === "pending");
+            const utilization = Math.round((state.resources.filter(item => item.status !== "available").length / Math.max(state.resources.length, 1)) * 100);
+            const avgScore = state.decisions ? Math.round(state.totalScore / state.decisions) : 0;
+            const traceSummary = state.traceStore.slice(0, 4).map(trace =>
+                `  - ${trace.traceId}: ${trace.incident.type}, ${trace.winner ? `selected R${trace.winner.resource.id}` : "no safe assignment"}, outcome: ${trace.outcome}`
+            ).join("\n") || "  - No traces captured yet.";
+
+            return [
+                "Incident report (local):",
+                `- Resolved incidents: ${state.resolved}.`,
+                `- Active assignments: ${assigned.length}.`,
+                `- Pending incidents: ${pending.length}.`,
+                `- Resource utilization: ${utilization}%.`,
+                `- Average suitability score: ${avgScore}.`,
+                `- Transactional repairs used: ${state.repairCount}.`,
+                `- Open needs: ${countNeeds(open) || "none"}.`,
+                "- Recent decision traces:",
+                traceSummary,
+                "- Bottleneck notes: check pending incidents, high route-risk zones, and low-fuel resources before adding new assignments."
+            ].join("\n");
+        }
+
+        async function attachGraphEvidence(trace, incidentId, resourceId = null) {
+            trace.graphEvidence = { loading: true };
+            if (state.decisionTrace?.traceId === trace.traceId) renderDecision();
+
+            try {
+                const data = await postJson("/graph/evidence", {
+                    snapshot: buildSnapshot(),
+                    incidentId,
+                    resourceId,
+                    traceId: trace.traceId,
+                    hops: 2,
+                    persist: true
+                });
+                trace.graphEvidence = data;
+            } catch (error) {
+                trace.graphEvidence = { available: false, reason: "backend offline" };
+            }
+
+            if (state.decisionTrace?.traceId === trace.traceId) renderDecision();
+        }
+
+        function renderPathBreadcrumb(narrative) {
+            if (!narrative) return "";
+            const steps = narrative.split(/\s*→\s*/).filter(Boolean);
+            if (steps.length < 2) {
+                return `<div class="graph-path">${narrative}</div>`;
+            }
+            const html = steps.map((step, i) => {
+                const arrow = i < steps.length - 1 ? '<span class="graph-path-arrow">→</span>' : "";
+                return `<span class="graph-path-step">${step.trim()}</span>${arrow}`;
+            }).join("");
+            return `<div class="graph-path"><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Route through the graph</div><div class="graph-path-steps">${html}</div></div>`;
+        }
+
+        function renderGraphEvidence(graphEvidence) {
+            if (!graphEvidence) return "";
+            if (graphEvidence.loading) {
+                return `
+                    <div class="alloc-section">
+                        <div class="alloc-section-title">Graph evidence</div>
+                        <div class="note">Loading knowledge-graph evidence…</div>
+                    </div>`;
+            }
+            if (graphEvidence.available === false) {
+                return `
+                    <div class="alloc-section">
+                        <div class="alloc-section-title">Graph evidence</div>
+                        <div class="note">Unavailable — start the backend to attach graph paths to this trace.</div>
+                    </div>`;
+            }
+
+            const parts = [];
+            if (graphEvidence.evidence?.narrative) {
+                parts.push(renderPathBreadcrumb(graphEvidence.evidence.narrative));
+            }
+            if (graphEvidence.evidence?.edges?.length) {
+                const edgeLabels = graphEvidence.evidence.edges
+                    .slice(-3)
+                    .map(edge => `${edge.type}${edge.distance != null ? ` (${edge.distance})` : ""}`)
+                    .join(" → ");
+                parts.push(`<div class="graph-detail"><strong>Key edges:</strong> ${edgeLabels}</div>`);
+            }
+            if (graphEvidence.ripple?.summary) {
+                parts.push(`<div class="graph-detail"><strong>Ripple check:</strong> ${graphEvidence.ripple.summary}</div>`);
+            }
+            const effects = (graphEvidence.ripple?.effects || []).slice(0, 2);
+            for (const effect of effects) {
+                parts.push(`<div class="graph-callout">${effect.detail}</div>`);
+            }
+            if (graphEvidence.subgraph?.summary) {
+                parts.push(`<div class="graph-detail"><strong>Neighborhood:</strong> ${graphEvidence.subgraph.summary}</div>`);
+            }
+            if (!parts.length) return "";
+
+            return `
+                <div class="alloc-section">
+                    <div class="alloc-section-title">Graph evidence</div>
+                    <div class="alloc-explainer">How this assignment is grounded in the knowledge graph (bases, risks, reachability).</div>
+                    ${parts.join("")}
+                    <a href="#" class="graph-link" id="openGraphFromTrace">Open full graph explorer →</a>
+                </div>`;
+        }
+
+        function openGraphExplorer(trace) {
+            persistLiveSession();
+            const t = trace || state.decisionTrace;
+            if (t) {
+                sessionStorage.setItem("resqflow_focus", JSON.stringify({
+                    traceId: t.traceId,
+                    incidentId: t.incident?.id,
+                    resourceId: t.winner?.resource?.id
+                }));
+            } else {
+                sessionStorage.removeItem("resqflow_focus");
+            }
+            window.location.href = "graph.html";
+        }
+
+        async function postJson(path, payload) {
+            const response = await fetch(`${API_BASE}${path}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        }
+
+        function setApiStatus(text) {
+            document.getElementById("apiStatus").textContent = text;
+        }
+
+        async function checkBackendHealth() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                if (!response.ok) throw new Error("unhealthy");
+                const data = await response.json();
+                if (data.llm_configured) {
+                    setApiStatus(`Backend: connected (${data.provider || "llm"})`);
+                } else {
+                    setApiStatus("Backend: connected (local text only — add API key to .env)");
+                }
+            } catch (error) {
+                setApiStatus("Backend: offline — using local text fallback");
+            }
+        }
+
+        async function generateBriefing() {
+            updateBriefing("Generating briefing…");
+            try {
+                const data = await postJson("/briefing", buildSnapshot());
+                const label = data.source === "llm" ? "Situation briefing (AI):" : "Situation briefing (local):";
+                updateBriefing(`${label}\n${data.text.replace(/^Situation briefing[^:]*:\s*/i, "")}`);
+            } catch (error) {
+                updateBriefing(localBriefingText());
+            }
+        }
+
+        async function generateIncidentReport() {
+            document.getElementById("reportText").textContent = "Generating report…";
+            try {
+                const data = await postJson("/report", buildSnapshot());
+                const label = data.source === "llm" ? "Incident report (AI):" : "Incident report (local):";
+                const body = data.text.replace(/^Incident report[^:]*:\s*/i, "");
+                document.getElementById("reportText").textContent = `${label}\n${body}`;
+            } catch (error) {
+                document.getElementById("reportText").textContent = localReportText();
+            }
+        }
+
+        function countNeeds(incidents) {
+            const counts = {};
+            for (const incident of incidents) counts[incident.need] = (counts[incident.need] || 0) + 1;
+            return Object.entries(counts)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 3)
+                .map(([need, count]) => `${need} (${count})`)
+                .join(", ");
+        }
+
+        function updateBriefing(text) {
+            document.getElementById("briefingText").textContent = text;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawRiskZones();
+            drawBases();
+            drawRoutes();
+            drawIncidents();
+            drawResources();
+        }
+
+        function drawRiskZones() {
+            for (const zone of state.riskZones) {
+                const p = gridToCanvas(zone);
+                const radius = (zone.r / GRID_SIZE) * Math.min(canvas.width, canvas.height);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                ctx.fillStyle = "rgba(167, 139, 250, 0.16)";
+                ctx.fill();
+                ctx.strokeStyle = "rgba(167, 139, 250, 0.55)";
+                ctx.setLineDash([7, 6]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.fillStyle = "#c4b5fd";
+                ctx.font = "12px sans-serif";
+                ctx.fillText(zone.label, p.x - radius * 0.7, p.y);
+            }
+        }
+
+        function drawBases() {
+            for (const base of state.bases) {
+                const p = gridToCanvas(base);
+                ctx.fillStyle = "rgba(34, 197, 94, 0.18)";
+                ctx.strokeStyle = "#22c55e";
+                ctx.lineWidth = 2;
+                ctx.fillRect(p.x - 12, p.y - 12, 24, 24);
+                ctx.strokeRect(p.x - 12, p.y - 12, 24, 24);
+                ctx.fillStyle = "#bbf7d0";
+                ctx.font = "11px sans-serif";
+                ctx.fillText(base.label, p.x + 15, p.y + 4);
+            }
+        }
+
+        function drawRoutes() {
+            for (const resource of state.resources) {
+                if (!resource.route.length) continue;
+                ctx.beginPath();
+                const start = gridToCanvas(resource);
+                ctx.moveTo(start.x, start.y);
+                for (const point of resource.route) {
+                    const p = gridToCanvas(point);
+                    ctx.lineTo(p.x, p.y);
+                }
+                ctx.strokeStyle = "rgba(220, 238, 255, 0.55)";
+                ctx.lineWidth = 2;
+                ctx.setLineDash([6, 5]);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        function drawIncidents() {
+            for (const incident of state.incidents.filter(item => item.status !== "resolved")) {
+                const p = gridToCanvas(incident);
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y - 13);
+                ctx.lineTo(p.x - 12, p.y + 11);
+                ctx.lineTo(p.x + 12, p.y + 11);
+                ctx.closePath();
+                ctx.fillStyle = incident.urgency >= 85 ? "#ef4444" : "#f59e0b";
+                ctx.fill();
+                ctx.strokeStyle = "#fff7ed";
+                ctx.stroke();
+                ctx.fillStyle = "#ffffff";
+                ctx.font = "bold 11px sans-serif";
+                ctx.fillText(String(incident.urgency), p.x - 8, p.y + 6);
+            }
+        }
+
+        function drawResources() {
+            for (const resource of state.resources) {
+                const p = gridToCanvas(resource);
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 12, 0, Math.PI * 2);
+                ctx.fillStyle = resource.status === "available" ? resource.color : "#f59e0b";
+                ctx.fill();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = "#eaf7ff";
+                ctx.stroke();
+                ctx.fillStyle = "#08111f";
+                ctx.font = "bold 9px sans-serif";
+                ctx.textAlign = "center";
+                ctx.fillText(resource.short.slice(0, 3), p.x, p.y + 3);
+                ctx.textAlign = "left";
+            }
+        }
+
+        function renderAll() {
+            draw();
+            renderStats();
+            renderLists();
+            renderDecision();
+        }
+
+        function renderStats() {
+            const open = state.incidents.filter(item => item.status !== "resolved").length;
+            const free = state.resources.filter(item => item.status === "available").length;
+            document.getElementById("statOpen").textContent = open;
+            document.getElementById("statFree").textContent = free;
+            document.getElementById("statResolved").textContent = state.resolved;
+            document.getElementById("statScore").textContent = state.decisions ? Math.round(state.totalScore / state.decisions) : 0;
+            document.getElementById("strategyBadge").textContent = formatStrategy(state.strategy);
+            document.getElementById("resourceCount").textContent = `${state.resources.length} active`;
+        }
+
+        function renderLists() {
+            const resources = document.getElementById("resourceList");
+            resources.innerHTML = state.resources.map(resource => `
+                <div class="card">
+                    <div class="card-top">
+                        <div>
+                            <div class="card-title">${resource.type} R${resource.id}</div>
+                            <div class="meta">${resource.capabilities.join(", ")} | capacity ${resource.capacity} | completed ${resource.completed}</div>
+                        </div>
+                        <span class="pill ${resource.status === "available" ? "green" : "warn"}">${resource.status}</span>
+                    </div>
+                    <div class="bar"><span style="width:${resource.fuel}%"></span></div>
+                    <div class="meta">Fuel/availability: ${Math.round(resource.fuel)}%</div>
+                </div>
+            `).join("");
+
+            const incidents = document.getElementById("incidentList");
+            const visible = state.incidents.filter(incident => incident.status !== "resolved");
+            incidents.innerHTML = visible.length ? visible.map(incident => `
+                <div class="card">
+                    <div class="card-top">
+                        <div>
+                            <div class="card-title">${incident.type} I${incident.id}</div>
+                            <div class="meta">Need: ${incident.need} | People affected: ${incident.people}</div>
+                        </div>
+                        <span class="pill ${incident.urgency >= 85 ? "red" : "warn"}">urgency ${incident.urgency}</span>
+                    </div>
+                    <div class="meta">Status: ${incident.status}${incident.assignedResourceId ? ` | Assigned R${incident.assignedResourceId}` : ""}</div>
+                </div>
+            `).join("") : '<div class="note">All current incidents have been resolved.</div>';
+        }
+
+        const AGENT_META = {
+            medical: { label: "Medical", role: "Triage & capability fit" },
+            logistics: { label: "Logistics", role: "Fuel, depot & availability" },
+            route: { label: "Route", role: "Path risk & access" }
+        };
+
+        function formatCouncilDelta(value) {
+            return `${value >= 0 ? "+" : ""}${value}`;
+        }
+
+        function agentClass(agent) {
+            return agent === "medical" || agent === "logistics" || agent === "route" ? agent : "route";
+        }
+
+        function formatAgentConcern(op) {
+            const lines = (op.concerns || []).filter(Boolean);
+            if (!lines.length) return "No concerns noted.";
+            return lines.join(" ");
+        }
+
+        function pickCouncilWinner(candidates) {
+            return (candidates || []).reduce(
+                (best, row) => (!best || row.adjusted_total > best.adjusted_total ? row : best),
+                null
+            );
+        }
+
+        function renderAgentRows(opinions, compact = false) {
+            const order = ["medical", "logistics", "route"];
+            const sorted = [...(opinions || [])].sort(
+                (a, b) => order.indexOf(a.agent) - order.indexOf(b.agent)
+            );
+            const wrapClass = compact ? "council-agents council-compact" : "council-agents";
+            const rows = sorted.map(op => {
+                const cls = agentClass(op.agent);
+                const meta = AGENT_META[cls] || { label: op.agent, role: "Specialist review" };
+                const deltaCls = op.score_delta < 0 ? "agent-row-delta neg" : "agent-row-delta";
+                return `
+                    <div class="agent-row ${cls}">
+                        <div class="agent-row-stripe"></div>
+                        <div class="agent-row-head">
+                            <div>
+                                <div class="agent-row-name">${meta.label}</div>
+                                <div class="agent-row-role">${meta.role}</div>
+                            </div>
+                        </div>
+                        <div class="${deltaCls}">${formatCouncilDelta(op.score_delta)}</div>
+                        <div class="agent-row-note">${formatAgentConcern(op)}</div>
+                    </div>
+                `;
+            }).join("");
+            return `<div class="${wrapClass}">${rows}</div>`;
+        }
+
+        function renderCouncilVerdict(winnerRow, council) {
+            const base = winnerRow.adjusted_total - winnerRow.merged_delta;
+            const deltaCls = winnerRow.merged_delta < 0 ? "delta-pill neg" : "delta-pill";
+            const reviewed = (council.candidates || []).length;
+            const summary = council.narrative
+                || `${reviewed} candidate(s) reviewed on the knowledge graph.`;
+            return `
+                <div class="council-verdict">
+                    <div class="council-verdict-label">Council recommendation</div>
+                    <div class="council-verdict-pick">${winnerRow.resource_type} R${winnerRow.resource_id}</div>
+                    <div class="council-score-flow">
+                        <span>Base</span> <strong>${base}</strong>
+                        <span>→</span>
+                        <span>Final</span> <strong>${winnerRow.adjusted_total}</strong>
+                        <span class="${deltaCls}">Council ${formatCouncilDelta(winnerRow.merged_delta)}</span>
+                    </div>
+                </div>
+                <div class="council-summary">${summary}</div>
+                <div class="council-agents-title">Specialist votes</div>
+            `;
+        }
+
+        function renderCouncilPanel(council) {
+            const panel = document.getElementById("councilPanel");
+            const badge = document.getElementById("councilSourceBadge");
+            if (!state.useAgentCouncil) {
+                badge.textContent = "off";
+                badge.className = "pill";
+                panel.innerHTML = '<div class="note">Agent council is disabled. Enable it in Controls to review allocations with Medical, Logistics, and Route specialists.</div>';
+                return;
+            }
+            if (!council || !council.available) {
+                badge.textContent = "waiting";
+                badge.className = "pill";
+                panel.innerHTML = '<div class="note">Waiting for the next allocation. Council will review the top candidates when the planner runs.</div>';
+                return;
+            }
+            badge.textContent = council.source === "llm" ? "AI council" : "Rule council";
+            badge.className = "pill green";
+            const winnerRow = pickCouncilWinner(council.candidates);
+            if (!winnerRow) {
+                panel.innerHTML = `<div class="note">${council.narrative || "No review yet."}</div>`;
+                return;
+            }
+            panel.innerHTML =
+                renderCouncilVerdict(winnerRow, council) +
+                renderAgentRows(winnerRow.opinions || []);
+        }
+
+        function buildAllocationExplainer(trace, score, passed, totalChecks) {
+            const res = trace.winner.resource;
+            const inc = trace.incident;
+            const strategy = formatStrategy(trace.strategy);
+            let text = `Committed <strong>${res.type} R${res.id}</strong> to <strong>${inc.type}</strong> using <strong>${strategy}</strong> strategy. `;
+            if (score.councilDelta != null && score.councilDelta !== 0) {
+                const base = score.total - score.councilDelta;
+                text += `Suitability moved from <strong>${base}</strong> to <strong>${score.total}</strong> after council (${formatCouncilDelta(score.councilDelta)}). `;
+            } else {
+                text += `Final suitability score <strong>${score.total}</strong>/100. `;
+            }
+            text += passed === totalChecks
+                ? `All <strong>${totalChecks}</strong> verification checks passed.`
+                : `<strong>${passed}/${totalChecks}</strong> verification checks passed.`;
+            if (trace.outcome && !trace.outcome.includes("committed")) {
+                text += ` ${trace.outcome}`;
+            }
+            return text;
+        }
+
+        function renderAllocationChips(trace, score, passed, totalChecks) {
+            const chips = [
+                `<span class="alloc-chip">${formatStrategy(trace.strategy)}</span>`,
+                `<span class="alloc-chip ${passed === totalChecks ? "ok" : "warn"}">Verify ${passed}/${totalChecks}</span>`
+            ];
+            if (score.councilDelta != null && score.councilDelta !== 0) {
+                const cls = score.councilDelta >= 0 ? "ok" : "warn";
+                chips.push(`<span class="alloc-chip ${cls}">Council ${formatCouncilDelta(score.councilDelta)}</span>`);
+            }
+            if (trace.incident.urgency >= 85) {
+                chips.push('<span class="alloc-chip warn">High urgency</span>');
+            }
+            return `<div class="alloc-chips">${chips.join("")}</div>`;
+        }
+
+        function renderScoreBreakdown(score) {
+            return `
+                <div class="alloc-section">
+                    <div class="alloc-section-title">Suitability breakdown</div>
+                    <div class="alloc-explainer">Weighted score from urgency, distance, capability, fuel, and route safety.</div>
+                    <div class="score-grid">
+                        <div class="score"><span>Urgency</span><strong>${score.urgencyScore}</strong></div>
+                        <div class="score"><span>Distance</span><strong>${score.distanceScore}</strong></div>
+                        <div class="score"><span>Capability</span><strong>${score.capabilityScore}</strong></div>
+                        <div class="score"><span>Fuel</span><strong>${score.fuelScore}</strong></div>
+                        <div class="score"><span>Route</span><strong>${score.riskScore}</strong></div>
+                        <div class="score total"><span>Total suitability</span><strong>${score.total}</strong></div>
+                    </div>
+                </div>`;
+        }
+
+        function renderVerification(trace) {
+            const checks = trace.checks || [];
+            if (!checks.length) return "";
+            const items = checks.map(check => {
+                const cls = check.passed ? "pass" : "fail";
+                return `<div class="verify-item ${cls}">${check.label}</div>`;
+            }).join("");
+            return `
+                <div class="alloc-section">
+                    <div class="alloc-section-title">Verification</div>
+                    <div class="alloc-explainer">Verify-then-commit: assignment only proceeds when every check passes (or repair selects the next safe candidate).</div>
+                    <div class="verify-list">${items}</div>
+                </div>`;
+        }
+
+        function renderPendingAllocation(trace) {
+            const verifyText = trace.topRejected.length
+                ? "No resource passed verification yet — waiting for a safe match."
+                : "Incident is queued; the planner will score candidates on the next cycle.";
+            return `
+                <div class="alloc-trace-meta">
+                    <span class="alloc-trace-id">${trace.traceId}</span>
+                    <span>${trace.time}</span>
+                </div>
+                <div class="alloc-verdict">
+                    <div class="alloc-verdict-label">Pending allocation</div>
+                    <div class="alloc-verdict-pick">${trace.incident.type}</div>
+                    <div class="alloc-verdict-target">Need: <strong>${trace.incident.need}</strong> · Urgency ${trace.incident.urgency} · ${trace.incident.people} people</div>
+                </div>
+                <div class="alloc-explainer">${verifyText} ${trace.outcome || ""}</div>
+                ${renderGraphEvidence(trace.graphEvidence)}
+                ${renderRejected(trace.topRejected, "Candidates reviewed")}
+            `;
+        }
+
+        function renderDecision() {
+            const panel = document.getElementById("decisionPanel");
+            const trace = state.decisionTrace;
+            if (!trace) {
+                panel.innerHTML = '<div class="note">Run a scenario to see the latest assignment, scores, graph evidence, and alternatives.</div>';
+                return;
+            }
+
+            if (!trace.winner) {
+                panel.innerHTML = renderPendingAllocation(trace);
+                return;
+            }
+
+            const score = trace.winner.score;
+            const passed = (trace.checks || []).filter(check => check.passed).length;
+            const totalChecks = trace.checks?.length || 0;
+            const res = trace.winner.resource;
+            const inc = trace.incident;
+
+            panel.innerHTML = `
+                <div class="alloc-trace-meta">
+                    <span class="alloc-trace-id">${trace.traceId}</span>
+                    <span>${trace.time}</span>
+                </div>
+                <div class="alloc-verdict">
+                    <div class="alloc-verdict-label">Assignment committed</div>
+                    <div class="alloc-verdict-pick">${res.type} R${res.id}</div>
+                    <div class="alloc-verdict-target">Responding to <strong>${inc.type}</strong> · need ${inc.need} · urgency ${inc.urgency}</div>
+                    ${renderAllocationChips(trace, score, passed, totalChecks)}
+                </div>
+                <div class="alloc-explainer">${buildAllocationExplainer(trace, score, passed, totalChecks)}</div>
+                ${renderScoreBreakdown(score)}
+                ${renderVerification(trace)}
+                ${renderGraphEvidence(trace.graphEvidence)}
+                ${renderRejected(trace.topRejected)}
+            `;
+        }
+
+        function renderRejected(rejected, title = "Other candidates") {
+            if (!rejected.length) return "";
+            const visible = rejected.slice(0, 3);
+            const rows = visible.map(item => `
+                <div class="alt-row">
+                    <div class="alt-row-head">
+                        <span class="alt-name">${item.label}</span>
+                        <span class="alt-score">Score ${item.score}</span>
+                    </div>
+                    <div class="alt-reason">${item.reason}</div>
+                </div>
+            `).join("");
+            const more = rejected.length > visible.length
+                ? `<div class="alt-more">+${rejected.length - visible.length} more not shown</div>`
+                : "";
+            return `
+                <div class="alloc-section">
+                    <div class="alloc-section-title">${title}</div>
+                    <div class="alloc-explainer">Top alternatives that scored lower or failed verification.</div>
+                    <div class="alt-list">${rows}</div>
+                    ${more}
+                </div>`;
+        }
+
+        function formatStrategy(strategy) {
+            return {
+                balanced: "Balanced",
+                urgency: "Urgency First",
+                nearest: "Nearest First",
+                risk: "Risk Aware",
+                saving: "Resource Saving"
+            }[strategy] || strategy;
+        }
+
+        function loop() {
+            if (state.running) {
+                state.tick += 1;
+                if (state.tick % 35 === 0) runAuction().catch(() => {});
+                if (state.tick % movementInterval() === 0) moveResources();
+            }
+            renderAll();
+            requestAnimationFrame(loop);
+        }
+
+        document.getElementById("startDemoBtn").addEventListener("click", () => resetDemo(true));
+        document.getElementById("resetBtn").addEventListener("click", () => resetDemo(false));
+        document.getElementById("addIncidentBtn").addEventListener("click", addRandomIncident);
+        document.getElementById("previewBtn").addEventListener("click", updateWhatIf);
+        document.getElementById("briefingBtn").addEventListener("click", generateBriefing);
+        document.getElementById("reportBtn").addEventListener("click", generateIncidentReport);
+        document.getElementById("toggleRunBtn").addEventListener("click", () => {
+            state.running = !state.running;
+            document.getElementById("toggleRunBtn").textContent = state.running ? "Pause" : "Resume";
+        });
+        document.getElementById("strategySelect").addEventListener("change", event => {
+            state.strategy = event.target.value;
+            updateWhatIf();
+            renderAll();
+        });
+        document.getElementById("speedSelect").addEventListener("change", event => {
+            state.speed = Number(event.target.value);
+        });
+        document.getElementById("agentCouncilToggle").addEventListener("change", event => {
+            state.useAgentCouncil = event.target.checked;
+            renderCouncilPanel(state.lastCouncil);
+        });
+        document.getElementById("openGraphBtn").addEventListener("click", () => openGraphExplorer());
+        document.getElementById("openGraphNav").addEventListener("click", event => {
+            event.preventDefault();
+            openGraphExplorer();
+        });
+        document.addEventListener("click", event => {
+            if (event.target?.id === "openGraphFromTrace") {
+                event.preventDefault();
+                openGraphExplorer(state.decisionTrace);
+            }
+        });
+
+        if (!restoreLiveSession()) {
+            resetDemo(false);
+        }
+        checkBackendHealth();
+        loop();
+    </script>
+</body>
+</html>

@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ResQFlow — Knowledge Graph</title>
+    <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+    <style>
+        :root {
+            --bg: #08111f;
+            --panel: #101c2f;
+            --panel-2: #0d1828;
+            --border: #263a57;
+            --text: #eef6ff;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-2: #22c55e;
+            --warn: #f59e0b;
+            --danger: #ef4444;
+            --purple: #a78bfa;
+            --glow: #fde047;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 17, 31, 0.95);
+            flex-shrink: 0;
+        }
+        .header-row {
+            max-width: 1600px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+        }
+        .brand { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em; }
+        .brand span { color: var(--accent); }
+        .brand-sub { font-size: 0.8rem; color: var(--muted); font-weight: 500; margin-left: 8px; }
+        .nav-links { display: flex; gap: 6px; }
+        .nav-links a {
+            color: var(--muted);
+            text-decoration: none;
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            font-size: 0.85rem;
+        }
+        .nav-links a.active, .nav-links a:hover {
+            color: var(--text);
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .toolbar {
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 10px 20px;
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border);
+            background: var(--panel-2);
+        }
+        .status-pill {
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            border: 1px solid var(--border);
+            white-space: nowrap;
+        }
+        .status-pill.ok { border-color: var(--accent-2); color: var(--accent-2); }
+        .status-pill.err { border-color: var(--danger); color: var(--danger); }
+
+        .view-modes {
+            display: flex;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 3px;
+            gap: 2px;
+        }
+        .view-modes button {
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            padding: 6px 12px;
+            border-radius: 7px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            margin: 0;
+            width: auto;
+        }
+        .view-modes button.active {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .toolbar-field {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+        .toolbar-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            color: var(--muted);
+            line-height: 1;
+        }
+        .toolbar select {
+            padding: 7px 32px 7px 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background-color: var(--bg);
+            color: var(--text);
+            font-size: 0.82rem;
+            min-width: 168px;
+            max-width: 220px;
+            margin: 0;
+            cursor: pointer;
+            -webkit-appearance: menulist;
+            appearance: menulist;
+        }
+        .toolbar select option {
+            background-color: var(--panel);
+            color: var(--text);
+        }
+        .toolbar-btn {
+            padding: 7px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--text);
+            font-size: 0.82rem;
+            cursor: pointer;
+            margin: 0;
+            width: auto;
+        }
+        .toolbar-btn.primary {
+            background: linear-gradient(135deg, #0ea5e9, #16a34a);
+            border: none;
+            font-weight: 600;
+        }
+        .toolbar-spacer { flex: 1; min-width: 8px; }
+
+        .workspace {
+            flex: 1;
+            max-width: 1600px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 14px 20px 20px;
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 14px;
+            min-height: 0;
+        }
+        @media (max-width: 1000px) {
+            .workspace { grid-template-columns: 1fr; }
+        }
+
+        .graph-panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            display: flex;
+            flex-direction: column;
+            min-height: 520px;
+            overflow: hidden;
+        }
+        .graph-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .graph-head h2 {
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 700;
+        }
+        .graph-hint { font-size: 0.75rem; color: var(--muted); }
+        .edge-bar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(8, 17, 31, 0.5);
+        }
+        .edge-chip {
+            font-size: 0.7rem;
+            padding: 3px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            cursor: pointer;
+            user-select: none;
+            color: var(--muted);
+        }
+        .edge-chip.on { color: var(--text); font-weight: 500; }
+        .edge-chip.off { opacity: 0.35; }
+        .edge-chip[data-type="CAN_REACH"].on { border-color: #22c55e; background: rgba(34,197,94,0.12); }
+        .edge-chip[data-type="BLOCKED_BY"].on { border-color: #ef4444; background: rgba(239,68,68,0.1); }
+        .edge-chip[data-type="COMPETES_FOR"].on { border-color: #f59e0b; background: rgba(245,158,11,0.1); }
+        .edge-chip[data-type="SUPPORTS"].on { border-color: #2dd4bf; background: rgba(45,212,191,0.1); }
+        .edge-chip[data-type="DISTANCE"].on { border-color: #64748b; background: rgba(100,116,139,0.15); }
+
+        #graphCanvas {
+            width: 100%;
+            height: 500px;
+            min-height: 500px;
+            flex: 1 1 500px;
+            position: relative;
+            background: radial-gradient(ellipse at 30% 20%, rgba(56,189,248,0.06), transparent 50%),
+                        radial-gradient(ellipse at 70% 80%, rgba(167,139,250,0.05), transparent 45%),
+                        #0a1424;
+        }
+        #networkMount {
+            width: 100%;
+            height: 100%;
+        }
+        .graph-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 14px;
+            border-top: 1px solid var(--border);
+            font-size: 0.72rem;
+            color: var(--muted);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .legend-inline { display: flex; gap: 12px; flex-wrap: wrap; }
+        .legend-inline span::before {
+            content: "";
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            margin-right: 4px;
+            vertical-align: middle;
+            border-radius: 50%;
+        }
+        .legend-inline .inc::before { background: var(--danger); }
+        .legend-inline .res::before { background: var(--accent); border-radius: 1px; }
+        .legend-inline .base::before { background: var(--accent-2); }
+        .legend-inline .risk::before { background: var(--purple); }
+
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+        }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            overflow: hidden;
+        }
+        .card-title {
+            padding: 10px 14px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-body { padding: 12px 14px; }
+
+        .story-path {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        .story-step {
+            display: flex;
+            gap: 10px;
+            padding: 8px 0;
+        }
+        .story-step:not(:last-child) { border-bottom: 1px dashed var(--border); }
+        .story-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--glow);
+            margin-top: 5px;
+            flex-shrink: 0;
+            box-shadow: 0 0 8px var(--glow);
+        }
+        .story-text { font-size: 0.84rem; line-height: 1.45; }
+        .story-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+
+        .ripple-card {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(245, 158, 11, 0.08);
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .stat-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .stat-chip {
+            padding: 5px 10px;
+            border-radius: 8px;
+            background: var(--panel-2);
+            border: 1px solid var(--border);
+            font-size: 0.75rem;
+        }
+        .stat-chip strong { color: var(--accent); margin-right: 4px; }
+
+        details.advanced {
+            font-size: 0.82rem;
+        }
+        details.advanced summary {
+            cursor: pointer;
+            color: var(--muted);
+            padding: 8px 14px;
+            border-bottom: 1px solid var(--border);
+        }
+        details.advanced .card-body { padding-top: 8px; }
+        details.advanced label { display: block; font-size: 0.75rem; color: var(--muted); margin: 8px 0 4px; }
+        details.advanced select, details.advanced input[type=range] {
+            width: 100%;
+            margin-bottom: 8px;
+        }
+
+        .empty-state {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+        .empty-state a { color: var(--accent); }
+        .inspect-meta { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+        .inspect-meta strong { color: var(--text); }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-row">
+            <div>
+                <span class="brand">ResQ<span>Flow</span></span>
+                <span class="brand-sub">Knowledge Graph</span>
+            </div>
+            <nav class="nav-links">
+                <a href="index.html">Operations demo</a>
+                <a href="graph.html" class="active">Knowledge graph</a>
+            </nav>
+        </div>
+    </header>
+
+    <div class="toolbar">
+        <span id="backendStatus" class="status-pill">Checking…</span>
+        <div class="view-modes" role="group" aria-label="Graph view mode">
+            <button type="button" class="active" data-view="focus">Focus</button>
+            <button type="button" data-view="reach">Reachability</button>
+            <button type="button" data-view="full">Full map</button>
+        </div>
+        <label class="toolbar-field">
+            <span class="toolbar-label">Incident</span>
+            <select id="incidentSelect" title="Focus incident on the graph">
+                <option value="">Select incident…</option>
+            </select>
+        </label>
+        <label class="toolbar-field">
+            <span class="toolbar-label">Trace</span>
+            <select id="traceSelect" title="Decision trace for evidence path">
+                <option value="">Select trace…</option>
+            </select>
+        </label>
+        <button type="button" class="toolbar-btn primary" id="refreshBtn">Refresh</button>
+        <button type="button" class="toolbar-btn" id="fitBtn" title="Fit graph to view">Fit view</button>
+        <div class="toolbar-spacer"></div>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);cursor:pointer;">
+            <input type="checkbox" id="labelToggle"> Edge labels
+        </label>
+    </div>
+
+    <div class="workspace">
+        <section class="graph-panel">
+            <div class="graph-head">
+                <h2>Disaster knowledge graph</h2>
+                <span class="graph-hint" id="viewHint">Focus mode — neighborhood + evidence path only</span>
+            </div>
+            <div class="edge-bar" id="edgeFilters"></div>
+            <div id="graphCanvas"><div id="networkMount"></div></div>
+            <div class="graph-foot">
+                <div class="legend-inline">
+                    <span class="inc">Incident</span>
+                    <span class="res">Resource</span>
+                    <span class="base">Base</span>
+                    <span class="risk">Risk</span>
+                </div>
+                <span>Yellow glow = evidence path · Hover nodes/edges for details</span>
+            </div>
+        </section>
+
+        <aside class="side-panel">
+            <div class="card">
+                <div class="card-title">Decision story</div>
+                <div class="card-body" id="storyPanel">
+                    <div class="inspect-meta">Select an incident and trace to see the evidence path and ripple effects.</div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title">Overview</div>
+                <div class="card-body">
+                    <div class="stat-chips" id="statsPanel"></div>
+                </div>
+            </div>
+            <div class="card">
+                <details class="advanced">
+                    <summary>Advanced options</summary>
+                    <div class="card-body">
+                        <label>Neighborhood hops: <span id="hopsVal">2</span></label>
+                        <input type="range" id="hopsRange" min="1" max="3" value="2">
+                        <label>Layout</label>
+                        <select id="layoutSelect">
+                            <option value="physics" selected>Force layout</option>
+                            <option value="map">Map coordinates</option>
+                        </select>
+                    </div>
+                </details>
+            </div>
+            <div class="card">
+                <div class="card-title">Selection</div>
+                <div class="card-body inspect-meta" id="inspector">Click a node or edge on the graph.</div>
+            </div>
+        </aside>
+    </div>
+
+    <script>
+        const API_BASE = "http://localhost:8000";
+        const EDGE_TYPES = ["CAN_REACH", "BLOCKED_BY", "COMPETES_FOR", "SUPPORTS", "DISTANCE"];
+        const EDGE_COLORS = {
+            CAN_REACH: "#22c55e",
+            DISTANCE: "#334155",
+            BLOCKED_BY: "#ef4444",
+            COMPETES_FOR: "#f59e0b",
+            SUPPORTS: "#2dd4bf"
+        };
+        const NODE_STYLES = {
+            Incident: { color: "#ef4444", shape: "dot", size: 20 },
+            Resource: { color: "#38bdf8", shape: "box", size: 16 },
+            Base: { color: "#22c55e", shape: "diamond", size: 18 },
+            RiskZone: { color: "#a78bfa", shape: "hexagon", size: 22 }
+        };
+
+        let snapshot = null;
+        let focus = {};
+        let graphData = { nodes: [], edges: [], stats: {}, focus: {} };
+        let network = null;
+        let viewMode = "focus";
+        let showEdgeLabels = false;
+        let activeEdgeTypes = new Set(["CAN_REACH", "BLOCKED_BY", "COMPETES_FOR", "SUPPORTS"]);
+        let highlightNodes = new Set();
+        let highlightEdges = new Set();
+
+        function loadSnapshotFromStorage() {
+            const raw = sessionStorage.getItem("resqflow_snapshot");
+            const focusRaw = sessionStorage.getItem("resqflow_focus");
+            if (raw) snapshot = JSON.parse(raw);
+            if (focusRaw) focus = JSON.parse(focusRaw);
+        }
+
+        async function postJson(path, payload) {
+            const res = await fetch(`${API_BASE}${path}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) {
+                const detail = await res.text();
+                throw new Error(`HTTP ${res.status}${detail ? ": " + detail.slice(0, 80) : ""}`);
+            }
+            return res.json();
+        }
+
+        function normalizeSnapshot(snap) {
+            return {
+                strategy: snap.strategy || "balanced",
+                resolved: snap.resolved || 0,
+                repairCount: snap.repairCount || 0,
+                decisions: snap.decisions || 0,
+                totalScore: snap.totalScore || 0,
+                bases: snap.bases || [],
+                riskZones: snap.riskZones || [],
+                resources: (snap.resources || []).map(r => ({
+                    id: r.id, type: r.type, x: r.x, y: r.y, fuel: r.fuel, status: r.status,
+                    capabilities: r.capabilities || [], capacity: r.capacity || 0,
+                    assignedIncidentId: r.assignedIncidentId ?? null, completed: r.completed || 0
+                })),
+                incidents: (snap.incidents || []).map(i => ({
+                    id: i.id, type: i.type, need: i.need, urgency: i.urgency, people: i.people,
+                    x: i.x, y: i.y, status: i.status,
+                    assignedResourceId: i.assignedResourceId ?? null, sourceText: i.sourceText || ""
+                })),
+                latestTrace: snap.latestTrace || null,
+                recentTraces: snap.recentTraces || []
+            };
+        }
+
+        function dist(ax, ay, bx, by) { return Math.hypot(ax - bx, ay - by); }
+
+        function routeRisk(ax, ay, bx, by, zones) {
+            let risk = 0;
+            const mx = (ax + bx) / 2, my = (ay + by) / 2;
+            for (const zone of zones) {
+                const r = zone.r || 4;
+                if (dist(mx, my, zone.x, zone.y) <= r + 2 || dist(bx, by, zone.x, zone.y) <= r + 1) {
+                    risk = Math.max(risk, zone.level || 50);
+                }
+            }
+            return Math.min(risk, 100);
+        }
+
+        function buildGraphFromSnapshot(snap) {
+            const REACH = 45, COMPETE = 28, SUPPORT = 18;
+            const nodes = [], edges = [];
+            const seen = new Set();
+            const addEdge = (from, to, type, extra = {}) => {
+                const sig = `${from}|${to}|${type}`;
+                if (seen.has(sig)) return;
+                seen.add(sig);
+                edges.push({ from, to, type, ...extra });
+            };
+            (snap.bases || []).forEach((b, i) => nodes.push({ id: `base:${i}`, kind: "Base", label: b.label || `Base ${i}`, x: b.x, y: b.y }));
+            (snap.riskZones || []).forEach((z, i) => nodes.push({ id: `risk:${i}`, kind: "RiskZone", label: z.label || `Risk ${i}`, x: z.x, y: z.y }));
+            (snap.resources || []).forEach(r => nodes.push({ id: `resource:${r.id}`, kind: "Resource", label: r.type, x: r.x, y: r.y, status: r.status, fuel: r.fuel }));
+            (snap.incidents || []).forEach(i => nodes.push({ id: `incident:${i.id}`, kind: "Incident", label: i.type, x: i.x, y: i.y, urgency: i.urgency, need: i.need }));
+            const pending = (snap.incidents || []).filter(i => i.status === "pending");
+            const zones = snap.riskZones || [];
+            for (const r of snap.resources || []) {
+                for (const inc of snap.incidents || []) {
+                    const d = dist(r.x, r.y, inc.x, inc.y);
+                    addEdge(`resource:${r.id}`, `incident:${inc.id}`, "DISTANCE", { distance: Math.round(d * 10) / 10 });
+                    if (r.status === "available" && (r.capabilities || []).includes(inc.need) && d <= REACH) {
+                        const fuelCost = Math.max(8, Math.round(d * 0.55));
+                        if (r.fuel - fuelCost >= 12) {
+                            addEdge(`resource:${r.id}`, `incident:${inc.id}`, "CAN_REACH", {
+                                distance: Math.round(d * 10) / 10,
+                                route_risk: Math.round(routeRisk(r.x, r.y, inc.x, inc.y, zones) * 10) / 10
+                            });
+                        }
+                    }
+                }
+            }
+            for (let i = 0; i < pending.length; i++) {
+                for (let j = i + 1; j < pending.length; j++) {
+                    const a = pending[i], b = pending[j];
+                    if (a.need === b.need && dist(a.x, a.y, b.x, b.y) <= COMPETE) {
+                        addEdge(`incident:${a.id}`, `incident:${b.id}`, "COMPETES_FOR", { need: a.need });
+                    }
+                }
+            }
+            (snap.bases || []).forEach((b, bi) => {
+                const bNode = `base:${bi}`;
+                for (const r of snap.resources || []) {
+                    const d = dist(b.x, b.y, r.x, r.y);
+                    if (d <= SUPPORT) addEdge(bNode, `resource:${r.id}`, "SUPPORTS", { distance: Math.round(d * 10) / 10 });
+                }
+                for (const inc of pending) {
+                    const d = dist(b.x, b.y, inc.x, inc.y);
+                    if (d <= SUPPORT * 1.5) addEdge(bNode, `incident:${inc.id}`, "SUPPORTS", { distance: Math.round(d * 10) / 10 });
+                }
+            });
+            zones.forEach((zone, zi) => {
+                const zNode = `risk:${zi}`;
+                for (const r of snap.resources || []) {
+                    if (dist(r.x, r.y, zone.x, zone.y) <= (zone.r || 4) + 1) addEdge(`resource:${r.id}`, zNode, "BLOCKED_BY", { level: zone.level });
+                }
+                for (const inc of snap.incidents || []) {
+                    if (dist(inc.x, inc.y, zone.x, zone.y) <= (zone.r || 4) + 1) addEdge(`incident:${inc.id}`, zNode, "BLOCKED_BY", { level: zone.level });
+                }
+            });
+            const nodesByKind = {}, edgesByType = {};
+            nodes.forEach(n => { nodesByKind[n.kind] = (nodesByKind[n.kind] || 0) + 1; });
+            edges.forEach(e => { edgesByType[e.type] = (edgesByType[e.type] || 0) + 1; });
+            return { nodes, edges, stats: { node_count: nodes.length, edge_count: edges.length, nodes_by_kind: nodesByKind, edges_by_type: edgesByType }, focus: {} };
+        }
+
+        function setBackendStatus(text, kind) {
+            const el = document.getElementById("backendStatus");
+            el.textContent = text;
+            el.className = "status-pill " + (kind || "");
+        }
+
+        function updateViewHint() {
+            const hints = {
+                focus: "Focus — highlighted neighborhood + evidence path (cleanest)",
+                reach: "Reachability — semantic links only, no distance clutter",
+                full: "Full map — all enabled edge types"
+            };
+            document.getElementById("viewHint").textContent = hints[viewMode] || "";
+        }
+
+        function getFocusIds() {
+            const incidentId = document.getElementById("incidentSelect").value || focus.incidentId || null;
+            let resourceId = focus.resourceId || null;
+            const traceVal = document.getElementById("traceSelect").value;
+            if (traceVal) {
+                const t = (snapshot.recentTraces || []).find(x => x.traceId === traceVal)
+                    || (snapshot.latestTrace?.traceId === traceVal ? snapshot.latestTrace : null);
+                if (t?.incident?.id != null) focus.incidentId = t.incident.id;
+                if (t?.winner?.resource?.id != null) resourceId = t.winner.resource.id;
+            }
+            return {
+                incidentId: incidentId != null && incidentId !== "" ? incidentId : null,
+                resourceId: resourceId != null && resourceId !== "" ? resourceId : null,
+                hops: Number(document.getElementById("hopsRange").value)
+            };
+        }
+
+        function edgeIsHighlighted(e) {
+            const pk = `${e.from}|${e.to}`, pk2 = `${e.to}|${e.from}`;
+            return highlightEdges.has(`${pk}|${e.type}`) || highlightEdges.has(pk) || highlightEdges.has(pk2)
+                || highlightEdges.has(`${pk2}|${e.type}`);
+        }
+
+        function getVisibleEdges() {
+            const pool = graphData.edges.filter(e => activeEdgeTypes.has(e.type));
+            if (viewMode === "full") return pool;
+
+            if (viewMode === "reach") {
+                return pool.filter(e => e.type !== "DISTANCE");
+            }
+
+            const focusSet = highlightNodes;
+            if (focusSet.size === 0) {
+                return pool.filter(e => e.type !== "DISTANCE");
+            }
+            return pool.filter(e => {
+                if (edgeIsHighlighted(e)) return true;
+                if (e.type === "DISTANCE") return false;
+                return focusSet.has(e.from) && focusSet.has(e.to);
+            });
+        }
+
+        function getVisibleNodes(edgeList) {
+            const ids = new Set();
+            edgeList.forEach(e => { ids.add(e.from); ids.add(e.to); });
+            highlightNodes.forEach(id => ids.add(id));
+            if (viewMode === "full" || ids.size === 0) return graphData.nodes;
+            return graphData.nodes.filter(n => ids.has(n.id));
+        }
+
+        async function fetchGraph() {
+            if (!snapshot) {
+                document.getElementById("graphCanvas").innerHTML = '<div class="empty-state">No scenario loaded.<br><a href="index.html">Start Operations demo</a> then open Knowledge graph.</div>';
+                return;
+            }
+            const { incidentId, resourceId, hops } = getFocusIds();
+            const cleanSnap = normalizeSnapshot(snapshot);
+            const reqBody = { snapshot: cleanSnap, incidentId, resourceId, hops };
+            setBackendStatus("Loading…", "");
+
+            try {
+                graphData = await postJson("/graph/full", reqBody);
+                setBackendStatus("Connected", "ok");
+            } catch (fullErr) {
+                const is404 = String(fullErr.message).includes("404");
+                try {
+                    if (reqBody.incidentId != null) {
+                        const ev = await postJson("/graph/evidence", {
+                            snapshot: cleanSnap, incidentId: reqBody.incidentId, resourceId: reqBody.resourceId,
+                            traceId: focus.traceId || null, hops: reqBody.hops, persist: false
+                        });
+                        graphData = buildGraphFromSnapshot(cleanSnap);
+                        graphData.stats = ev.stats || graphData.stats;
+                        graphData.focus = { subgraph: ev.subgraph, ripple: ev.ripple, evidence: ev.evidence };
+                        setBackendStatus(is404 ? "Connected (restart API for full routes)" : "Connected", "ok");
+                    } else {
+                        graphData = buildGraphFromSnapshot(cleanSnap);
+                        setBackendStatus("Local graph", "ok");
+                    }
+                } catch {
+                    graphData = buildGraphFromSnapshot(cleanSnap);
+                    setBackendStatus("Offline — local graph", "err");
+                }
+            }
+            applyHighlights();
+            renderStats();
+            renderStoryPanel();
+            renderNetwork();
+        }
+
+        function applyHighlights() {
+            highlightNodes.clear();
+            highlightEdges.clear();
+            const f = graphData.focus || {};
+            if (f.subgraph?.nodes) f.subgraph.nodes.forEach(n => highlightNodes.add(String(n.id)));
+            if (f.evidence?.path) f.evidence.path.forEach(id => highlightNodes.add(String(id)));
+            if (f.evidence?.edges) {
+                f.evidence.edges.forEach(e => {
+                    highlightEdges.add(`${e.from}|${e.to}|${e.type}`);
+                    highlightEdges.add(`${e.from}|${e.to}`);
+                });
+            }
+            if (f.evidence?.path?.length > 1) {
+                for (let i = 0; i < f.evidence.path.length - 1; i++) {
+                    highlightEdges.add(`${f.evidence.path[i]}|${f.evidence.path[i + 1]}`);
+                }
+            }
+        }
+
+        function shortenLabel(label, max = 14) {
+            if (!label) return "";
+            return label.length > max ? label.slice(0, max - 1) + "…" : label;
+        }
+
+        const GRID_SIZE = 50;
+
+        function getMapScale() {
+            const el = document.getElementById("graphCanvas");
+            const w = el.clientWidth || 700;
+            const h = el.clientHeight || 500;
+            const pad = 50;
+            return Math.min((w - pad * 2) / GRID_SIZE, (h - pad * 2) / GRID_SIZE, 14);
+        }
+
+        function mapPosition(x, y, scale) {
+            const pad = 40;
+            return { x: pad + (Number(x) || 0) * scale, y: pad + (Number(y) || 0) * scale };
+        }
+
+        function fitGraph() {
+            if (!network || !graphData.nodes.length) return;
+            try {
+                network.fit({
+                    nodes: [...highlightNodes].length ? [...highlightNodes] : undefined,
+                    animation: { duration: 350, easingFunction: "easeInOutQuad" },
+                    padding: 60
+                });
+            } catch {
+                network.moveTo({ scale: 0.85, position: { x: 0, y: 0 } });
+            }
+        }
+
+        function renderNetwork() {
+            const mount = document.getElementById("networkMount");
+            if (!mount) return;
+            mount.innerHTML = "";
+            if (!graphData.nodes.length) {
+                mount.innerHTML = '<div class="empty-state" style="padding:80px 20px;">No graph nodes in snapshot.</div>';
+                return;
+            }
+
+            const useMap = document.getElementById("layoutSelect").value === "map";
+            const mapScale = getMapScale();
+            const visibleEdges = getVisibleEdges().filter(e =>
+                graphData.nodes.some(n => n.id === e.from) && graphData.nodes.some(n => n.id === e.to)
+            );
+            const dimOthers = viewMode === "focus" && highlightNodes.size > 0;
+
+            const visNodes = graphData.nodes.map(n => {
+                const style = NODE_STYLES[n.kind] || { color: "#94a3b8", shape: "dot", size: 14 };
+                const hasCoords = n.x != null && n.y != null;
+                const pos = useMap && hasCoords ? mapPosition(n.x, n.y, mapScale) : undefined;
+                const isHi = highlightNodes.has(String(n.id));
+                const dimmed = dimOthers && !isHi;
+                return {
+                    id: n.id,
+                    label: isHi ? shortenLabel(n.label) : (viewMode === "full" ? shortenLabel(n.label, 10) : ""),
+                    title: `${n.kind}: ${n.label}`,
+                    color: {
+                        background: dimmed ? "#3d4f63" : style.color,
+                        border: isHi ? "#fde047" : (dimmed ? "#475569" : "#cbd5e1"),
+                        highlight: { background: style.color, border: "#fde047" }
+                    },
+                    borderWidth: isHi ? 3 : 2,
+                    shape: style.shape,
+                    size: isHi ? style.size + 8 : style.size,
+                    font: { color: "#f1f5f9", size: isHi ? 12 : 10, face: "Inter, sans-serif" },
+                    x: pos?.x,
+                    y: pos?.y,
+                    fixed: !!(useMap && pos)
+                };
+            });
+
+            const nodeIds = new Set(graphData.nodes.map(n => n.id));
+            const visEdges = visibleEdges
+                .filter(e => nodeIds.has(e.from) && nodeIds.has(e.to))
+                .map((e, idx) => {
+                    const isHi = edgeIsHighlighted(e);
+                    const color = isHi ? "#fde047" : (EDGE_COLORS[e.type] || "#64748b");
+                    const isDistance = e.type === "DISTANCE";
+                    return {
+                        id: `${e.from}-${e.to}-${e.type}-${idx}`,
+                        from: e.from,
+                        to: e.to,
+                        label: (showEdgeLabels && isHi) ? e.type : "",
+                        title: `${e.type}${e.distance != null ? " · " + e.distance : ""}`,
+                        color: { color, highlight: "#fde047" },
+                        width: isHi ? 4 : (isDistance ? 1 : 2),
+                        dashes: e.type === "BLOCKED_BY" || e.type === "COMPETES_FOR",
+                        smooth: { type: "curvedCW", roundness: 0.12 },
+                        arrows: { to: { enabled: isHi || e.type === "CAN_REACH", scaleFactor: 0.45 } }
+                    };
+                });
+
+            const data = { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) };
+            const options = {
+                physics: useMap ? { enabled: false } : {
+                    enabled: true,
+                    stabilization: { iterations: 250, fit: true },
+                    barnesHut: {
+                        gravitationalConstant: -12000,
+                        springLength: 120,
+                        springConstant: 0.04,
+                        avoidOverlap: 0.5
+                    }
+                },
+                interaction: {
+                    hover: true,
+                    tooltipDelay: 80,
+                    zoomView: true,
+                    dragView: true,
+                    navigationButtons: true,
+                    keyboard: { enabled: true, bindToWindow: false }
+                },
+                nodes: { shadow: { enabled: true, size: 6, x: 2, y: 2 } }
+            };
+
+            if (network) {
+                network.destroy();
+                network = null;
+            }
+            network = new vis.Network(mount, data, options);
+            network.on("click", params => {
+                if (params.nodes.length) showNodeInspector(params.nodes[0]);
+                else if (params.edges.length) showEdgeInspector(params.edges[0], visEdges);
+            });
+
+            const doFit = () => fitGraph();
+            if (useMap) {
+                setTimeout(doFit, 80);
+            } else {
+                network.once("stabilizationIterationsDone", doFit);
+                network.once("stabilized", doFit);
+                setTimeout(doFit, 800);
+            }
+        }
+
+        function nodeLabelFromId(id) {
+            const n = graphData.nodes.find(x => x.id === id);
+            return n ? n.label : id;
+        }
+
+        function renderStoryPanel() {
+            const f = graphData.focus || {};
+            const panel = document.getElementById("storyPanel");
+            if (!f.evidence?.narrative && !f.ripple?.summary) {
+                panel.innerHTML = '<div class="inspect-meta">Pick an <strong>incident</strong> and <strong>trace</strong> in the toolbar, then click Refresh.</div>';
+                return;
+            }
+            let html = "";
+            if (f.evidence?.edges?.length) {
+                html += '<div class="story-path">';
+                f.evidence.edges.forEach(step => {
+                    html += `<div class="story-step"><span class="story-dot"></span><div class="story-text"><strong>${step.type || "LINK"}</strong>${step.label || ""}</div></div>`;
+                });
+                html += "</div>";
+            } else if (f.evidence?.narrative) {
+                const parts = f.evidence.narrative.split("→").map(s => s.trim());
+                html += '<div class="story-path">';
+                parts.forEach((part, i) => {
+                    html += `<div class="story-step"><span class="story-dot"></span><div class="story-text"><strong>Step ${i + 1}</strong>${part}</div></div>`;
+                });
+                html += "</div>";
+            }
+            if (f.ripple?.summary) {
+                html += `<div class="ripple-card"><strong>Ripple check</strong><br>${f.ripple.summary}`;
+                (f.ripple.effects || []).slice(0, 3).forEach(eff => { html += `<br>• ${eff.detail}`; });
+                html += "</div>";
+            }
+            panel.innerHTML = html;
+        }
+
+        function showNodeInspector(nodeId) {
+            const n = graphData.nodes.find(x => x.id === nodeId);
+            if (!n) return;
+            document.getElementById("inspector").innerHTML = `
+                <strong>${n.kind}</strong> — ${n.label}<br>
+                ${n.urgency != null ? `Urgency ${n.urgency}<br>` : ""}
+                ${n.need ? `Need: ${n.need}<br>` : ""}
+                ${n.fuel != null ? `Fuel ${Math.round(n.fuel)}%<br>` : ""}
+                ${n.status ? `Status: ${n.status}` : ""}
+            `;
+        }
+
+        function showEdgeInspector(edgeId, visEdges) {
+            const e = visEdges.find(x => x.id === edgeId);
+            if (!e) return;
+            const raw = graphData.edges.find(x => x.from === e.from && x.to === e.to && x.type === e.label);
+            document.getElementById("inspector").innerHTML = `
+                <strong>${e.label || "Edge"}</strong><br>
+                ${nodeLabelFromId(e.from)} → ${nodeLabelFromId(e.to)}
+                ${raw?.distance != null ? `<br>Distance ${raw.distance}` : ""}
+                ${raw?.route_risk != null ? `<br>Route risk ${raw.route_risk}` : ""}
+            `;
+        }
+
+        function renderStats() {
+            const s = graphData.stats || {};
+            const visible = getVisibleEdges().length;
+            const chips = [
+                ["Edges shown", visible],
+                ["Nodes", graphData.nodes.length],
+                ["Highlighted", highlightNodes.size]
+            ];
+            document.getElementById("statsPanel").innerHTML = chips.map(([k, v]) =>
+                `<span class="stat-chip"><strong>${v}</strong>${k}</span>`
+            ).join("");
+        }
+
+        function setSelectValue(sel, value) {
+            const v = value == null || value === "" ? "" : String(value);
+            if (!v) {
+                sel.value = "";
+                return false;
+            }
+            const match = [...sel.options].some(opt => opt.value === v);
+            if (match) {
+                sel.value = v;
+                return true;
+            }
+            sel.value = "";
+            return false;
+        }
+
+        function findTraceById(traceId) {
+            if (!traceId || !snapshot) return null;
+            return (snapshot.recentTraces || []).find(x => x.traceId === traceId)
+                || (snapshot.latestTrace?.traceId === traceId ? snapshot.latestTrace : null);
+        }
+
+        function incidentOptionLabel(inc) {
+            const tag = inc.status === "pending" ? "pending"
+                : inc.status === "assigned" ? "assigned"
+                : inc.status;
+            return `I${inc.id} · ${shortenLabel(inc.type, 20)} (${tag})`;
+        }
+
+        function syncIncidentFromTrace() {
+            const traceVal = document.getElementById("traceSelect").value;
+            const t = findTraceById(traceVal);
+            if (!t || t.incident?.id == null) return;
+            const sel = document.getElementById("incidentSelect");
+            if (setSelectValue(sel, t.incident.id)) {
+                focus.incidentId = t.incident.id;
+            }
+        }
+
+        function populateIncidentSelect() {
+            const sel = document.getElementById("incidentSelect");
+            sel.innerHTML = '<option value="">Select incident…</option>';
+            if (!snapshot) return;
+
+            const incidents = snapshot.incidents || [];
+            const open = incidents.filter(i => i.status !== "resolved");
+            const added = new Set();
+
+            const appendIncident = inc => {
+                const id = String(inc.id);
+                if (added.has(id)) return;
+                added.add(id);
+                const opt = document.createElement("option");
+                opt.value = id;
+                opt.textContent = incidentOptionLabel(inc);
+                sel.appendChild(opt);
+            };
+
+            open.forEach(appendIncident);
+
+            const focusId = focus.incidentId != null ? String(focus.incidentId) : "";
+            if (focusId && !added.has(focusId)) {
+                const extra = incidents.find(i => String(i.id) === focusId);
+                if (extra) appendIncident(extra);
+            }
+
+            if (!setSelectValue(sel, focusId)) {
+                syncIncidentFromTrace();
+            }
+            if (!sel.value && sel.options.length > 1) {
+                sel.selectedIndex = 1;
+                focus.incidentId = sel.value;
+            }
+        }
+
+        function populateTraceSelect() {
+            const sel = document.getElementById("traceSelect");
+            sel.innerHTML = '<option value="">Select trace…</option>';
+            const traces = [];
+            if (snapshot?.latestTrace) traces.push(snapshot.latestTrace);
+            (snapshot?.recentTraces || []).forEach(t => {
+                if (!traces.find(x => x.traceId === t.traceId)) traces.push(t);
+            });
+            traces.forEach(t => {
+                const opt = document.createElement("option");
+                opt.value = t.traceId;
+                opt.textContent = `${t.traceId} · ${shortenLabel(t.incident?.type, 18)}`;
+                sel.appendChild(opt);
+            });
+            if (!setSelectValue(sel, focus.traceId) && traces.length && sel.options.length > 1) {
+                sel.selectedIndex = 1;
+                focus.traceId = sel.value;
+            }
+            syncIncidentFromTrace();
+        }
+
+        function buildEdgeFilters() {
+            const row = document.getElementById("edgeFilters");
+            row.innerHTML = "";
+            EDGE_TYPES.forEach(type => {
+                const chip = document.createElement("span");
+                chip.className = "edge-chip " + (activeEdgeTypes.has(type) ? "on" : "off");
+                chip.dataset.type = type;
+                chip.textContent = type;
+                chip.addEventListener("click", () => {
+                    if (activeEdgeTypes.has(type)) { activeEdgeTypes.delete(type); chip.classList.remove("on"); chip.classList.add("off"); }
+                    else { activeEdgeTypes.add(type); chip.classList.add("on"); chip.classList.remove("off"); }
+                    renderStats();
+                    renderNetwork();
+                });
+                row.appendChild(chip);
+            });
+        }
+
+        function init() {
+            loadSnapshotFromStorage();
+            buildEdgeFilters();
+            updateViewHint();
+            populateIncidentSelect();
+            populateTraceSelect();
+
+            if (!snapshot) {
+                document.getElementById("networkMount").innerHTML = '<div class="empty-state">No scenario loaded.<br><a href="index.html">Operations demo</a> → Start scenario → Knowledge graph</div>';
+            } else {
+                fetchGraph();
+            }
+            window.addEventListener("resize", () => { if (graphData.nodes.length) renderNetwork(); });
+
+            document.querySelectorAll(".view-modes button").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    document.querySelectorAll(".view-modes button").forEach(b => b.classList.remove("active"));
+                    btn.classList.add("active");
+                    viewMode = btn.dataset.view;
+                    updateViewHint();
+                    renderStats();
+                    renderNetwork();
+                });
+            });
+            document.getElementById("refreshBtn").addEventListener("click", fetchGraph);
+            document.getElementById("fitBtn").addEventListener("click", fitGraph);
+            document.getElementById("labelToggle").addEventListener("change", e => {
+                showEdgeLabels = e.target.checked;
+                renderNetwork();
+            });
+            document.getElementById("incidentSelect").addEventListener("change", () => {
+                focus.incidentId = document.getElementById("incidentSelect").value || null;
+                fetchGraph();
+            });
+            document.getElementById("traceSelect").addEventListener("change", () => {
+                focus.traceId = document.getElementById("traceSelect").value || null;
+                syncIncidentFromTrace();
+                fetchGraph();
+            });
+            document.getElementById("hopsRange").addEventListener("input", e => { document.getElementById("hopsVal").textContent = e.target.value; });
+            document.getElementById("hopsRange").addEventListener("change", fetchGraph);
+            document.getElementById("layoutSelect").addEventListener("change", renderNetwork);
+
+            fetch(`${API_BASE}/health`).then(r => r.json()).then(d => {
+                if (d.graph) setBackendStatus("Connected", "ok");
+            }).catch(() => setBackendStatus("Offline", "err"));
+        }
+
+        init();
+    </script>
+</body>
+</html>
