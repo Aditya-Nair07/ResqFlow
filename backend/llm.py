@@ -70,6 +70,8 @@ async def openai_compatible_chat(prompt: str) -> str:
         return await _openai_compatible(prompt, OPENAI_API_KEY, OPENAI_BASE_URL, OPENAI_MODEL)
     if LLM_PROVIDER == "openrouter":
         return await _openrouter(prompt)
+    if LLM_PROVIDER == "gemini":
+        return await _gemini(prompt)
     raise ValueError(f"Unsupported provider for chat: {LLM_PROVIDER}")
 
 

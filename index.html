@@ -4,574 +4,459 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ResQFlow</title>
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#030712',
+                            panel: 'rgba(15, 23, 42, 0.45)',
+                            border: 'rgba(51, 65, 85, 0.35)',
+                            accent: '#38bdf8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #08111f;
-            --panel: #101c2f;
-            --panel-soft: #16243a;
-            --border: #263a57;
-            --text: #eef6ff;
-            --muted: #a8b7ca;
-            --accent: #38bdf8;
-            --accent-2: #22c55e;
-            --warn: #f59e0b;
-            --danger: #ef4444;
-            --purple: #a78bfa;
-            --shadow: 0 14px 40px rgba(0, 0, 0, 0.32);
-        }
-
-        * {
-            box-sizing: border-box;
-        }
-
+        /* Base and Scrollbar overrides */
         body {
-            margin: 0;
-            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-            background:
-                radial-gradient(circle at top left, rgba(56, 189, 248, 0.14), transparent 34%),
-                radial-gradient(circle at top right, rgba(239, 68, 68, 0.14), transparent 30%),
-                var(--bg);
-            color: var(--text);
+            background-color: #030712;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.08) 0%, transparent 40%);
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
         }
 
-        header {
-            padding: 22px 28px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(8, 17, 31, 0.86);
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            backdrop-filter: blur(12px);
+        .scroll::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .scroll::-webkit-scrollbar-thumb {
+            background: rgba(51, 65, 85, 0.5);
+            border-radius: 999px;
+        }
+        .scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(51, 65, 85, 0.8);
         }
 
-        .header-row {
-            max-width: 1700px;
-            margin: 0 auto;
-            display: flex;
-            gap: 20px;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .brand {
-            font-size: 1.35rem;
-            font-weight: 800;
-            letter-spacing: -0.04em;
-            color: var(--text);
-        }
-
-        .brand span {
-            color: var(--accent);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            padding: 8px 14px;
-            border-radius: 10px;
-            border: 1px solid var(--border);
-            font-size: 0.88rem;
-        }
-
-        .nav-links a.active,
-        .nav-links a:hover {
-            color: var(--text);
-            border-color: var(--accent);
-            background: rgba(56, 189, 248, 0.12);
-        }
-
-        .stats {
+        /* Dynamically rendered components classes styling */
+        .agent-row {
             display: grid;
-            grid-template-columns: repeat(4, minmax(94px, 1fr));
-            gap: 10px;
-            min-width: 430px;
-        }
-
-        .stat {
-            border: 1px solid var(--border);
-            background: rgba(16, 28, 47, 0.76);
+            grid-template-columns: 4px 1fr auto;
+            grid-template-rows: auto auto;
+            gap: 4px 12px;
+            align-items: start;
+            padding: 12px 14px 12px 0;
             border-radius: 14px;
-            padding: 10px 12px;
-        }
-
-        .stat span {
-            display: block;
-            color: var(--muted);
-            font-size: 11px;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .stat strong {
-            display: block;
-            margin-top: 4px;
-            font-size: 20px;
-            color: var(--accent);
-        }
-
-        main {
-            max-width: 1700px;
-            margin: 0 auto;
-            padding: 22px;
-            display: grid;
-            grid-template-columns: 310px minmax(520px, 1fr) 380px;
-            gap: 18px;
-        }
-
-        .panel {
-            border: 1px solid var(--border);
-            background: linear-gradient(180deg, rgba(16, 28, 47, 0.96), rgba(13, 24, 41, 0.96));
-            box-shadow: var(--shadow);
-            border-radius: 18px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(51, 65, 85, 0.25);
             overflow: hidden;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .panel-header {
-            padding: 15px 16px;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
+        .agent-row:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(15, 23, 42, 0.6);
+            transform: scale(1.01);
         }
-
-        .panel-title {
-            font-weight: 800;
-            letter-spacing: -0.02em;
+        .agent-row-stripe {
+            grid-column: 1;
+            grid-row: 1 / -1;
+            align-self: stretch;
+            border-radius: 12px 0 0 12px;
         }
+        .agent-row.medical .agent-row-stripe { background: #fb7185; }
+        .agent-row.logistics .agent-row-stripe { background: #fbbf24; }
+        .agent-row.route .agent-row-stripe { background: #a78bfa; }
 
-        .panel-body {
-            padding: 16px;
-        }
-
-        .stack {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-        }
-
-        .controls {
-            display: grid;
-            gap: 10px;
-        }
-
-        button,
-        select,
-        input {
-            width: 100%;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 10px 12px;
-            color: var(--text);
-            background: var(--panel-soft);
-            font: inherit;
-        }
-
-        .row-2 {
-            display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 8px;
-            align-items: end;
-        }
-
-        .row-2 button {
-            padding: 10px 12px;
-            white-space: nowrap;
-        }
-
-        button {
-            cursor: pointer;
-            font-weight: 800;
-            background: linear-gradient(135deg, #0ea5e9, #2563eb);
-            border-color: rgba(56, 189, 248, 0.45);
-            transition: transform 0.16s ease, filter 0.16s ease;
-        }
-
-        button:hover {
-            transform: translateY(-1px);
-            filter: brightness(1.08);
-        }
-
-        button.secondary {
-            background: var(--panel-soft);
-            color: var(--text);
-        }
-
-        button.green {
-            background: linear-gradient(135deg, #16a34a, #15803d);
-        }
-
-        button.warn {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-        }
-
-        label {
-            display: grid;
-            gap: 6px;
-            color: var(--muted);
-            font-size: 12px;
+        .agent-row-name {
             font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.06em;
+            font-size: 13px;
+            color: #f8fafc;
         }
+        .agent-row.medical .agent-row-name { color: #fda4af; }
+        .agent-row.logistics .agent-row-name { color: #fcd34d; }
+        .agent-row.route .agent-row-name { color: #c4b5fd; }
 
-        .canvas-wrap {
-            padding: 16px;
-            min-height: 640px;
+        .agent-row-role {
+            font-size: 10px;
+            color: #94a3b8;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+        .agent-row-head {
+            grid-column: 2;
+            grid-row: 1;
+            min-width: 0;
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 2px;
+        }
+        .agent-row-delta {
+            grid-column: 3;
+            grid-row: 1;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            white-space: nowrap;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .agent-row-delta.neg {
+            background: rgba(244, 63, 94, 0.12);
+            color: #f43f5e;
+            border-color: rgba(244, 63, 94, 0.2);
+        }
+        .agent-row-note {
+            grid-column: 2 / 4;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #cbd5e1;
+            margin-top: 4px;
         }
 
-        canvas {
-            width: 100%;
-            height: 580px;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            background:
-                linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px),
-                #0b1525;
-            background-size: 20px 20px;
+        /* Council Verdict & Scores styles */
+        .council-verdict {
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(16, 185, 129, 0.04));
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            margin-bottom: 12px;
         }
-
-        .legend {
-            color: var(--muted);
+        .council-verdict-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 6px;
+        }
+        .council-verdict-pick {
+            font-size: 15px;
+            font-weight: 800;
+            color: #f8fafc;
+            line-height: 1.3;
+        }
+        .council-score-flow {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 6px 10px;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #94a3b8;
+        }
+        .council-score-flow strong {
+            color: #f8fafc;
+            font-size: 13px;
+        }
+        .council-score-flow .delta-pill {
+            display: inline-block;
+            padding: 2px 7px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 800;
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+        .council-score-flow .delta-pill.neg {
+            background: rgba(244, 63, 94, 0.12);
+            color: #f43f5e;
+            border-color: rgba(244, 63, 94, 0.2);
+        }
+        .council-summary {
             font-size: 12px;
             line-height: 1.6;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
+            color: #cbd5e1;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.35);
+        }
+        .council-agents-title {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: #94a3b8;
+            margin-bottom: 10px;
         }
 
-        .card {
-            border: 1px solid var(--border);
-            background: rgba(22, 36, 58, 0.76);
-            border-radius: 14px;
-            padding: 12px;
-        }
-
-        .card + .card {
-            margin-top: 10px;
-        }
-
-        .card-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-            gap: 10px;
-        }
-
-        .card-title {
-            font-weight: 800;
-            font-size: 14px;
-        }
-
-        .meta {
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.5;
-            margin-top: 6px;
-        }
-
-        .pill {
-            display: inline-block;
-            padding: 4px 8px;
-            border-radius: 999px;
-            font-size: 11px;
-            color: #eaf7ff;
-            background: rgba(56, 189, 248, 0.16);
-            border: 1px solid rgba(56, 189, 248, 0.28);
-            white-space: nowrap;
-        }
-
-        .pill.red {
-            background: rgba(239, 68, 68, 0.18);
-            border-color: rgba(239, 68, 68, 0.32);
-        }
-
-        .pill.green {
-            background: rgba(34, 197, 94, 0.18);
-            border-color: rgba(34, 197, 94, 0.32);
-        }
-
-        .pill.warn {
-            background: rgba(245, 158, 11, 0.18);
-            border-color: rgba(245, 158, 11, 0.32);
-        }
-
-        .bar {
-            height: 8px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.08);
-            overflow: hidden;
-            margin-top: 8px;
-        }
-
-        .bar > span {
-            display: block;
-            height: 100%;
-            border-radius: inherit;
-            background: linear-gradient(90deg, var(--accent-2), var(--accent));
-        }
-
-        .scroll {
-            max-height: 340px;
-            overflow: auto;
-            padding-right: 4px;
-        }
-
+        /* Allocation Details & Verification List styling */
         .alloc-section {
-            margin-top: 14px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(51, 65, 85, 0.35);
         }
-
         .alloc-section:first-child {
             margin-top: 0;
             padding-top: 0;
             border-top: none;
         }
-
         .alloc-section-title {
             font-size: 10px;
             font-weight: 700;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: #94a3b8;
             margin-bottom: 10px;
         }
-
         .alloc-trace-meta {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 6px 8px;
-            margin-bottom: 10px;
+            gap: 6px 12px;
+            margin-bottom: 12px;
             font-size: 11px;
-            color: var(--muted);
+            color: #94a3b8;
         }
-
         .alloc-trace-id {
-            font-weight: 700;
-            color: var(--text);
+            font-weight: 800;
+            color: #f8fafc;
             font-size: 12px;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 2px 7px;
+            border-radius: 6px;
+            border: 1px solid rgba(51, 65, 85, 0.35);
         }
-
         .alloc-verdict {
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.1), rgba(167, 139, 250, 0.06));
+            padding: 14px 16px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.08), rgba(99, 102, 241, 0.04));
             border: 1px solid rgba(56, 189, 248, 0.25);
-            margin-bottom: 10px;
+            margin-bottom: 12px;
         }
-
         .alloc-verdict-label {
             font-size: 10px;
             font-weight: 700;
             letter-spacing: 0.06em;
             text-transform: uppercase;
-            color: var(--muted);
+            color: #94a3b8;
             margin-bottom: 6px;
         }
-
         .alloc-verdict-pick {
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 16px;
+            font-weight: 800;
             line-height: 1.35;
-            color: var(--text);
+            color: #f8fafc;
         }
-
         .alloc-verdict-target {
             font-size: 12px;
-            color: var(--muted);
+            color: #94a3b8;
             margin-top: 4px;
         }
-
         .alloc-chips {
             display: flex;
             flex-wrap: wrap;
             gap: 6px;
             margin-top: 10px;
         }
-
         .alloc-chip {
             font-size: 10px;
-            font-weight: 600;
-            padding: 3px 8px;
-            border-radius: 999px;
-            border: 1px solid var(--border);
-            background: rgba(8, 17, 31, 0.6);
-            color: var(--muted);
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            background: rgba(15, 23, 42, 0.6);
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
-
         .alloc-chip.ok {
-            color: var(--accent-2);
-            border-color: rgba(34, 197, 94, 0.35);
-            background: rgba(34, 197, 94, 0.1);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.35);
+            background: rgba(16, 185, 129, 0.1);
         }
-
         .alloc-chip.warn {
-            color: #fcd34d;
+            color: #fbbf24;
             border-color: rgba(245, 158, 11, 0.35);
             background: rgba(245, 158, 11, 0.08);
         }
-
         .alloc-explainer {
             font-size: 12px;
-            line-height: 1.55;
-            color: var(--muted);
-            margin-bottom: 4px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 8px;
         }
 
+        /* Score breakdown Grid styling */
         .score-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
         }
-
         .score {
-            background: rgba(8, 17, 31, 0.55);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 10px;
-            padding: 8px 10px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(51, 65, 85, 0.25);
+            border-radius: 12px;
+            padding: 10px 12px;
+            transition: all 0.2s ease;
         }
-
+        .score:hover {
+            border-color: rgba(99, 102, 241, 0.2);
+            background: rgba(15, 23, 42, 0.5);
+        }
         .score.total {
             grid-column: 1 / -1;
             border-color: rgba(56, 189, 248, 0.35);
             background: rgba(56, 189, 248, 0.08);
         }
-
         .score span {
             display: block;
-            color: var(--muted);
-            font-size: 10px;
+            color: #94a3b8;
+            font-size: 9px;
             text-transform: uppercase;
-            letter-spacing: 0.03em;
+            letter-spacing: 0.05em;
+            font-weight: 700;
         }
-
         .score strong {
             display: block;
             margin-top: 4px;
-            color: var(--accent);
+            color: #38bdf8;
             font-size: 18px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
         }
-
         .score.total strong {
-            font-size: 22px;
+            font-size: 24px;
+            color: #38bdf8;
+            text-shadow: 0 0 12px rgba(56, 189, 248, 0.25);
         }
 
+        /* Verification status lists */
         .verify-list {
             display: flex;
             flex-direction: column;
-            gap: 5px;
+            gap: 6px;
         }
-
         .verify-item {
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1.4;
-            padding: 6px 8px;
-            border-radius: 8px;
-            background: rgba(8, 17, 31, 0.45);
-            border: 1px solid var(--border);
-            color: var(--muted);
+            padding: 8px 10px;
+            border-radius: 10px;
+            background: rgba(15, 23, 42, 0.3);
+            border: 1px solid rgba(51, 65, 85, 0.25);
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
-
         .verify-item.pass::before {
-            content: "✓ ";
-            color: var(--accent-2);
-            font-weight: 700;
+            content: "✓";
+            color: #10b981;
+            font-weight: 800;
+            font-size: 14px;
         }
-
         .verify-item.fail::before {
-            content: "✗ ";
-            color: var(--danger);
-            font-weight: 700;
+            content: "✗";
+            color: #f43f5e;
+            font-weight: 800;
+            font-size: 14px;
         }
 
+        /* Graph evidence layout bubbles */
         .graph-path {
             font-size: 12px;
             line-height: 1.5;
-            color: var(--text);
-            padding: 10px 12px;
-            border-radius: 10px;
-            background: rgba(8, 17, 31, 0.55);
-            border: 1px solid var(--border);
-            margin-bottom: 8px;
+            color: #f8fafc;
+            padding: 12px 14px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.25);
+            margin-bottom: 10px;
         }
-
         .graph-path-steps {
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: 4px 2px;
-            margin-top: 6px;
+            gap: 4px 6px;
+            margin-top: 8px;
         }
-
         .graph-path-step {
             font-size: 11px;
-            padding: 2px 6px;
-            border-radius: 6px;
-            background: rgba(56, 189, 248, 0.1);
-            border: 1px solid rgba(56, 189, 248, 0.2);
-        }
-
-        .graph-path-arrow {
-            color: var(--muted);
-            font-size: 10px;
-        }
-
-        .graph-detail {
-            font-size: 11px;
-            line-height: 1.5;
-            color: var(--muted);
-            margin-bottom: 6px;
-        }
-
-        .graph-detail strong {
-            color: var(--text);
             font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 6px;
+            background: rgba(56, 189, 248, 0.12);
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            color: #38bdf8;
         }
-
-        .graph-callout {
-            padding: 8px 10px;
-            border-radius: 8px;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-            background: rgba(245, 158, 11, 0.08);
-            font-size: 11px;
-            line-height: 1.45;
-            color: #fde68a;
+        .graph-path-arrow {
+            color: #64748b;
+            font-size: 12px;
+            font-weight: 800;
+        }
+        .graph-detail {
+            font-size: 12px;
+            line-height: 1.5;
+            color: #cbd5e1;
             margin-bottom: 8px;
         }
-
+        .graph-detail strong {
+            color: #f8fafc;
+            font-weight: 700;
+        }
+        .graph-callout {
+            padding: 10px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+            background: rgba(245, 158, 11, 0.08);
+            font-size: 11px;
+            line-height: 1.5;
+            color: #fde68a;
+            margin-bottom: 10px;
+        }
         .graph-link {
             display: inline-block;
-            margin-top: 4px;
+            margin-top: 6px;
             font-size: 11px;
-            font-weight: 600;
-            color: var(--accent);
+            font-weight: 700;
+            color: #38bdf8;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            transition: all 0.2s ease;
+        }
+        .graph-link:hover {
+            color: #60a5fa;
+            transform: translateX(2px);
         }
 
+        /* Alternatives table rules */
         .alt-list {
             display: flex;
             flex-direction: column;
             gap: 8px;
         }
-
         .alt-row {
-            padding: 8px 10px;
-            border-radius: 10px;
-            background: rgba(8, 17, 31, 0.45);
-            border: 1px solid var(--border);
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(51, 65, 85, 0.25);
+            transition: all 0.2s ease;
         }
-
+        .alt-row:hover {
+            border-color: rgba(99, 102, 241, 0.25);
+            background: rgba(15, 23, 42, 0.55);
+        }
         .alt-row-head {
             display: flex;
             justify-content: space-between;
@@ -579,386 +464,335 @@
             gap: 8px;
             margin-bottom: 4px;
         }
-
         .alt-name {
             font-size: 12px;
             font-weight: 700;
-            color: var(--text);
+            color: #f8fafc;
         }
-
         .alt-score {
             font-size: 11px;
-            font-weight: 700;
-            color: var(--muted);
+            font-weight: 800;
+            color: #38bdf8;
             padding: 2px 7px;
             border-radius: 6px;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px solid rgba(56, 189, 248, 0.2);
         }
-
         .alt-reason {
             font-size: 11px;
-            line-height: 1.45;
-            color: var(--muted);
+            line-height: 1.5;
+            color: #cbd5e1;
         }
-
         .alt-more {
             font-size: 11px;
-            color: var(--muted);
+            color: #64748b;
             font-style: italic;
-        }
-
-        .council-verdict {
-            padding: 12px 14px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(56, 189, 248, 0.12), rgba(34, 197, 94, 0.06));
-            border: 1px solid rgba(56, 189, 248, 0.28);
-            margin-bottom: 12px;
-        }
-
-        .council-verdict-label {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 6px;
-        }
-
-        .council-verdict-pick {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--text);
-            line-height: 1.3;
-        }
-
-        .council-score-flow {
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 6px 8px;
-            margin-top: 8px;
-            font-size: 12px;
-            color: var(--muted);
-        }
-
-        .council-score-flow strong {
-            color: var(--text);
-            font-size: 13px;
-        }
-
-        .council-score-flow .delta-pill {
-            display: inline-block;
-            padding: 2px 8px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            background: rgba(34, 197, 94, 0.15);
-            color: var(--accent-2);
-            border: 1px solid rgba(34, 197, 94, 0.35);
-        }
-
-        .council-score-flow .delta-pill.neg {
-            background: rgba(239, 68, 68, 0.12);
-            color: #fca5a5;
-            border-color: rgba(239, 68, 68, 0.35);
-        }
-
-        .council-summary {
-            font-size: 12px;
-            line-height: 1.55;
-            color: var(--muted);
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .council-agents-title {
-            font-size: 10px;
-            font-weight: 700;
-            letter-spacing: 0.06em;
-            text-transform: uppercase;
-            color: var(--muted);
-            margin-bottom: 8px;
-        }
-
-        .council-agents {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .agent-row {
-            display: grid;
-            grid-template-columns: 4px 1fr auto;
-            grid-template-rows: auto auto;
-            gap: 4px 10px;
-            align-items: start;
-            padding: 10px 12px 10px 0;
-            border-radius: 10px;
-            background: rgba(8, 17, 31, 0.5);
-            border: 1px solid var(--border);
-            overflow: hidden;
-        }
-
-        .agent-row-stripe {
-            grid-column: 1;
-            grid-row: 1 / -1;
-            align-self: stretch;
-            border-radius: 10px 0 0 10px;
-        }
-
-        .agent-row.medical .agent-row-stripe { background: #fb7185; }
-        .agent-row.logistics .agent-row-stripe { background: #fbbf24; }
-        .agent-row.route .agent-row-stripe { background: #a78bfa; }
-
-        .agent-row-name {
-            font-weight: 700;
-            font-size: 12px;
-            color: var(--text);
-        }
-
-        .agent-row.medical .agent-row-name { color: #fda4af; }
-        .agent-row.logistics .agent-row-name { color: #fcd34d; }
-        .agent-row.route .agent-row-name { color: #c4b5fd; }
-
-        .agent-row-role {
-            font-size: 10px;
-            color: var(--muted);
-            font-weight: 500;
-        }
-
-        .agent-row-head {
-            grid-column: 2;
-            grid-row: 1;
-            min-width: 0;
-        }
-
-        .agent-row-delta {
-            grid-column: 3;
-            grid-row: 1;
-            font-size: 12px;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 8px;
-            background: rgba(34, 197, 94, 0.12);
-            color: var(--accent-2);
-            white-space: nowrap;
-        }
-
-        .agent-row-delta.neg {
-            background: rgba(239, 68, 68, 0.12);
-            color: #fca5a5;
-        }
-
-        .agent-row-note {
-            grid-column: 2 / 4;
-            font-size: 11px;
-            line-height: 1.45;
-            color: var(--muted);
+            text-align: center;
             margin-top: 4px;
         }
 
-        .council-compact .agent-row {
-            padding: 8px 8px 8px 0;
+        /* Lists & Card Containers styles */
+        .card {
+            border: 1px solid rgba(51, 65, 85, 0.25);
+            background: rgba(15, 23, 42, 0.4);
+            border-radius: 14px;
+            padding: 12px 14px;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        .council-compact .agent-row-note {
-            margin-top: 2px;
+        .card:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            background: rgba(15, 23, 42, 0.6);
+            transform: scale(1.01);
         }
-
-        .toggle-row {
+        .card + .card {
+            margin-top: 10px;
+        }
+        .card-top {
             display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 10px;
-            font-size: 0.85rem;
-            color: var(--muted);
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 13.5px;
+            color: #f8fafc;
+        }
+        .meta {
+            color: #94a3b8;
+            font-size: 11px;
+            line-height: 1.5;
+            margin-top: 4px;
         }
 
-        .toggle-row input { width: auto; margin: 0; }
-
-        .whatif-row {
-            display: grid;
-            grid-template-columns: 92px repeat(4, 1fr);
-            gap: 6px;
+        /* Status Pills & Badges styles */
+        .pill {
+            display: inline-flex;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 12px;
-        }
-
-        .whatif-row:first-child {
-            color: var(--muted);
+            padding: 2.5px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.04em;
-            font-size: 10px;
+            white-space: nowrap;
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+        }
+        .pill.red {
+            background: rgba(244, 63, 94, 0.12);
+            color: #f43f5e;
+            border-color: rgba(244, 63, 94, 0.25);
+        }
+        .pill.green {
+            background: rgba(16, 185, 129, 0.12);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.25);
+        }
+        .pill.warn {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.25);
+        }
+
+        /* Battery/Fuel Indicator Bars styles */
+        .bar {
+            height: 6px;
+            border-radius: 9999px;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(51, 65, 85, 0.35);
+            overflow: hidden;
+            margin-top: 8px;
+        }
+        .bar > span {
+            display: block;
+            height: 100%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, #10b981, #38bdf8);
+        }
+
+        /* Strategy Compare Matrix Grid styling */
+        .whatif-row {
+            display: grid;
+            grid-template-columns: 100px repeat(4, 1fr);
+            gap: 8px;
+            align-items: center;
+            padding: 9px 12px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.2);
+            font-size: 11.5px;
+            color: #cbd5e1;
+            transition: background 0.15s ease;
+        }
+        .whatif-row:hover:not(:first-child) {
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .whatif-row:first-child {
+            background: rgba(15, 23, 42, 0.6);
+            border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+            color: #94a3b8;
+            font-family: 'Outfit', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            font-size: 9.5px;
             font-weight: 800;
+            padding-top: 10px;
+            padding-bottom: 10px;
+            border-radius: 8px 8px 0 0;
+        }
+        .whatif-row:last-child {
+            border-bottom: none;
         }
 
-        .briefing {
-            white-space: pre-wrap;
-            color: #dceeff;
-            line-height: 1.5;
-            font-size: 12px;
-        }
-
+        /* Fallback informational Notes styles */
         .note {
-            color: var(--muted);
-            font-size: 12px;
-            line-height: 1.5;
-        }
-
-        @media (max-width: 1300px) {
-            main {
-                grid-template-columns: 1fr;
-            }
-
-            .stats {
-                min-width: 0;
-            }
-
-            .header-row {
-                align-items: flex-start;
-                flex-direction: column;
-            }
+            color: #94a3b8;
+            font-size: 11.5px;
+            line-height: 1.6;
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-row">
-            <div class="brand">ResQ<span>Flow</span></div>
-            <nav class="nav-links">
-                <a href="index.html" class="active">Operations demo</a>
-                <a href="#" id="openGraphNav">Knowledge graph</a>
-            </nav>
-            <div class="stats">
-                <div class="stat"><span>Open Incidents</span><strong id="statOpen">0</strong></div>
-                <div class="stat"><span>Resources Free</span><strong id="statFree">0</strong></div>
-                <div class="stat"><span>Resolved</span><strong id="statResolved">0</strong></div>
-                <div class="stat"><span>Avg Score</span><strong id="statScore">0</strong></div>
+    <header class="sticky top-0 z-30 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-6 py-4 shadow-lg shadow-black/10">
+        <div class="max-w-[1800px] mx-auto flex flex-col lg:flex-row gap-4 items-center justify-between">
+            <div class="flex items-center gap-6">
+                <div class="brand text-2xl font-display font-black tracking-tight text-white flex items-center gap-1.5 hover:opacity-90 transition-opacity">
+                    <span class="bg-gradient-to-r from-blue-500 to-indigo-500 text-transparent bg-clip-text">ResQ</span><span>Flow</span>
+                </div>
+                <nav class="nav-links flex items-center gap-1.5">
+                    <a href="index.html" class="active text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-white hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200">Operations demo</a>
+                    <a href="#" id="openGraphNav" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 hover:bg-slate-900/50 transition-all duration-200">Knowledge graph</a>
+                </nav>
+            </div>
+            <div class="stats grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto min-w-full lg:min-w-[480px]">
+                <div class="stat border border-slate-800/80 bg-slate-900/30 backdrop-blur-sm rounded-xl px-4 py-2 hover:border-slate-700/60 transition-all duration-300 shadow-md">
+                    <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Open Incidents</span>
+                    <strong class="block mt-1 text-xl font-display font-bold text-rose-500" id="statOpen">0</strong>
+                </div>
+                <div class="stat border border-slate-800/80 bg-slate-900/30 backdrop-blur-sm rounded-xl px-4 py-2 hover:border-slate-700/60 transition-all duration-300 shadow-md">
+                    <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Resources Free</span>
+                    <strong class="block mt-1 text-xl font-display font-bold text-emerald-400" id="statFree">0</strong>
+                </div>
+                <div class="stat border border-slate-800/80 bg-slate-900/30 backdrop-blur-sm rounded-xl px-4 py-2 hover:border-slate-700/60 transition-all duration-300 shadow-md">
+                    <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Resolved</span>
+                    <strong class="block mt-1 text-xl font-display font-bold text-indigo-400" id="statResolved">0</strong>
+                </div>
+                <div class="stat border border-slate-800/80 bg-slate-900/30 backdrop-blur-sm rounded-xl px-4 py-2 hover:border-slate-700/60 transition-all duration-300 shadow-md">
+                    <span class="block text-[10px] text-slate-500 font-bold uppercase tracking-wider">Avg Score</span>
+                    <strong class="block mt-1 text-xl font-display font-bold text-sky-400" id="statScore">0</strong>
+                </div>
             </div>
         </div>
     </header>
 
-    <main>
-        <section class="stack">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">Controls</div>
+    <main class="max-w-[1800px] mx-auto p-6 grid grid-cols-1 lg:grid-cols-[330px_1fr] xl:grid-cols-[330px_1fr_400px] gap-6 items-start">
+        <!-- COLUMN 1 -->
+        <section class="stack flex flex-col gap-6 w-full">
+            <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="sliders-horizontal" class="w-4 h-4 text-blue-500"></i>Controls
+                    </div>
                 </div>
-                <div class="panel-body controls">
-                    <button class="green" id="startDemoBtn">Start scenario</button>
-                    <button class="secondary" id="toggleRunBtn">Pause</button>
-                    <button class="secondary" id="addIncidentBtn">Add incident</button>
-                    <button class="secondary" id="resetBtn">Reset</button>
-                    <label>
-                        Strategy
-                        <select id="strategySelect">
+                <div class="panel-body p-5 flex flex-col gap-4">
+                    <button class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm tracking-wide rounded-xl px-4 py-3 shadow-lg active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border-t border-emerald-400/20" id="startDemoBtn">Start scenario</button>
+                    <button class="w-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 hover:text-white font-bold text-sm rounded-xl px-4 py-3 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border border-slate-700/50" id="toggleRunBtn">Pause</button>
+                    <button class="w-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 hover:text-white font-bold text-sm rounded-xl px-4 py-3 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border border-slate-700/50" id="addIncidentBtn">Add incident</button>
+                    <button class="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-sm tracking-wide rounded-xl px-4 py-3 shadow-lg active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border-t border-rose-400/20" id="resetBtn">Reset</button>
+                    
+                    <div class="flex flex-col gap-1.5 mt-2">
+                        <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Strategy</label>
+                        <select id="strategySelect" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700/80 focus:border-blue-500/50 rounded-xl px-4 py-2.5 text-slate-200 font-medium text-sm transition-all focus:outline-none focus:ring-1 focus:ring-blue-500/20 cursor-pointer">
                             <option value="balanced">Balanced</option>
                             <option value="urgency">Urgency First</option>
                             <option value="nearest">Nearest First</option>
                             <option value="risk">Risk Aware</option>
                             <option value="saving">Resource Saving</option>
                         </select>
-                    </label>
-                    <label class="toggle-row">
-                        <input type="checkbox" id="agentCouncilToggle" checked>
-                        Agent council (graph-grounded)
-                    </label>
-                    <label>
-                        Speed
-                        <select id="speedSelect">
+                    </div>
+
+                    <div class="flex items-center justify-between border-t border-slate-850 pt-4 mt-2">
+                        <label for="agentCouncilToggle" class="text-slate-400 text-xs font-semibold cursor-pointer">Agent council (graph-grounded)</label>
+                        <input type="checkbox" id="agentCouncilToggle" checked class="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-blue-500/20 cursor-pointer">
+                    </div>
+
+                    <div class="flex flex-col gap-1.5 mt-2">
+                        <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Speed</label>
+                        <select id="speedSelect" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700/80 focus:border-blue-500/50 rounded-xl px-4 py-2.5 text-slate-200 font-medium text-sm transition-all focus:outline-none focus:ring-1 focus:ring-blue-500/20 cursor-pointer">
                             <option value="0.35" selected>Demo</option>
                             <option value="0.6">Slow</option>
                             <option value="1">Normal</option>
                             <option value="1.6">Fast</option>
                         </select>
-                    </label>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">Resources</div>
-                    <span class="pill" id="resourceCount">0 active</span>
-                </div>
-                <div class="panel-body scroll" id="resourceList"></div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">Agent council</div>
-                    <span class="pill" id="councilSourceBadge">—</span>
-                </div>
-                <div class="panel-body scroll" id="councilPanel" style="max-height:420px;">
-                    <div class="note">Turn on <strong>Agent council</strong> in Controls. After each allocation, three specialists review the top pick using the knowledge graph.</div>
-                </div>
-            </div>
-        </section>
-
-        <section class="panel">
-            <div class="panel-header">
-                <div class="panel-title">Operations map</div>
-                <span class="pill" id="strategyBadge">Balanced</span>
-            </div>
-            <div class="canvas-wrap">
-                <canvas id="simCanvas" width="960" height="580"></canvas>
-                <div class="legend">
-                    <span><span style="color: #22c55e;">■</span> Base camp</span>
-                    <span><span style="color: #38bdf8;">●</span> Available resource</span>
-                    <span><span style="color: #f59e0b;">●</span> Assigned resource</span>
-                    <span><span style="color: #ef4444;">▲</span> Critical incident</span>
-                    <span><span style="color: #a78bfa;">■</span> Risk zone</span>
-                    <span><span style="color: #dceeff;">-</span> Planned route</span>
-                </div>
-            </div>
-        </section>
-
-        <section class="stack">
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">Pending Incidents</div>
-                </div>
-                <div class="panel-body scroll" id="incidentList"></div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">Latest allocation</div>
-                    <button class="secondary" id="openGraphBtn" type="button" style="width:auto;padding:7px 10px;font-size:0.8rem;">Graph view</button>
-                </div>
-                <div class="panel-body scroll" id="decisionPanel" style="max-height:520px;">
-                    <div class="note">Run a scenario to see the latest assignment, scores, graph evidence, and alternatives.</div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">Strategy compare</div>
-                    <button class="secondary" id="previewBtn" style="width:auto;padding:7px 10px;">Preview</button>
-                </div>
-                <div class="panel-body" id="whatIfPanel">
-                    <div class="note">Preview pending incidents across strategies.</div>
-                </div>
-            </div>
-
-            <div class="panel">
-                <div class="panel-header">
-                    <div class="panel-title">Summary</div>
-                    <div style="display:flex;gap:8px;flex-shrink:0;">
-                        <button class="secondary" id="briefingBtn" type="button" style="width:auto;padding:7px 10px;">Briefing</button>
-                        <button class="secondary" id="reportBtn" type="button" style="width:auto;padding:7px 10px;">Report</button>
                     </div>
                 </div>
-                <div class="panel-body">
-                    <div class="note" id="apiStatus" style="margin-bottom:8px;">Backend: checking…</div>
-                    <div class="briefing" id="briefingText">Tap Briefing or Report.</div>
-                    <div class="briefing" id="reportText" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);color:var(--muted);"></div>
+            </div>
+
+            <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i>Resources
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-800/60 text-slate-300" id="resourceCount">0 active</span>
+                </div>
+                <div class="panel-body p-5 scroll max-h-[340px] overflow-y-auto pr-1 flex flex-col gap-3" id="resourceList"></div>
+            </div>
+
+            <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-indigo-400"></i>Agent council
+                    </div>
+                    <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-800/60 text-slate-300" id="councilSourceBadge">—</span>
+                </div>
+                <div class="panel-body p-5 scroll max-h-[380px] overflow-y-auto pr-1 flex flex-col gap-3" id="councilPanel">
+                    <div class="text-xs text-slate-400 leading-relaxed">Turn on <strong>Agent council</strong> in Controls. After each allocation, three specialists review the top pick using the knowledge graph.</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLUMN 2 (CENTER CANVAS) -->
+        <section class="panel lg:col-span-1 border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-2xl shadow-black/60 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+            <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                    <i data-lucide="map" class="w-4 h-4 text-sky-400"></i>Operations map
+                </div>
+                <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400" id="strategyBadge">Balanced</span>
+            </div>
+            <div class="canvas-wrap p-5 flex flex-col gap-4">
+                <canvas id="simCanvas" width="960" height="580" class="w-full border border-slate-800 rounded-xl bg-slate-950 shadow-inner"></canvas>
+                <div class="legend flex flex-wrap gap-x-5 gap-y-2 border-t border-slate-850 pt-4 text-xs font-semibold text-slate-400">
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block shadow-sm"></span> Base camp</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400 inline-block shadow-sm"></span> Available resource</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block shadow-sm"></span> Assigned resource</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-rose-500 inline-block shadow-sm rotate-45"></span> Critical incident</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-violet-500 inline-block shadow-sm"></span> Risk zone</span>
+                    <span class="flex items-center gap-1.5"><span class="w-4 border-t border-dashed border-slate-300 inline-block"></span> Planned route</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- COLUMN 3 -->
+        <section class="stack flex flex-col gap-6 w-full lg:col-span-2 xl:col-span-1">
+            <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-500"></i>Pending Incidents
+                    </div>
+                </div>
+                <div class="panel-body p-5 scroll max-h-[220px] overflow-y-auto pr-1 flex flex-col gap-3" id="incidentList"></div>
+            </div>
+
+            <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="target" class="w-4 h-4 text-indigo-400"></i>Latest allocation
+                    </div>
+                    <button class="text-xs font-semibold px-2.5 py-1 rounded bg-slate-800/80 text-slate-300 border border-slate-750 hover:border-slate-600 hover:text-white transition-all cursor-pointer flex items-center gap-1" id="openGraphBtn" type="button">
+                        <i data-lucide="network" class="w-3.5 h-3.5 text-blue-400"></i>Graph view
+                    </button>
+                </div>
+                <div class="panel-body p-5 scroll max-h-[460px] overflow-y-auto pr-1" id="decisionPanel">
+                    <div class="text-xs text-slate-400 leading-relaxed">Run a scenario to see the latest assignment, scores, graph evidence, and alternatives.</div>
+                </div>
+            </div>
+
+            <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="git-compare" class="w-4 h-4 text-amber-400"></i>Strategy compare
+                    </div>
+                    <button class="text-xs font-semibold px-2.5 py-1 rounded bg-slate-800/80 text-slate-300 border border-slate-750 hover:border-slate-600 hover:text-white transition-all cursor-pointer flex items-center gap-1" id="previewBtn">
+                        <i data-lucide="scan-eye" class="w-3.5 h-3.5 text-amber-400"></i>Preview
+                    </button>
+                </div>
+                <div class="panel-body p-5" id="whatIfPanel">
+                    <div class="text-xs text-slate-400 leading-relaxed">Preview pending incidents across strategies.</div>
+                </div>
+            </div>
+
+            <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
+                    <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="file-text" class="w-4 h-4 text-sky-400"></i>Summary
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0">
+                        <button class="text-xs font-semibold px-2.5 py-1.5 rounded bg-slate-800/80 text-slate-300 border border-slate-750 hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-white transition-all cursor-pointer" id="briefingBtn" type="button">Briefing</button>
+                        <button class="text-xs font-semibold px-2.5 py-1.5 rounded bg-slate-800/80 text-slate-300 border border-slate-750 hover:border-blue-500/30 hover:bg-blue-500/10 hover:text-white transition-all cursor-pointer" id="reportBtn" type="button">Report</button>
+                    </div>
+                </div>
+                <div class="panel-body p-5 flex flex-col gap-3">
+                    <div class="text-xs font-bold text-slate-400 bg-slate-950/60 border border-slate-850 px-3 py-2 rounded-xl" id="apiStatus">Backend: checking…</div>
+                    <div class="briefing text-xs leading-relaxed text-slate-300 whitespace-pre-wrap" id="briefingText">Tap Briefing or Report.</div>
+                    <div class="briefing text-xs leading-relaxed text-slate-400 whitespace-pre-wrap border-t border-slate-800/85 pt-3" id="reportText"></div>
                 </div>
             </div>
         </section>
     </main>
+
+    <!-- Lucide Icons initialization script -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 
     <script>
         const GRID_SIZE = 50;
@@ -2339,6 +2173,7 @@
             resetDemo(false);
         }
         checkBackendHealth();
+        lucide.createIcons();
         loop();
     </script>
 </body>
