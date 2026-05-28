@@ -184,7 +184,7 @@ async def run_llm_council(
     candidates: list[CandidateBid],
     subgraph: dict,
 ) -> dict[str, list[AgentOpinion]] | None:
-    if not llm_configured() or LLM_PROVIDER not in ("openai", "aicredits", "openrouter"):
+    if not llm_configured() or LLM_PROVIDER not in ("openai", "aicredits", "openrouter", "gemini"):
         return None
 
     incident = next((i for i in snapshot.incidents if str(i.id) == str(incident_id)), None)

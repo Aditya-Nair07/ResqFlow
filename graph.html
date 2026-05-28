@@ -5,314 +5,113 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ResQFlow — Knowledge Graph</title>
     <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+    <!-- Tailwind CSS v3 CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            bg: '#030712',
+                            panel: 'rgba(15, 23, 42, 0.45)',
+                            border: 'rgba(51, 65, 85, 0.35)',
+                            accent: '#38bdf8',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Outfit & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --bg: #08111f;
-            --panel: #101c2f;
-            --panel-2: #0d1828;
-            --border: #263a57;
-            --text: #eef6ff;
-            --muted: #94a3b8;
-            --accent: #38bdf8;
-            --accent-2: #22c55e;
-            --warn: #f59e0b;
-            --danger: #ef4444;
-            --purple: #a78bfa;
-            --glow: #fde047;
-        }
-        * { box-sizing: border-box; }
         body {
-            margin: 0;
-            font-family: Inter, ui-sans-serif, system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-        header {
-            padding: 14px 20px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(8, 17, 31, 0.95);
-            flex-shrink: 0;
-        }
-        .header-row {
-            max-width: 1600px;
-            margin: 0 auto;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-        }
-        .brand { font-size: 1.15rem; font-weight: 800; letter-spacing: -0.03em; }
-        .brand span { color: var(--accent); }
-        .brand-sub { font-size: 0.8rem; color: var(--muted); font-weight: 500; margin-left: 8px; }
-        .nav-links { display: flex; gap: 6px; }
-        .nav-links a {
-            color: var(--muted);
-            text-decoration: none;
-            padding: 7px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            font-size: 0.85rem;
-        }
-        .nav-links a.active, .nav-links a:hover {
-            color: var(--text);
-            border-color: var(--accent);
-            background: rgba(56, 189, 248, 0.1);
+            background-color: #030712;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(56, 189, 248, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(99, 102, 241, 0.06) 0%, transparent 40%);
+            background-attachment: fixed;
+            font-family: 'Inter', sans-serif;
         }
 
-        .toolbar {
-            max-width: 1600px;
-            margin: 0 auto;
-            width: 100%;
-            padding: 10px 20px;
-            display: flex;
-            flex-wrap: wrap;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 1px solid var(--border);
-            background: var(--panel-2);
-        }
-        .status-pill {
-            padding: 5px 10px;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            border: 1px solid var(--border);
-            white-space: nowrap;
-        }
-        .status-pill.ok { border-color: var(--accent-2); color: var(--accent-2); }
-        .status-pill.err { border-color: var(--danger); color: var(--danger); }
-
-        .view-modes {
-            display: flex;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 3px;
-            gap: 2px;
-        }
-        .view-modes button {
-            border: none;
-            background: transparent;
-            color: var(--muted);
-            padding: 6px 12px;
-            border-radius: 7px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            margin: 0;
-            width: auto;
-        }
-        .view-modes button.active {
-            background: rgba(56, 189, 248, 0.2);
-            color: var(--text);
-            font-weight: 600;
-        }
-
-        .toolbar-field {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .toolbar-label {
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            color: var(--muted);
-            line-height: 1;
-        }
-        .toolbar select {
-            padding: 7px 32px 7px 10px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background-color: var(--bg);
-            color: var(--text);
-            font-size: 0.82rem;
-            min-width: 168px;
-            max-width: 220px;
-            margin: 0;
-            cursor: pointer;
-            -webkit-appearance: menulist;
-            appearance: menulist;
-        }
-        .toolbar select option {
-            background-color: var(--panel);
-            color: var(--text);
-        }
-        .toolbar-btn {
-            padding: 7px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--text);
-            font-size: 0.82rem;
-            cursor: pointer;
-            margin: 0;
-            width: auto;
-        }
-        .toolbar-btn.primary {
-            background: linear-gradient(135deg, #0ea5e9, #16a34a);
-            border: none;
-            font-weight: 600;
-        }
-        .toolbar-spacer { flex: 1; min-width: 8px; }
-
-        .workspace {
-            flex: 1;
-            max-width: 1600px;
-            margin: 0 auto;
-            width: 100%;
-            padding: 14px 20px 20px;
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 14px;
-            min-height: 0;
-        }
-        @media (max-width: 1000px) {
-            .workspace { grid-template-columns: 1fr; }
-        }
-
-        .graph-panel {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            display: flex;
-            flex-direction: column;
-            min-height: 520px;
-            overflow: hidden;
-        }
-        .graph-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            border-bottom: 1px solid var(--border);
-            flex-wrap: wrap;
-            gap: 8px;
-        }
-        .graph-head h2 {
-            margin: 0;
-            font-size: 0.95rem;
-            font-weight: 700;
-        }
-        .graph-hint { font-size: 0.75rem; color: var(--muted); }
-        .edge-bar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            padding: 8px 14px;
-            border-bottom: 1px solid var(--border);
-            background: rgba(8, 17, 31, 0.5);
-        }
+        /* Dynamically rendered components classes styling */
         .edge-chip {
-            font-size: 0.7rem;
-            padding: 3px 8px;
-            border-radius: 6px;
-            border: 1px solid var(--border);
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 8px;
+            border: 1px solid rgba(51, 65, 85, 0.5);
+            background: rgba(15, 23, 42, 0.5);
             cursor: pointer;
             user-select: none;
-            color: var(--muted);
+            color: #94a3b8;
+            font-weight: 600;
+            transition: all 0.2s ease;
         }
-        .edge-chip.on { color: var(--text); font-weight: 500; }
-        .edge-chip.off { opacity: 0.35; }
-        .edge-chip[data-type="CAN_REACH"].on { border-color: #22c55e; background: rgba(34,197,94,0.12); }
-        .edge-chip[data-type="BLOCKED_BY"].on { border-color: #ef4444; background: rgba(239,68,68,0.1); }
-        .edge-chip[data-type="COMPETES_FOR"].on { border-color: #f59e0b; background: rgba(245,158,11,0.1); }
-        .edge-chip[data-type="SUPPORTS"].on { border-color: #2dd4bf; background: rgba(45,212,191,0.1); }
-        .edge-chip[data-type="DISTANCE"].on { border-color: #64748b; background: rgba(100,116,139,0.15); }
-
-        #graphCanvas {
-            width: 100%;
-            height: 500px;
-            min-height: 500px;
-            flex: 1 1 500px;
-            position: relative;
-            background: radial-gradient(ellipse at 30% 20%, rgba(56,189,248,0.06), transparent 50%),
-                        radial-gradient(ellipse at 70% 80%, rgba(167,139,250,0.05), transparent 45%),
-                        #0a1424;
+        .edge-chip.on {
+            color: #f8fafc;
+            transform: scale(1.02);
         }
-        #networkMount {
-            width: 100%;
-            height: 100%;
+        .edge-chip.off {
+            opacity: 0.35;
         }
-        .graph-foot {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 14px;
-            border-top: 1px solid var(--border);
-            font-size: 0.72rem;
-            color: var(--muted);
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .legend-inline { display: flex; gap: 12px; flex-wrap: wrap; }
-        .legend-inline span::before {
-            content: "";
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            margin-right: 4px;
-            vertical-align: middle;
-            border-radius: 50%;
-        }
-        .legend-inline .inc::before { background: var(--danger); }
-        .legend-inline .res::before { background: var(--accent); border-radius: 1px; }
-        .legend-inline .base::before { background: var(--accent-2); }
-        .legend-inline .risk::before { background: var(--purple); }
-
-        .side-panel {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            min-height: 0;
-        }
-        .card {
-            background: var(--panel);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            overflow: hidden;
-        }
-        .card-title {
-            padding: 10px 14px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            border-bottom: 1px solid var(--border);
-        }
-        .card-body { padding: 12px 14px; }
+        .edge-chip[data-type="CAN_REACH"].on { border-color: #10b981; background: rgba(16, 185, 129, 0.12); color: #34d399; }
+        .edge-chip[data-type="BLOCKED_BY"].on { border-color: #f43f5e; background: rgba(244, 63, 94, 0.1); color: #f43f5e; }
+        .edge-chip[data-type="COMPETES_FOR"].on { border-color: #fbbf24; background: rgba(245, 158, 11, 0.1); color: #fbbf24; }
+        .edge-chip[data-type="SUPPORTS"].on { border-color: #2dd4bf; background: rgba(45, 212, 191, 0.1); color: #2dd4bf; }
+        .edge-chip[data-type="DISTANCE"].on { border-color: #64748b; background: rgba(100, 116, 139, 0.15); color: #94a3b8; }
 
         .story-path {
             display: flex;
             flex-direction: column;
-            gap: 0;
+            gap: 2px;
         }
         .story-step {
             display: flex;
-            gap: 10px;
-            padding: 8px 0;
+            gap: 12px;
+            padding: 10px 0;
         }
-        .story-step:not(:last-child) { border-bottom: 1px dashed var(--border); }
+        .story-step:not(:last-child) { 
+            border-bottom: 1px dashed rgba(51, 65, 85, 0.35); 
+        }
         .story-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
-            background: var(--glow);
-            margin-top: 5px;
+            background: #fde047;
+            margin-top: 6px;
             flex-shrink: 0;
-            box-shadow: 0 0 8px var(--glow);
+            box-shadow: 0 0 8px #fde047;
         }
-        .story-text { font-size: 0.84rem; line-height: 1.45; }
-        .story-text strong { color: var(--text); display: block; margin-bottom: 2px; }
+        .story-text { 
+            font-size: 13px; 
+            line-height: 1.5; 
+            color: #cbd5e1;
+        }
+        .story-text strong { 
+            color: #f8fafc; 
+            display: block; 
+            margin-bottom: 2px; 
+            font-weight: 700;
+        }
 
         .ripple-card {
-            margin-top: 10px;
-            padding: 10px;
-            border-radius: 10px;
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 12px;
             background: rgba(245, 158, 11, 0.08);
             border: 1px solid rgba(245, 158, 11, 0.25);
-            font-size: 0.8rem;
-            line-height: 1.4;
+            font-size: 12px;
+            line-height: 1.5;
+            color: #cbd5e1;
         }
 
         .stat-chips {
@@ -323,132 +122,224 @@
         .stat-chip {
             padding: 5px 10px;
             border-radius: 8px;
-            background: var(--panel-2);
-            border: 1px solid var(--border);
-            font-size: 0.75rem;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(51, 65, 85, 0.35);
+            font-size: 11px;
+            color: #cbd5e1;
         }
-        .stat-chip strong { color: var(--accent); margin-right: 4px; }
+        .stat-chip strong { 
+            color: #38bdf8; 
+            margin-right: 4px; 
+            font-weight: 700;
+        }
 
-        details.advanced {
-            font-size: 0.82rem;
-        }
         details.advanced summary {
             cursor: pointer;
-            color: var(--muted);
-            padding: 8px 14px;
-            border-bottom: 1px solid var(--border);
-        }
-        details.advanced .card-body { padding-top: 8px; }
-        details.advanced label { display: block; font-size: 0.75rem; color: var(--muted); margin: 8px 0 4px; }
-        details.advanced select, details.advanced input[type=range] {
-            width: 100%;
-            margin-bottom: 8px;
+            color: #94a3b8;
+            padding: 10px 14px;
+            border-bottom: 1px solid rgba(51, 65, 85, 0.35);
+            font-weight: 700;
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
-        .empty-state {
-            padding: 48px 24px;
-            text-align: center;
-            color: var(--muted);
-            line-height: 1.6;
+        .inspect-meta { 
+            font-size: 12px; 
+            color: #94a3b8; 
+            line-height: 1.6; 
         }
-        .empty-state a { color: var(--accent); }
-        .inspect-meta { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
-        .inspect-meta strong { color: var(--text); }
+        .inspect-meta strong { 
+            color: #f8fafc; 
+            font-weight: 700;
+        }
+
+        /* Empty state styling */
+        .empty-state {
+            padding: 80px 20px;
+            text-align: center;
+            color: #94a3b8;
+            font-size: 14.5px;
+            line-height: 1.7;
+            font-family: 'Inter', sans-serif;
+        }
+        .empty-state a {
+            color: #38bdf8;
+            font-weight: 700;
+            text-decoration: none;
+            border-bottom: 1px dashed rgba(56, 189, 248, 0.4);
+            transition: all 0.2s ease;
+        }
+        .empty-state a:hover {
+            color: #60a5fa;
+            border-color: #60a5fa;
+            transform: translateY(-0.5px);
+        }
+
+        /* Graph Canvas & Container Dimensions */
+        #graphCanvas {
+            height: 600px;
+            min-height: 600px;
+        }
+
+        /* View Mode Segmented Controls styles */
+        .view-modes button {
+            color: #94a3b8;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .view-modes button:hover {
+            color: #f8fafc;
+        }
+        .view-modes button.active {
+            color: #ffffff !important;
+            background: #3b82f6 !important;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.35);
+        }
+
+        /* Status Pill & Connection Banners */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid rgba(51, 65, 85, 0.25);
+            color: #cbd5e1;
+            white-space: nowrap;
+        }
+        .status-pill.ok {
+            background: rgba(16, 185, 129, 0.15) !important;
+            color: #34d399 !important;
+            border-color: rgba(16, 185, 129, 0.25) !important;
+        }
+        .status-pill.err {
+            background: rgba(244, 63, 94, 0.15) !important;
+            color: #f43f5e !important;
+            border-color: rgba(244, 63, 94, 0.25) !important;
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-row">
-            <div>
-                <span class="brand">ResQ<span>Flow</span></span>
-                <span class="brand-sub">Knowledge Graph</span>
+    <header class="sticky top-0 z-30 w-full border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md px-6 py-4 shadow-lg shadow-black/10">
+        <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row gap-4 items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="brand text-xl font-display font-black tracking-tight text-white flex items-center gap-1.5">
+                    <span class="bg-gradient-to-r from-blue-500 to-indigo-500 text-transparent bg-clip-text">ResQ</span><span>Flow</span>
+                </div>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-750">Graph</span>
             </div>
-            <nav class="nav-links">
-                <a href="index.html">Operations demo</a>
-                <a href="graph.html" class="active">Knowledge graph</a>
+            <nav class="nav-links flex items-center gap-1.5">
+                <a href="index.html" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 hover:bg-slate-900/50 transition-all duration-200">Operations demo</a>
+                <a href="graph.html" class="active text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-white hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200">Knowledge graph</a>
             </nav>
         </div>
     </header>
 
-    <div class="toolbar">
-        <span id="backendStatus" class="status-pill">Checking…</span>
-        <div class="view-modes" role="group" aria-label="Graph view mode">
-            <button type="button" class="active" data-view="focus">Focus</button>
-            <button type="button" data-view="reach">Reachability</button>
-            <button type="button" data-view="full">Full map</button>
+    <div class="toolbar max-w-[1600px] mx-auto w-full p-4 border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl flex flex-wrap items-center gap-4 mt-6 shadow-xl shadow-black/30">
+        <span id="backendStatus" class="status-pill text-[10px] font-extrabold tracking-wider uppercase px-2.5 py-1 rounded bg-slate-800/60 text-slate-300 border border-slate-750">Checking…</span>
+        <div class="view-modes flex bg-slate-950 border border-slate-800/80 rounded-xl p-1 gap-1 shadow-inner" role="group" aria-label="Graph view mode">
+            <button type="button" class="active text-xs font-bold px-3 py-1.5 rounded-lg transition-all" data-view="focus">Focus</button>
+            <button type="button" class="text-xs font-bold px-3 py-1.5 rounded-lg transition-all" data-view="reach">Reachability</button>
+            <button type="button" class="text-xs font-bold px-3 py-1.5 rounded-lg transition-all" data-view="full">Full map</button>
         </div>
-        <label class="toolbar-field">
-            <span class="toolbar-label">Incident</span>
-            <select id="incidentSelect" title="Focus incident on the graph">
+        <label class="toolbar-field flex flex-col gap-1.5">
+            <span class="toolbar-label text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Incident</span>
+            <select id="incidentSelect" title="Focus incident on the graph" class="bg-slate-950 border border-slate-850 hover:border-slate-700/80 rounded-xl px-3 py-2 text-slate-200 font-medium text-xs transition-all cursor-pointer">
                 <option value="">Select incident…</option>
             </select>
         </label>
-        <label class="toolbar-field">
-            <span class="toolbar-label">Trace</span>
-            <select id="traceSelect" title="Decision trace for evidence path">
+        <label class="toolbar-field flex flex-col gap-1.5">
+            <span class="toolbar-label text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Trace</span>
+            <select id="traceSelect" title="Decision trace for evidence path" class="bg-slate-950 border border-slate-850 hover:border-slate-700/80 rounded-xl px-3 py-2 text-slate-200 font-medium text-xs transition-all cursor-pointer">
                 <option value="">Select trace…</option>
             </select>
         </label>
-        <button type="button" class="toolbar-btn primary" id="refreshBtn">Refresh</button>
-        <button type="button" class="toolbar-btn" id="fitBtn" title="Fit graph to view">Fit view</button>
-        <div class="toolbar-spacer"></div>
-        <label style="display:flex;align-items:center;gap:6px;font-size:0.78rem;color:var(--muted);cursor:pointer;">
-            <input type="checkbox" id="labelToggle"> Edge labels
+        <button type="button" class="toolbar-btn primary bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs rounded-xl px-4 py-2.5 shadow-lg active:scale-[0.98] transition-all cursor-pointer flex items-center gap-1" id="refreshBtn">
+            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>Refresh
+        </button>
+        <button type="button" class="toolbar-btn bg-slate-800/85 hover:bg-slate-700/85 text-slate-200 hover:text-white font-bold text-xs rounded-xl px-4 py-2.5 shadow-md active:scale-[0.98] transition-all border border-slate-750 cursor-pointer flex items-center gap-1" id="fitBtn" title="Fit graph to view">
+            <i data-lucide="maximize" class="w-3.5 h-3.5"></i>Fit view
+        </button>
+        <div class="toolbar-spacer flex-1 min-w-[8px]"></div>
+        <label style="cursor:pointer;" class="flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors select-none">
+            <input type="checkbox" id="labelToggle" class="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-blue-500/20 cursor-pointer"> Edge labels
         </label>
     </div>
 
-    <div class="workspace">
-        <section class="graph-panel">
-            <div class="graph-head">
-                <h2>Disaster knowledge graph</h2>
-                <span class="graph-hint" id="viewHint">Focus mode — neighborhood + evidence path only</span>
+    <div class="workspace max-w-[1600px] mx-auto w-full p-6 grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-6 items-start">
+        <section class="graph-panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+            <div class="graph-head px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4 flex-wrap">
+                <h2 class="font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                    <i data-lucide="network" class="w-4 h-4 text-sky-400"></i>Disaster knowledge graph
+                </h2>
+                <span class="text-xs text-slate-500 font-semibold" id="viewHint">Focus mode — neighborhood + evidence path only</span>
             </div>
-            <div class="edge-bar" id="edgeFilters"></div>
-            <div id="graphCanvas"><div id="networkMount"></div></div>
-            <div class="graph-foot">
-                <div class="legend-inline">
-                    <span class="inc">Incident</span>
-                    <span class="res">Resource</span>
-                    <span class="base">Base</span>
-                    <span class="risk">Risk</span>
+            <div class="edge-bar flex flex-wrap gap-2 px-5 py-3 border-b border-slate-800 bg-slate-950/20" id="edgeFilters"></div>
+            <div id="graphCanvas" class="w-full relative bg-slate-950"><div id="networkMount" class="w-full h-full"></div></div>
+            <div class="graph-foot px-5 py-4 border-t border-slate-800/80 bg-slate-950/20 flex items-center justify-between text-xs text-slate-400 flex-wrap gap-4 select-none">
+                <div class="legend-inline flex gap-x-4 gap-y-2 flex-wrap items-center">
+                    <span class="inc flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-rose-500 inline-block shadow-sm"></span> Incident</span>
+                    <span class="res flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-sky-400 inline-block shadow-sm"></span> Resource</span>
+                    <span class="base flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-emerald-500 inline-block shadow-sm"></span> Base</span>
+                    <span class="risk flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-violet-500 inline-block shadow-sm"></span> Risk</span>
                 </div>
-                <span>Yellow glow = evidence path · Hover nodes/edges for details</span>
+                <span class="font-medium text-slate-500">Yellow glow = evidence path · Hover nodes/edges for details</span>
             </div>
         </section>
 
-        <aside class="side-panel">
-            <div class="card">
-                <div class="card-title">Decision story</div>
-                <div class="card-body" id="storyPanel">
+        <aside class="side-panel flex flex-col gap-6 w-full">
+            <div class="card border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="card-title px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                    <i data-lucide="book-open" class="w-4 h-4 text-amber-400"></i>Decision story
+                </div>
+                <div class="card-body p-5" id="storyPanel">
                     <div class="inspect-meta">Select an incident and trace to see the evidence path and ripple effects.</div>
                 </div>
             </div>
-            <div class="card">
-                <div class="card-title">Overview</div>
-                <div class="card-body">
+            <div class="card border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="card-title px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                    <i data-lucide="pie-chart" class="w-4 h-4 text-sky-400"></i>Overview
+                </div>
+                <div class="card-body p-5">
                     <div class="stat-chips" id="statsPanel"></div>
                 </div>
             </div>
-            <div class="card">
-                <details class="advanced">
-                    <summary>Advanced options</summary>
-                    <div class="card-body">
-                        <label>Neighborhood hops: <span id="hopsVal">2</span></label>
-                        <input type="range" id="hopsRange" min="1" max="3" value="2">
-                        <label>Layout</label>
-                        <select id="layoutSelect">
-                            <option value="physics" selected>Force layout</option>
-                            <option value="map">Map coordinates</option>
-                        </select>
+            <div class="card border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <details class="advanced select-none cursor-pointer">
+                    <summary class="font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                        <i data-lucide="settings" class="w-4 h-4 text-indigo-400"></i>Advanced options
+                    </summary>
+                    <div class="card-body p-5 flex flex-col gap-4 cursor-default">
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Neighborhood hops: <span id="hopsVal" class="text-blue-400 font-extrabold text-sm">2</span></label>
+                            <input type="range" id="hopsRange" min="1" max="3" value="2" class="w-full bg-slate-950 cursor-pointer h-1.5 rounded-lg appearance-none accent-blue-500">
+                        </div>
+                        <div class="flex flex-col gap-1.5">
+                            <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Layout</label>
+                            <select id="layoutSelect" class="w-full bg-slate-950 border border-slate-850 hover:border-slate-700/80 focus:border-blue-500/50 rounded-xl px-4 py-2.5 text-slate-200 font-medium text-xs transition-all focus:outline-none cursor-pointer">
+                                <option value="physics" selected>Force layout</option>
+                                <option value="map">Map coordinates</option>
+                            </select>
+                        </div>
                     </div>
                 </details>
             </div>
-            <div class="card">
-                <div class="card-title">Selection</div>
-                <div class="card-body inspect-meta" id="inspector">Click a node or edge on the graph.</div>
+            <div class="card border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
+                <div class="card-title px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
+                    <i data-lucide="eye" class="w-4 h-4 text-violet-400"></i>Selection
+                </div>
+                <div class="card-body p-5 inspect-meta" id="inspector">Click a node or edge on the graph.</div>
             </div>
         </aside>
     </div>
+
 
     <script>
         const API_BASE = "http://localhost:8000";
@@ -1093,6 +984,7 @@
             fetch(`${API_BASE}/health`).then(r => r.json()).then(d => {
                 if (d.graph) setBackendStatus("Connected", "ok");
             }).catch(() => setBackendStatus("Offline", "err"));
+            lucide.createIcons();
         }
 
         init();
