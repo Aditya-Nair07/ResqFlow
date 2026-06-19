@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResQFlow</title>
+    <title>ResQFlow — Closed-Loop Cyber-Physical Orchestration for Disaster Resource Dispatch</title>
     <!-- Tailwind CSS v3 CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
@@ -622,7 +622,7 @@
                 </div>
                 <nav class="nav-links flex items-center gap-1.5">
                     <a href="index.html" class="active text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-white hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200">Operations demo</a>
-                    <a href="#" id="openGraphNav" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 hover:bg-slate-900/50 transition-all duration-200">Knowledge graph</a>
+                    <a href="#" id="openGraphNav" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 hover:bg-slate-900/50 transition-all duration-200">Digital twin</a>
                 </nav>
             </div>
             <div class="stats grid grid-cols-2 sm:grid-cols-4 gap-3 w-full lg:w-auto min-w-full lg:min-w-[480px]">
@@ -673,9 +673,15 @@
                     </div>
 
                     <div class="flex items-center justify-between border-t border-slate-850 pt-4 mt-2">
-                        <label for="agentCouncilToggle" class="text-slate-400 text-xs font-semibold cursor-pointer">Agent council (graph-grounded)</label>
+                        <label for="agentCouncilToggle" class="text-slate-400 text-xs font-semibold cursor-pointer">Agent council (twin-grounded)</label>
                         <input type="checkbox" id="agentCouncilToggle" checked class="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-blue-500/20 cursor-pointer">
                     </div>
+
+                    <div class="flex items-center justify-between pt-2">
+                        <label for="closedLoopToggle" class="text-slate-400 text-xs font-semibold cursor-pointer" title="Closed-loop: verify-then-actuate with physical feedback. Uncheck for open-loop score-only dispatch.">Closed-loop control (verify-then-actuate)</label>
+                        <input type="checkbox" id="closedLoopToggle" checked class="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-blue-500/20 cursor-pointer">
+                    </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed -mt-1">Uncheck for <strong class="text-slate-400">open-loop</strong> demo: dispatch top score without verification feedback.</p>
 
                     <div class="flex flex-col gap-1.5 mt-2">
                         <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Speed</label>
@@ -707,7 +713,7 @@
                     <span class="text-[10px] font-bold px-2 py-1 rounded bg-slate-800/60 text-slate-300" id="councilSourceBadge">—</span>
                 </div>
                 <div class="panel-body p-5 scroll max-h-[380px] overflow-y-auto pr-1 flex flex-col gap-3" id="councilPanel">
-                    <div class="text-xs text-slate-400 leading-relaxed">Turn on <strong>Agent council</strong> in Controls. After each allocation, three specialists review the top pick using the knowledge graph.</div>
+                    <div class="text-xs text-slate-400 leading-relaxed">Turn on <strong>Agent council</strong> in Controls. After each allocation, three specialists review the top pick using the digital twin.</div>
                 </div>
             </div>
         </section>
@@ -716,9 +722,12 @@
         <section class="panel lg:col-span-1 border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-2xl shadow-black/60 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
             <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
                 <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
-                    <i data-lucide="map" class="w-4 h-4 text-sky-400"></i>Operations map
+                    <i data-lucide="map" class="w-4 h-4 text-sky-400"></i>Physical plant (simulated)
                 </div>
-                <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400" id="strategyBadge">Balanced</span>
+                <div class="flex items-center gap-2 flex-shrink-0">
+                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400" id="strategyBadge">Balanced</span>
+                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" id="controlModeBadge">Closed loop</span>
+                </div>
             </div>
             <div class="canvas-wrap p-5 flex flex-col gap-4">
                 <canvas id="simCanvas" width="960" height="580" class="w-full border border-slate-800 rounded-xl bg-slate-950 shadow-inner"></canvas>
@@ -750,11 +759,11 @@
                         <i data-lucide="target" class="w-4 h-4 text-indigo-400"></i>Latest allocation
                     </div>
                     <button class="text-xs font-semibold px-2.5 py-1 rounded bg-slate-800/80 text-slate-300 border border-slate-750 hover:border-slate-600 hover:text-white transition-all cursor-pointer flex items-center gap-1" id="openGraphBtn" type="button">
-                        <i data-lucide="network" class="w-3.5 h-3.5 text-blue-400"></i>Graph view
+                        <i data-lucide="network" class="w-3.5 h-3.5 text-blue-400"></i>Digital twin
                     </button>
                 </div>
                 <div class="panel-body p-5 scroll max-h-[460px] overflow-y-auto pr-1" id="decisionPanel">
-                    <div class="text-xs text-slate-400 leading-relaxed">Run a scenario to see the latest assignment, scores, graph evidence, and alternatives.</div>
+                    <div class="text-xs text-slate-400 leading-relaxed">Run a scenario to see the latest actuation command, scores, twin-grounded evidence, and alternatives.</div>
                 </div>
             </div>
 
@@ -798,6 +807,12 @@
         const GRID_SIZE = 50;
         const MAX_INCIDENTS = 10;
         const API_BASE = "http://localhost:8000";
+        // CPS predictive thresholds — tuned for demo flow: seed incidents assign cleanly,
+        // late-scenario incidents still commit when a capable resource is nearby, while
+        // clearly distant candidates continue to fail ETA (visible repair/rejection path).
+        const CPS_FUEL_RESERVE_AT_ARRIVAL = 5;
+        const CPS_URGENCY_ETA_BASE = 16;
+        const CPS_URGENCY_ETA_SCALE = 0.72;
         const canvas = document.getElementById("simCanvas");
         const ctx = canvas.getContext("2d");
 
@@ -843,7 +858,9 @@
             decisions: 0,
             tick: 0,
             useAgentCouncil: true,
+            closedLoopControl: true,
             lastCouncil: null,
+            lastTwinSync: null,
             bases: [
                 { x: 5, y: 5, label: "North Base" },
                 { x: 45, y: 7, label: "Medical Depot" },
@@ -939,7 +956,47 @@
             return route;
         }
 
-        function scoreResource(resource, incident, strategy = state.strategy) {
+        /** Route-step ETA aligned with buildRoute; faster assets finish sooner. */
+        function estimateTravelTicks(dist, resourceSpeed) {
+            const routeSteps = Math.max(6, Math.ceil(dist));
+            return Math.ceil(routeSteps / clamp(resourceSpeed || 1, 0.5, 2));
+        }
+
+        /** Projected fuel after outbound leg (same fuelCost model as commitAssignment). */
+        function fuelAtArrival(resource, fuelCost, reserve = CPS_FUEL_RESERVE_AT_ARRIVAL) {
+            return clamp(resource.fuel - fuelCost, 0, 100);
+        }
+
+        /** Urgency maps to a max route-step budget — tighter for critical incidents. */
+        function urgencyMaxTicks(urgency) {
+            return Math.round(CPS_URGENCY_ETA_BASE + (100 - urgency) * CPS_URGENCY_ETA_SCALE);
+        }
+
+        function formatEtaLabel(etaTicks) {
+            return `ETA ~${etaTicks} route step${etaTicks === 1 ? "" : "s"}`;
+        }
+
+        function isClosedLoop() {
+            return state.closedLoopControl !== false;
+        }
+
+        /** Closed-loop: first scorer that passes verification. Open-loop: first available top scorer. */
+        function findActuationWinner(bids) {
+            if (isClosedLoop()) {
+                return bids.find(bid => bid.score.canCommit) || null;
+            }
+            return bids.find(bid =>
+                bid.resource.status === "available" && !bid.resource.assignedIncidentId
+            ) || null;
+        }
+
+        function defaultActuationOutcome() {
+            return isClosedLoop()
+                ? "Actuation command issued."
+                : "Open-loop actuation: top score dispatched without physical verification feedback.";
+        }
+
+        function scoreResource(resource, incident, strategy = state.strategy, options = {}) {
             const dist = distance(resource, incident);
             const routeRisk = getRouteRisk(resource, incident);
             const capabilityScore = resource.capabilities.includes(incident.need)
@@ -967,6 +1024,15 @@
             const reasons = buildReasons({ resource, incident, dist, routeRisk, capabilityScore, fuelCost, total });
             if (memoryBoost > 0) reasons.push("matched procedural playbook");
 
+            const verification = verifyCandidate(resource, incident, {
+                fuelCost,
+                capabilityScore,
+                routeRisk,
+                dist,
+                resource,
+                skipPriorityGate: options.skipPriorityGate
+            });
+
             return {
                 total: clamp(Math.round(total), 0, 100),
                 urgencyScore: Math.round(urgencyScore),
@@ -978,26 +1044,53 @@
                 routeRisk: Math.round(routeRisk),
                 fuelCost,
                 distance: Math.round(dist),
-                checks: verifyCandidate(resource, incident, { fuelCost, capabilityScore, routeRisk }),
-                canCommit: verifyCandidate(resource, incident, { fuelCost, capabilityScore, routeRisk }).passed,
+                checks: verification,
+                canCommit: verification.passed,
+                etaTicks: verification.etaTicks,
+                fuelAtArrival: verification.fuelAtArrival,
+                estimatedEtaLabel: verification.estimatedEtaLabel,
                 reasons
             };
         }
 
         function verifyCandidate(resource, incident, details) {
+            const dist = details.dist ?? distance(resource, incident);
+            const etaTicks = estimateTravelTicks(dist, resource.speed);
+            const projectedFuel = fuelAtArrival(resource, details.fuelCost);
+            const maxEta = urgencyMaxTicks(incident.urgency);
+
             const checks = [
                 { label: "resource available", passed: resource.status === "available" },
                 { label: "fuel margin sufficient", passed: resource.fuel > details.fuelCost + 8 },
                 { label: "capability acceptable", passed: details.capabilityScore >= 50 },
                 { label: "route risk acceptable", passed: details.routeRisk < 72 },
                 { label: "not double-booked", passed: !resource.assignedIncidentId },
-                { label: "high-priority request not ignored", passed: !hasHigherPriorityPending(incident) }
+                { label: "high-priority request not ignored", passed: details.skipPriorityGate || !hasHigherPriorityPending(incident) },
+                // CPS predictive lookahead — physical feasibility before actuation.
+                {
+                    label: "fuel sufficient at arrival",
+                    passed: projectedFuel >= CPS_FUEL_RESERVE_AT_ARRIVAL
+                },
+                {
+                    label: "ETA within urgency window",
+                    passed: etaTicks <= maxEta
+                }
             ];
             return {
                 passed: checks.every(check => check.passed),
                 checks,
-                failed: checks.filter(check => !check.passed).map(check => check.label)
+                failed: checks.filter(check => !check.passed).map(check => check.label),
+                etaTicks,
+                fuelAtArrival: projectedFuel,
+                estimatedEtaLabel: formatEtaLabel(etaTicks)
             };
+        }
+
+        /** Block lower urgency only while a higher-priority pending incident can still be served. */
+        function incidentHasSafeResource(incident) {
+            return state.resources.some(resource =>
+                scoreResource(resource, incident, state.strategy, { skipPriorityGate: true }).canCommit
+            );
         }
 
         function hasHigherPriorityPending(incident) {
@@ -1005,7 +1098,8 @@
                 item.status === "pending" &&
                 item.id !== incident.id &&
                 item.urgency >= 90 &&
-                item.urgency > incident.urgency + 12
+                item.urgency > incident.urgency + 12 &&
+                incidentHasSafeResource(item)
             );
         }
 
@@ -1042,8 +1136,11 @@
             return reasons;
         }
 
-        function resetDemo(shouldRun = false) {
+        function resetDemo(shouldRun = false, preserveSettings = false) {
             sessionStorage.removeItem("resqflow_live");
+            const closedLoop = preserveSettings
+                ? document.getElementById("closedLoopToggle").checked
+                : true;
             state.resources = [];
             state.incidents = [];
             state.decisionTrace = null;
@@ -1057,7 +1154,10 @@
             state.tick = 0;
             state.running = shouldRun;
             state.lastCouncil = null;
+            state.lastTwinSync = null;
+            state.closedLoopControl = closedLoop;
             document.getElementById("toggleRunBtn").textContent = shouldRun ? "Pause" : "Resume";
+            document.getElementById("closedLoopToggle").checked = closedLoop;
             seedResources();
             seedIncidents();
             updateBriefing("Tap Briefing or Report.");
@@ -1125,6 +1225,7 @@
                     }))
                 });
                 state.lastCouncil = council;
+                markTwinSync();
                 renderCouncilPanel(council);
                 return bids.map(bid => {
                     const row = (council.candidates || []).find(
@@ -1156,15 +1257,18 @@
                 bids = await applyAgentCouncil(incident, bids);
 
                 const initialCandidate = bids[0];
-                const winner = bids.find(bid => bid.score.canCommit);
+                const winner = findActuationWinner(bids);
                 if (!winner) {
-                    const trace = createTrace(incident, null, bids, "No safe resource could be committed yet.");
+                    const outcome = isClosedLoop()
+                        ? "No safe resource could be committed yet."
+                        : "No available resource to dispatch yet (open-loop bypasses verification, but all units are busy).";
+                    const trace = createTrace(incident, null, bids, outcome);
                     state.decisionTrace = trace;
                     attachGraphEvidence(trace, incident.id);
                     continue;
                 }
 
-                const repairNote = initialCandidate && initialCandidate.resource.id !== winner.resource.id
+                const repairNote = isClosedLoop() && initialCandidate && initialCandidate.resource.id !== winner.resource.id
                     ? `Transactional repair: top candidate ${initialCandidate.resource.type} R${initialCandidate.resource.id} failed verification, so the planner selected the next safe candidate.`
                     : "";
                 if (repairNote) state.repairCount += 1;
@@ -1183,7 +1287,7 @@
             resource.fuel = clamp(resource.fuel - score.fuelCost, 0, 100);
             state.totalScore += score.total;
             state.decisions += 1;
-            const trace = createTrace(incident, { resource, score, council: bid?.council }, bids, repairNote || "Assignment committed.");
+            const trace = createTrace(incident, { resource, score, council: bid?.council }, bids, repairNote || defaultActuationOutcome());
             state.decisionTrace = trace;
             attachGraphEvidence(trace, incident.id, resource.id);
         }
@@ -1205,6 +1309,7 @@
                 topRejected,
                 outcome,
                 strategy: state.strategy,
+                controlMode: isClosedLoop() ? "closed" : "open",
                 time: new Date().toLocaleTimeString(),
                 checks: winner ? winner.score.checks.checks : [],
                 stateSnapshot: getStateSnapshot(),
@@ -1218,10 +1323,15 @@
         }
 
         function rejectionReason(score) {
+            const failed = score.checks?.failed || score.checks?.checks?.filter(c => !c.passed).map(c => c.label) || [];
+            if (failed.includes("resource available")) return "rejected: resource not available (assigned or busy)";
+            if (failed.includes("high-priority request not ignored")) return "rejected: higher-priority incident still pending";
+            if (failed.includes("fuel sufficient at arrival")) return "rejected: insufficient fuel at arrival (predictive CPS)";
+            if (failed.includes("ETA within urgency window")) return "rejected: ETA exceeds urgency window (predictive CPS)";
             if (score.fuelScore < 15) return "rejected: low fuel margin";
             if (score.capabilityScore < 50) return "rejected: weak capability match";
             if (score.riskScore < 45) return "rejected: unsafe route";
-            if (score.checks && score.checks.failed.length) return `rejected: ${score.checks.failed[0]}`;
+            if (failed.length) return `rejected: ${failed[0]}`;
             return "rejected: lower total suitability";
         }
 
@@ -1360,6 +1470,7 @@
                 traceId: trace.traceId,
                 time: trace.time || "",
                 strategy: trace.strategy || "",
+                controlMode: trace.controlMode || "closed",
                 outcome: trace.outcome || "",
                 playbookHint: trace.playbookHint || "",
                 incident: trace.incident ? {
@@ -1384,6 +1495,7 @@
                 strategy: state.strategy,
                 tick: state.tick,
                 useAgentCouncil: state.useAgentCouncil,
+                closedLoopControl: state.closedLoopControl,
                 nextTraceId: state.nextTraceId,
                 repairCount: state.repairCount,
                 resolved: state.resolved,
@@ -1393,6 +1505,7 @@
                 riskZones: state.riskZones,
                 playbooks: state.playbooks,
                 lastCouncil: state.lastCouncil,
+                lastTwinSync: state.lastTwinSync,
                 resources: state.resources.map(r => ({
                     id: r.id,
                     type: r.type,
@@ -1445,6 +1558,7 @@
                 state.strategy = data.strategy || "balanced";
                 state.tick = data.tick || 0;
                 state.useAgentCouncil = data.useAgentCouncil !== false;
+                state.closedLoopControl = data.closedLoopControl !== false;
                 state.nextTraceId = data.nextTraceId || 1;
                 state.repairCount = data.repairCount || 0;
                 state.resolved = data.resolved || 0;
@@ -1454,6 +1568,7 @@
                 state.riskZones = data.riskZones || state.riskZones;
                 state.playbooks = data.playbooks || [];
                 state.lastCouncil = data.lastCouncil || null;
+                state.lastTwinSync = data.lastTwinSync || null;
                 state.resources = data.resources;
                 state.incidents = data.incidents;
                 state.decisionTrace = data.decisionTrace || null;
@@ -1462,6 +1577,7 @@
                 document.getElementById("strategySelect").value = state.strategy;
                 document.getElementById("speedSelect").value = String(state.speed);
                 document.getElementById("agentCouncilToggle").checked = state.useAgentCouncil;
+                document.getElementById("closedLoopToggle").checked = state.closedLoopControl;
                 document.getElementById("toggleRunBtn").textContent = state.running ? "Pause" : "Resume";
                 renderCouncilPanel(state.lastCouncil);
                 updateWhatIf();
@@ -1569,6 +1685,7 @@
                     persist: true
                 });
                 trace.graphEvidence = data;
+                markTwinSync();
             } catch (error) {
                 trace.graphEvidence = { available: false, reason: "backend offline" };
             }
@@ -1586,7 +1703,7 @@
                 const arrow = i < steps.length - 1 ? '<span class="graph-path-arrow">→</span>' : "";
                 return `<span class="graph-path-step">${step.trim()}</span>${arrow}`;
             }).join("");
-            return `<div class="graph-path"><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Route through the graph</div><div class="graph-path-steps">${html}</div></div>`;
+            return `<div class="graph-path"><div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Route through the twin</div><div class="graph-path-steps">${html}</div></div>`;
         }
 
         function renderGraphEvidence(graphEvidence) {
@@ -1594,15 +1711,15 @@
             if (graphEvidence.loading) {
                 return `
                     <div class="alloc-section">
-                        <div class="alloc-section-title">Graph evidence</div>
-                        <div class="note">Loading knowledge-graph evidence…</div>
+                        <div class="alloc-section-title">Twin-grounded evidence</div>
+                        <div class="note">Loading digital-twin evidence…</div>
                     </div>`;
             }
             if (graphEvidence.available === false) {
                 return `
                     <div class="alloc-section">
-                        <div class="alloc-section-title">Graph evidence</div>
-                        <div class="note">Unavailable — start the backend to attach graph paths to this trace.</div>
+                        <div class="alloc-section-title">Twin-grounded evidence</div>
+                        <div class="note">Unavailable — start the backend to attach twin paths to this trace.</div>
                     </div>`;
             }
 
@@ -1631,10 +1748,10 @@
 
             return `
                 <div class="alloc-section">
-                    <div class="alloc-section-title">Graph evidence</div>
-                    <div class="alloc-explainer">How this assignment is grounded in the knowledge graph (bases, risks, reachability).</div>
+                    <div class="alloc-section-title">Twin-grounded evidence</div>
+                    <div class="alloc-explainer">How this actuation is grounded in the digital twin (bases, risks, reachability).</div>
                     ${parts.join("")}
-                    <a href="#" class="graph-link" id="openGraphFromTrace">Open full graph explorer →</a>
+                    <a href="#" class="graph-link" id="openGraphFromTrace">Open digital twin explorer →</a>
                 </div>`;
         }
 
@@ -1663,8 +1780,24 @@
             return response.json();
         }
 
-        function setApiStatus(text) {
+        let apiStatusBase = "Backend: checking…";
+
+        function refreshApiStatusDisplay() {
+            let text = apiStatusBase;
+            if (state.lastTwinSync) {
+                text += ` · Twin sync ${state.lastTwinSync}`;
+            }
             document.getElementById("apiStatus").textContent = text;
+        }
+
+        function markTwinSync() {
+            state.lastTwinSync = new Date().toLocaleTimeString();
+            refreshApiStatusDisplay();
+        }
+
+        function setApiStatus(text) {
+            apiStatusBase = text;
+            refreshApiStatusDisplay();
         }
 
         async function checkBackendHealth() {
@@ -1829,6 +1962,14 @@
             document.getElementById("statResolved").textContent = state.resolved;
             document.getElementById("statScore").textContent = state.decisions ? Math.round(state.totalScore / state.decisions) : 0;
             document.getElementById("strategyBadge").textContent = formatStrategy(state.strategy);
+            const modeBadge = document.getElementById("controlModeBadge");
+            if (modeBadge) {
+                const open = !isClosedLoop();
+                modeBadge.textContent = open ? "Open loop" : "Closed loop";
+                modeBadge.className = open
+                    ? "text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400"
+                    : "text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400";
+            }
             document.getElementById("resourceCount").textContent = `${state.resources.length} active`;
         }
 
@@ -1923,7 +2064,7 @@
             const deltaCls = winnerRow.merged_delta < 0 ? "delta-pill neg" : "delta-pill";
             const reviewed = (council.candidates || []).length;
             const summary = council.narrative
-                || `${reviewed} candidate(s) reviewed on the knowledge graph.`;
+                || `${reviewed} candidate(s) reviewed on the digital twin.`;
             return `
                 <div class="council-verdict">
                     <div class="council-verdict-label">Council recommendation</div>
@@ -1971,17 +2112,24 @@
             const res = trace.winner.resource;
             const inc = trace.incident;
             const strategy = formatStrategy(trace.strategy);
-            let text = `Committed <strong>${res.type} R${res.id}</strong> to <strong>${inc.type}</strong> using <strong>${strategy}</strong> strategy. `;
+            let text = `Issued actuation for <strong>${res.type} R${res.id}</strong> to <strong>${inc.type}</strong> using <strong>${strategy}</strong> strategy. `;
             if (score.councilDelta != null && score.councilDelta !== 0) {
                 const base = score.total - score.councilDelta;
                 text += `Suitability moved from <strong>${base}</strong> to <strong>${score.total}</strong> after council (${formatCouncilDelta(score.councilDelta)}). `;
             } else {
                 text += `Final suitability score <strong>${score.total}</strong>/100. `;
             }
-            text += passed === totalChecks
-                ? `All <strong>${totalChecks}</strong> verification checks passed.`
-                : `<strong>${passed}/${totalChecks}</strong> verification checks passed.`;
-            if (trace.outcome && !trace.outcome.includes("committed")) {
+            if (trace.controlMode === "open") {
+                text += `<strong>Open-loop control</strong> bypassed verification feedback — only score ranking drove the actuator (${passed}/${totalChecks} checks failed or would have blocked closed-loop dispatch).`;
+            } else {
+                text += passed === totalChecks
+                    ? `All <strong>${totalChecks}</strong> physical constraint checks passed (closed-loop verify-then-actuate).`
+                    : `<strong>${passed}/${totalChecks}</strong> physical constraint checks passed.`;
+            }
+            if (score.estimatedEtaLabel && score.fuelAtArrival != null) {
+                text += ` CPS lookahead: ${score.estimatedEtaLabel}, ~${score.fuelAtArrival}% fuel at arrival.`;
+            }
+            if (trace.outcome && !trace.outcome.toLowerCase().includes("actuation")) {
                 text += ` ${trace.outcome}`;
             }
             return text;
@@ -1989,9 +2137,15 @@
 
         function renderAllocationChips(trace, score, passed, totalChecks) {
             const chips = [
-                `<span class="alloc-chip">${formatStrategy(trace.strategy)}</span>`,
-                `<span class="alloc-chip ${passed === totalChecks ? "ok" : "warn"}">Verify ${passed}/${totalChecks}</span>`
+                `<span class="alloc-chip">${formatStrategy(trace.strategy)}</span>`
             ];
+            if (trace.controlMode === "open") {
+                chips.push('<span class="alloc-chip warn">Open loop</span>');
+                chips.push(`<span class="alloc-chip warn">Checks ignored ${passed}/${totalChecks}</span>`);
+            } else {
+                chips.push(`<span class="alloc-chip ${passed === totalChecks ? "ok" : "warn"}">Physical verify ${passed}/${totalChecks}</span>`);
+                chips.push('<span class="alloc-chip ok">Closed loop</span>');
+            }
             if (score.councilDelta != null && score.councilDelta !== 0) {
                 const cls = score.councilDelta >= 0 ? "ok" : "warn";
                 chips.push(`<span class="alloc-chip ${cls}">Council ${formatCouncilDelta(score.councilDelta)}</span>`);
@@ -2025,18 +2179,33 @@
                 const cls = check.passed ? "pass" : "fail";
                 return `<div class="verify-item ${cls}">${check.label}</div>`;
             }).join("");
+            const openBanner = trace.controlMode === "open"
+                ? `<div class="note" style="margin-bottom:8px;border-color:rgba(245,158,11,0.35);color:#fcd34d;">Open-loop control: actuation followed score ranking only. Failed checks below were <strong>not</strong> used as feedback to block the actuator — contrast with closed-loop verify-then-actuate.</div>`
+                : "";
+            const explainer = trace.controlMode === "open"
+                ? "Checks are shown for audit only. In closed-loop mode, failed items would block actuation before the actuator fires."
+                : "Verify-then-actuate: command only proceeds when every check passes, including predictive CPS lookahead (fuel-at-arrival and ETA vs urgency). Repair selects the next safe candidate if the top pick fails.";
             return `
                 <div class="alloc-section">
-                    <div class="alloc-section-title">Verification</div>
-                    <div class="alloc-explainer">Verify-then-commit: assignment only proceeds when every check passes (or repair selects the next safe candidate).</div>
+                    <div class="alloc-section-title">Physical constraint verification</div>
+                    ${openBanner}
+                    <div class="alloc-explainer">${explainer}</div>
                     <div class="verify-list">${items}</div>
                 </div>`;
         }
 
         function renderPendingAllocation(trace) {
-            const verifyText = trace.topRejected.length
-                ? "No resource passed verification yet — waiting for a safe match."
-                : "Incident is queued; the planner will score candidates on the next cycle.";
+            const isOpen = trace.controlMode === "open";
+            const verifyText = isOpen
+                ? (trace.topRejected.length
+                    ? "Open-loop mode: physical verification is bypassed, but no resource is currently free to dispatch."
+                    : "Incident is queued; waiting for a free resource.")
+                : (trace.topRejected.length
+                    ? "No resource passed physical constraint verification yet — waiting for a safe match."
+                    : "Incident is queued; the planner will score candidates on the next cycle.");
+            const modeChip = isOpen
+                ? '<span class="alloc-chip warn" style="margin-top:8px;display:inline-block;">Open loop</span>'
+                : '<span class="alloc-chip ok" style="margin-top:8px;display:inline-block;">Closed loop</span>';
             return `
                 <div class="alloc-trace-meta">
                     <span class="alloc-trace-id">${trace.traceId}</span>
@@ -2046,6 +2215,7 @@
                     <div class="alloc-verdict-label">Pending allocation</div>
                     <div class="alloc-verdict-pick">${trace.incident.type}</div>
                     <div class="alloc-verdict-target">Need: <strong>${trace.incident.need}</strong> · Urgency ${trace.incident.urgency} · ${trace.incident.people} people</div>
+                    ${modeChip}
                 </div>
                 <div class="alloc-explainer">${verifyText} ${trace.outcome || ""}</div>
                 ${renderGraphEvidence(trace.graphEvidence)}
@@ -2057,7 +2227,7 @@
             const panel = document.getElementById("decisionPanel");
             const trace = state.decisionTrace;
             if (!trace) {
-                panel.innerHTML = '<div class="note">Run a scenario to see the latest assignment, scores, graph evidence, and alternatives.</div>';
+                panel.innerHTML = '<div class="note">Run a scenario to see the latest actuation command, scores, twin-grounded evidence, and alternatives.</div>';
                 return;
             }
 
@@ -2078,7 +2248,7 @@
                     <span>${trace.time}</span>
                 </div>
                 <div class="alloc-verdict">
-                    <div class="alloc-verdict-label">Assignment committed</div>
+                    <div class="alloc-verdict-label">${trace.controlMode === "open" ? "Open-loop actuation issued" : "Actuation command issued"}</div>
                     <div class="alloc-verdict-pick">${res.type} R${res.id}</div>
                     <div class="alloc-verdict-target">Responding to <strong>${inc.type}</strong> · need ${inc.need} · urgency ${inc.urgency}</div>
                     ${renderAllocationChips(trace, score, passed, totalChecks)}
@@ -2109,7 +2279,7 @@
             return `
                 <div class="alloc-section">
                     <div class="alloc-section-title">${title}</div>
-                    <div class="alloc-explainer">Top alternatives that scored lower or failed verification.</div>
+                    <div class="alloc-explainer">Top alternatives that scored lower or failed physical constraint verification.</div>
                     <div class="alt-list">${rows}</div>
                     ${more}
                 </div>`;
@@ -2135,8 +2305,8 @@
             requestAnimationFrame(loop);
         }
 
-        document.getElementById("startDemoBtn").addEventListener("click", () => resetDemo(true));
-        document.getElementById("resetBtn").addEventListener("click", () => resetDemo(false));
+        document.getElementById("startDemoBtn").addEventListener("click", () => resetDemo(true, true));
+        document.getElementById("resetBtn").addEventListener("click", () => resetDemo(false, false));
         document.getElementById("addIncidentBtn").addEventListener("click", addRandomIncident);
         document.getElementById("previewBtn").addEventListener("click", updateWhatIf);
         document.getElementById("briefingBtn").addEventListener("click", generateBriefing);
@@ -2156,6 +2326,10 @@
         document.getElementById("agentCouncilToggle").addEventListener("change", event => {
             state.useAgentCouncil = event.target.checked;
             renderCouncilPanel(state.lastCouncil);
+        });
+        document.getElementById("closedLoopToggle").addEventListener("change", event => {
+            state.closedLoopControl = event.target.checked;
+            renderAll();
         });
         document.getElementById("openGraphBtn").addEventListener("click", () => openGraphExplorer());
         document.getElementById("openGraphNav").addEventListener("click", event => {

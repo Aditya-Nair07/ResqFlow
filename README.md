@@ -1,4 +1,4 @@
-# ResQFlow
+# ResQFlow: Closed-Loop Cyber-Physical Orchestration for Disaster Resource Dispatch
 
 Single-file orchestration UI in `index.html` (brand: **ResQFlow**).
 

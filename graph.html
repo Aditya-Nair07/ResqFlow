@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ResQFlow — Knowledge Graph</title>
+    <title>ResQFlow — Digital Twin Explorer</title>
     <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
     <!-- Tailwind CSS v3 CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -233,11 +233,11 @@
                 <div class="brand text-xl font-display font-black tracking-tight text-white flex items-center gap-1.5">
                     <span class="bg-gradient-to-r from-blue-500 to-indigo-500 text-transparent bg-clip-text">ResQ</span><span>Flow</span>
                 </div>
-                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-750">Graph</span>
+                <span class="text-xs font-semibold px-2 py-0.5 rounded bg-slate-800/60 text-slate-400 border border-slate-750">Twin</span>
             </div>
             <nav class="nav-links flex items-center gap-1.5">
                 <a href="index.html" class="text-xs font-semibold px-3 py-1.5 rounded-lg border border-slate-800 text-slate-400 hover:text-slate-200 hover:border-slate-700 hover:bg-slate-900/50 transition-all duration-200">Operations demo</a>
-                <a href="graph.html" class="active text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-white hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200">Knowledge graph</a>
+                <a href="graph.html" class="active text-xs font-semibold px-3 py-1.5 rounded-lg border border-blue-500/30 bg-blue-500/10 text-white hover:border-blue-500/50 hover:bg-blue-500/20 transition-all duration-200">Digital twin</a>
             </nav>
         </div>
     </header>
@@ -558,7 +558,7 @@
 
         async function fetchGraph() {
             if (!snapshot) {
-                document.getElementById("graphCanvas").innerHTML = '<div class="empty-state">No scenario loaded.<br><a href="index.html">Start Operations demo</a> then open Knowledge graph.</div>';
+                document.getElementById("graphCanvas").innerHTML = '<div class="empty-state">No scenario loaded.<br><a href="index.html">Start Operations demo</a> then open Digital twin.</div>';
                 return;
             }
             const { incidentId, resourceId, hops } = getFocusIds();
@@ -946,7 +946,7 @@
             populateTraceSelect();
 
             if (!snapshot) {
-                document.getElementById("networkMount").innerHTML = '<div class="empty-state">No scenario loaded.<br><a href="index.html">Operations demo</a> → Start scenario → Knowledge graph</div>';
+                document.getElementById("networkMount").innerHTML = '<div class="empty-state">No scenario loaded.<br><a href="index.html">Operations demo</a> → Start scenario → Digital twin</div>';
             } else {
                 fetchGraph();
             }
