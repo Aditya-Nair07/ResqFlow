@@ -18,6 +18,7 @@ __pycache__/
 # Docs — only README.md is tracked on GitHub
 *.md
 !README.md
+!experiments/results/summary.md
 
 # Optional: local demo trace JSON (remove these 3 lines if you want traces in the repo)
 data/traces/*.json
