@@ -658,19 +658,18 @@
                 <div class="panel-body p-5 flex flex-col gap-4">
                     <button class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold text-sm tracking-wide rounded-xl px-4 py-3 shadow-lg active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border-t border-emerald-400/20" id="startDemoBtn">Start scenario</button>
                     <button class="w-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 hover:text-white font-bold text-sm rounded-xl px-4 py-3 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border border-slate-700/50" id="toggleRunBtn">Pause</button>
-                    <button class="w-full bg-slate-800/80 hover:bg-slate-700/80 text-slate-200 hover:text-white font-bold text-sm rounded-xl px-4 py-3 active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border border-slate-700/50" id="addIncidentBtn">Add incident</button>
                     <button class="w-full bg-gradient-to-r from-rose-600 to-pink-600 hover:from-rose-500 hover:to-pink-500 text-white font-bold text-sm tracking-wide rounded-xl px-4 py-3 shadow-lg active:scale-[0.98] hover:-translate-y-0.5 transition-all duration-200 border-t border-rose-400/20" id="resetBtn">Reset</button>
-                    
+
                     <div class="flex flex-col gap-1.5 mt-2">
-                        <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Strategy</label>
-                        <select id="strategySelect" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700/80 focus:border-blue-500/50 rounded-xl px-4 py-2.5 text-slate-200 font-medium text-sm transition-all focus:outline-none focus:ring-1 focus:ring-blue-500/20 cursor-pointer">
-                            <option value="balanced">Balanced</option>
-                            <option value="urgency">Urgency First</option>
-                            <option value="nearest">Nearest First</option>
-                            <option value="risk">Risk Aware</option>
-                            <option value="saving">Resource Saving</option>
+                        <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block" title="How candidates are ranked before physical verification">Ranking method</label>
+                        <select id="rankingMethodSelect" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700/80 focus:border-blue-500/50 rounded-xl px-4 py-2.5 text-slate-200 font-medium text-sm transition-all focus:outline-none focus:ring-1 focus:ring-blue-500/20 cursor-pointer">
+                            <option value="weighted">Weighted score</option>
+                            <option value="ellipse">Ellipse reachability</option>
+                            <option value="polygon">Polygon service area</option>
+                            <option value="hybrid">Hybrid (W+E+P)</option>
                         </select>
                     </div>
+                    <p class="text-[10px] text-slate-500 leading-relaxed">GAPD priority and geometry overlays stay on. Strategy weights fixed to Balanced.</p>
 
                     <div class="flex items-center justify-between border-t border-slate-850 pt-4 mt-2">
                         <label for="agentCouncilToggle" class="text-slate-400 text-xs font-semibold cursor-pointer">Agent council (twin-grounded)</label>
@@ -682,16 +681,6 @@
                         <input type="checkbox" id="closedLoopToggle" checked class="w-4 h-4 rounded text-blue-600 bg-slate-950 border-slate-800 focus:ring-blue-500/20 cursor-pointer">
                     </div>
                     <p class="text-[10px] text-slate-500 leading-relaxed -mt-1">Uncheck for <strong class="text-slate-400">open-loop</strong> demo: dispatch top score without verification feedback.</p>
-
-                    <div class="flex flex-col gap-1.5 mt-2">
-                        <label class="text-slate-400 text-[10px] font-bold tracking-wider uppercase block">Speed</label>
-                        <select id="speedSelect" class="w-full bg-slate-950 border border-slate-800 hover:border-slate-700/80 focus:border-blue-500/50 rounded-xl px-4 py-2.5 text-slate-200 font-medium text-sm transition-all focus:outline-none focus:ring-1 focus:ring-blue-500/20 cursor-pointer">
-                            <option value="0.35" selected>Demo</option>
-                            <option value="0.6">Slow</option>
-                            <option value="1">Normal</option>
-                            <option value="1.6">Fast</option>
-                        </select>
-                    </div>
                 </div>
             </div>
 
@@ -724,8 +713,9 @@
                 <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
                     <i data-lucide="map" class="w-4 h-4 text-sky-400"></i>Physical plant (simulated)
                 </div>
-                <div class="flex items-center gap-2 flex-shrink-0">
+                <div class="flex items-center gap-2 flex-shrink-0 flex-wrap justify-end">
                     <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400" id="strategyBadge">Balanced</span>
+                    <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300" id="rankingBadge">Weighted</span>
                     <span class="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400" id="controlModeBadge">Closed loop</span>
                 </div>
             </div>
@@ -738,6 +728,8 @@
                     <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-rose-500 inline-block shadow-sm rotate-45"></span> Critical incident</span>
                     <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-violet-500 inline-block shadow-sm"></span> Risk zone</span>
                     <span class="flex items-center gap-1.5"><span class="w-4 border-t border-dashed border-slate-300 inline-block"></span> Planned route</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-2 rounded-full border border-cyan-400/80 inline-block"></span> Ellipse reach</span>
+                    <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 border border-amber-400/80 bg-amber-500/10 inline-block"></span> Service polygon</span>
                 </div>
             </div>
         </section>
@@ -770,14 +762,14 @@
             <div class="panel border border-slate-800 bg-slate-900/40 backdrop-blur-md rounded-2xl shadow-xl shadow-black/40 overflow-hidden hover:border-slate-700/50 transition-all duration-300">
                 <div class="panel-header px-5 py-4 border-b border-slate-800/80 bg-slate-950/40 flex items-center justify-between gap-4">
                     <div class="panel-title font-display font-black text-xs text-slate-400 tracking-wider uppercase flex items-center gap-1.5">
-                        <i data-lucide="git-compare" class="w-4 h-4 text-amber-400"></i>Strategy compare
+                        <i data-lucide="git-compare" class="w-4 h-4 text-amber-400"></i>Method compare
                     </div>
                     <button class="text-xs font-semibold px-2.5 py-1 rounded bg-slate-800/80 text-slate-300 border border-slate-750 hover:border-slate-600 hover:text-white transition-all cursor-pointer flex items-center gap-1" id="previewBtn">
                         <i data-lucide="scan-eye" class="w-3.5 h-3.5 text-amber-400"></i>Preview
                     </button>
                 </div>
                 <div class="panel-body p-5" id="whatIfPanel">
-                    <div class="text-xs text-slate-400 leading-relaxed">Preview pending incidents across strategies.</div>
+                    <div class="text-xs text-slate-400 leading-relaxed">Preview pending incidents across Weighted / Ellipse / Polygon / Hybrid ranking (no commit).</div>
                 </div>
             </div>
 
@@ -846,6 +838,9 @@
             running: false,
             speed: 0.35,
             strategy: "balanced",
+            rankingMethod: "weighted",
+            useGapdPriority: true,
+            showGeometryOverlay: true,
             resources: [],
             incidents: [],
             decisionTrace: null,
@@ -940,6 +935,274 @@
             return clamp(risk, 0, 100);
         }
 
+        /** Nearest supporting base — used as one ellipse focus (base ↔ unit endurance geometry). */
+        function nearestBase(resource) {
+            let best = state.bases[0];
+            let bestDist = Infinity;
+            for (const base of state.bases) {
+                const d = distance(resource, base);
+                if (d < bestDist) {
+                    bestDist = d;
+                    best = base;
+                }
+            }
+            return best;
+        }
+
+        /**
+         * Modified elliptical reachability (inspired by emergency UAV elliptical cover,
+         * adapted for live unit→incident dispatch — not depot-location MINLP).
+         * Foci: nearest base + current unit. Major axis 2a grows with fuel × speed.
+         */
+        function getEllipseParams(resource) {
+            const focusA = nearestBase(resource);
+            const focusB = { x: resource.x, y: resource.y };
+            const fociDist = distance(focusA, focusB);
+            const reachBudget = (resource.fuel / 100) * 26 * clamp(resource.speed, 0.5, 2) + fociDist + 5;
+            const twoA = Math.max(fociDist + 0.75, reachBudget);
+            return { focusA, focusB, twoA, fociDist };
+        }
+
+        function ellipsePathSum(point, params) {
+            return distance(point, params.focusA) + distance(point, params.focusB);
+        }
+
+        /** 0–100 ellipse fit: inside ellipse scores high; outside decays. */
+        function scoreEllipseFit(resource, incident) {
+            const params = getEllipseParams(resource);
+            const sum = ellipsePathSum(incident, params);
+            const margin = params.twoA - sum;
+            if (margin >= 0) {
+                return clamp(Math.round(58 + (margin / params.twoA) * 42), 58, 100);
+            }
+            return clamp(Math.round(55 - ((-margin) / params.twoA) * 85), 0, 54);
+        }
+
+        function pointInRiskZone(x, y, pad = 0.4) {
+            return state.riskZones.some(zone => Math.hypot(x - zone.x, y - zone.y) <= zone.r + pad);
+        }
+
+        function cross(o, a, b) {
+            return (a.x - o.x) * (b.y - o.y) - (a.y - o.y) * (b.x - o.x);
+        }
+
+        function convexHull(points) {
+            const pts = points
+                .map(p => ({ x: p.x, y: p.y }))
+                .sort((a, b) => (a.x === b.x ? a.y - b.y : a.x - b.x));
+            if (pts.length <= 1) return pts;
+            const lower = [];
+            for (const p of pts) {
+                while (lower.length >= 2 && cross(lower[lower.length - 2], lower[lower.length - 1], p) <= 0) lower.pop();
+                lower.push(p);
+            }
+            const upper = [];
+            for (let i = pts.length - 1; i >= 0; i--) {
+                const p = pts[i];
+                while (upper.length >= 2 && cross(upper[upper.length - 2], upper[upper.length - 1], p) <= 0) upper.pop();
+                upper.push(p);
+            }
+            upper.pop();
+            lower.pop();
+            return lower.concat(upper);
+        }
+
+        function pointInPolygon(point, polygon) {
+            let inside = false;
+            for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+                const xi = polygon[i].x;
+                const yi = polygon[i].y;
+                const xj = polygon[j].x;
+                const yj = polygon[j].y;
+                const intersect = ((yi > point.y) !== (yj > point.y))
+                    && (point.x < ((xj - xi) * (point.y - yi)) / ((yj - yi) || 1e-9) + xi);
+                if (intersect) inside = !inside;
+            }
+            return inside;
+        }
+
+        function distanceToPolygonEdge(point, polygon) {
+            if (polygon.length < 2) return distance(point, polygon[0] || point);
+            let best = Infinity;
+            for (let i = 0; i < polygon.length; i++) {
+                const a = polygon[i];
+                const b = polygon[(i + 1) % polygon.length];
+                const abx = b.x - a.x;
+                const aby = b.y - a.y;
+                const len2 = abx * abx + aby * aby || 1e-9;
+                let t = ((point.x - a.x) * abx + (point.y - a.y) * aby) / len2;
+                t = clamp(t, 0, 1);
+                const proj = { x: a.x + t * abx, y: a.y + t * aby };
+                best = Math.min(best, distance(point, proj));
+            }
+            return best;
+        }
+
+        /**
+         * Hazard-aware service polygon (inspired by GIS service areas + barrier polygons).
+         * Sample reachable ring, drop risk-zone / high-risk-route points, take convex hull.
+         */
+        function buildServicePolygon(resource) {
+            const radius = (resource.fuel / 100) * 16 * clamp(resource.speed, 0.5, 2) + 5.5;
+            const samples = [{ x: resource.x, y: resource.y }];
+            const sectors = 18;
+            for (let i = 0; i < sectors; i++) {
+                const ang = (i / sectors) * Math.PI * 2;
+                for (const frac of [0.45, 0.75, 1]) {
+                    const x = resource.x + Math.cos(ang) * radius * frac;
+                    const y = resource.y + Math.sin(ang) * radius * frac;
+                    if (x < 1 || y < 1 || x > GRID_SIZE - 1 || y > GRID_SIZE - 1) continue;
+                    if (pointInRiskZone(x, y)) continue;
+                    const tip = { x, y };
+                    if (getRouteRisk(resource, tip) >= 70) continue;
+                    samples.push(tip);
+                }
+            }
+            const hull = convexHull(samples);
+            return hull.length >= 3 ? hull : samples.slice(0, Math.min(samples.length, 3));
+        }
+
+        /** 0–100 polygon coverage fit. */
+        function scorePolygonFit(resource, incident) {
+            const poly = buildServicePolygon(resource);
+            if (poly.length < 3) return 8;
+            if (pointInPolygon(incident, poly)) {
+                const depth = distanceToPolygonEdge(incident, poly);
+                return clamp(Math.round(62 + depth * 7), 62, 100);
+            }
+            const gap = distanceToPolygonEdge(incident, poly);
+            return clamp(Math.round(52 - gap * 3.8), 0, 51);
+        }
+
+        function priorityBand(urgency) {
+            if (urgency >= 90) return 3;
+            if (urgency >= 75) return 2;
+            if (urgency >= 55) return 1;
+            return 0;
+        }
+
+        function formatPriorityBand(band) {
+            return ["Low", "Medium", "High", "Critical"][band] || "Low";
+        }
+
+        /** GAPD key: band dominates; within band, geometry + urgency + people pressure. */
+        function gapdPriorityKey(incident, geometryScore = 50) {
+            const band = priorityBand(incident.urgency);
+            const peoplePressure = clamp(incident.people * 5, 0, 100);
+            return 1000 * band + 0.45 * geometryScore + 0.35 * incident.urgency + 0.20 * peoplePressure;
+        }
+
+        function geometryScoreForMethod(resource, incident, method) {
+            if (method === "ellipse") return scoreEllipseFit(resource, incident);
+            if (method === "polygon") return scorePolygonFit(resource, incident);
+            if (method === "hybrid") {
+                return Math.round(0.5 * scoreEllipseFit(resource, incident) + 0.5 * scorePolygonFit(resource, incident));
+            }
+            return clamp(100 - distance(resource, incident) * 2.1, 0, 100);
+        }
+
+        /** Soft-reserve capable units for pending critical incidents (GAPD novelty). */
+        function softReservedForCritical(resource, forIncident) {
+            if (!state.useGapdPriority) return false;
+            if (priorityBand(forIncident.urgency) >= 3) return false;
+            const criticals = state.incidents.filter(
+                item => item.status === "pending" && priorityBand(item.urgency) >= 3 && item.id !== forIncident.id
+            );
+            if (!criticals.length) return false;
+
+            for (const crit of criticals) {
+                const capable = state.resources.filter(r => {
+                    if (r.status !== "available") return false;
+                    return r.capabilities.includes(crit.need)
+                        || r.capabilities.some(cap => relatedNeeds(cap, crit.need));
+                });
+                if (!capable.some(r => r.id === resource.id)) continue;
+                if (capable.length <= 2) return true;
+                const ranked = capable
+                    .map(r => ({ id: r.id, g: geometryScoreForMethod(r, crit, state.rankingMethod) }))
+                    .sort((a, b) => b.g - a.g);
+                if (ranked[0]?.id === resource.id || ranked[1]?.id === resource.id) return true;
+            }
+            return false;
+        }
+
+        function sampleEllipsePoints(params, steps = 48) {
+            const { focusA, focusB, twoA } = params;
+            const cx = (focusA.x + focusB.x) / 2;
+            const cy = (focusA.y + focusB.y) / 2;
+            const fociDist = distance(focusA, focusB);
+            const c = fociDist / 2;
+            const a = twoA / 2;
+            const b = Math.sqrt(Math.max(a * a - c * c, 0.25));
+            const angle = Math.atan2(focusB.y - focusA.y, focusB.x - focusA.x);
+            const cos = Math.cos(angle);
+            const sin = Math.sin(angle);
+            const pts = [];
+            for (let i = 0; i <= steps; i++) {
+                const t = (i / steps) * Math.PI * 2;
+                const lx = a * Math.cos(t);
+                const ly = b * Math.sin(t);
+                pts.push({
+                    x: cx + lx * cos - ly * sin,
+                    y: cy + lx * sin + ly * cos
+                });
+            }
+            return pts;
+        }
+
+        function drawGeometryOverlays() {
+            if (!state.showGeometryOverlay) return;
+            const method = state.rankingMethod;
+            const drawEllipse = method === "ellipse" || method === "hybrid";
+            const drawPoly = method === "polygon" || method === "hybrid";
+            const available = state.resources.filter(r => r.status === "available").slice(0, 4);
+
+            if (drawEllipse) {
+                for (const resource of available) {
+                    const params = getEllipseParams(resource);
+                    const pts = sampleEllipsePoints(params);
+                    if (pts.length < 2) continue;
+                    ctx.beginPath();
+                    const start = gridToCanvas(pts[0]);
+                    ctx.moveTo(start.x, start.y);
+                    for (let i = 1; i < pts.length; i++) {
+                        const p = gridToCanvas(pts[i]);
+                        ctx.lineTo(p.x, p.y);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = "rgba(34, 211, 238, 0.55)";
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([4, 4]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = "rgba(34, 211, 238, 0.05)";
+                    ctx.fill();
+                }
+            }
+
+            if (drawPoly) {
+                for (const resource of available) {
+                    const poly = buildServicePolygon(resource);
+                    if (poly.length < 3) continue;
+                    ctx.beginPath();
+                    const start = gridToCanvas(poly[0]);
+                    ctx.moveTo(start.x, start.y);
+                    for (let i = 1; i < poly.length; i++) {
+                        const p = gridToCanvas(poly[i]);
+                        ctx.lineTo(p.x, p.y);
+                    }
+                    ctx.closePath();
+                    ctx.strokeStyle = "rgba(251, 191, 36, 0.65)";
+                    ctx.lineWidth = 1.5;
+                    ctx.setLineDash([5, 3]);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    ctx.fillStyle = "rgba(251, 191, 36, 0.06)";
+                    ctx.fill();
+                }
+            }
+        }
+
         function buildRoute(from, to) {
             const steps = Math.max(6, Math.ceil(distance(from, to)));
             const route = [];
@@ -1014,15 +1277,39 @@
             const capabilityCombined = capabilityScore * 0.78 + capacityScore * 0.22;
             const memoryBoost = getPlaybookBoost(resource, incident);
             const weights = strategyWeights[strategy];
-            const total = (
+            const weightedTotal = (
                 urgencyScore * weights.urgency +
                 distanceScore * weights.distance +
                 capabilityCombined * weights.capability +
                 fuelScore * weights.fuel +
                 riskScore * weights.risk
             ) + memoryBoost - availabilityPenalty;
+
+            const ellipseScore = scoreEllipseFit(resource, incident);
+            const polygonScore = scorePolygonFit(resource, incident);
+            const method = options.method || state.rankingMethod || "weighted";
+
+            let total;
+            if (method === "ellipse") {
+                total = ellipseScore * 0.55 + capabilityCombined * 0.25 + urgencyScore * 0.10 + riskScore * 0.10
+                    + memoryBoost - availabilityPenalty;
+            } else if (method === "polygon") {
+                total = polygonScore * 0.55 + capabilityCombined * 0.25 + urgencyScore * 0.10 + riskScore * 0.10
+                    + memoryBoost - availabilityPenalty;
+            } else if (method === "hybrid") {
+                total = weightedTotal * 0.40 + ellipseScore * 0.30 + polygonScore * 0.30;
+            } else {
+                total = weightedTotal;
+            }
+
+            const reserved = softReservedForCritical(resource, incident);
+            if (reserved) total -= 42;
+
             const reasons = buildReasons({ resource, incident, dist, routeRisk, capabilityScore, fuelCost, total });
             if (memoryBoost > 0) reasons.push("matched procedural playbook");
+            if (method === "ellipse" || method === "hybrid") reasons.push(`ellipse fit ${ellipseScore}`);
+            if (method === "polygon" || method === "hybrid") reasons.push(`polygon fit ${polygonScore}`);
+            if (reserved) reasons.push("soft-reserved for critical pending");
 
             const verification = verifyCandidate(resource, incident, {
                 fuelCost,
@@ -1040,6 +1327,10 @@
                 capabilityScore: Math.round(capabilityCombined),
                 fuelScore: Math.round(fuelScore),
                 riskScore: Math.round(riskScore),
+                ellipseScore: Math.round(ellipseScore),
+                polygonScore: Math.round(polygonScore),
+                rankingMethod: method,
+                priorityBand: priorityBand(incident.urgency),
                 memoryBoost,
                 routeRisk: Math.round(routeRisk),
                 fuelCost,
@@ -1141,6 +1432,9 @@
             const closedLoop = preserveSettings
                 ? document.getElementById("closedLoopToggle").checked
                 : true;
+            const rankingMethod = preserveSettings
+                ? document.getElementById("rankingMethodSelect").value
+                : "weighted";
             state.resources = [];
             state.incidents = [];
             state.decisionTrace = null;
@@ -1156,8 +1450,14 @@
             state.lastCouncil = null;
             state.lastTwinSync = null;
             state.closedLoopControl = closedLoop;
+            state.rankingMethod = rankingMethod;
+            state.strategy = "balanced";
+            state.speed = 0.35;
+            state.useGapdPriority = true;
+            state.showGeometryOverlay = true;
             document.getElementById("toggleRunBtn").textContent = shouldRun ? "Pause" : "Resume";
             document.getElementById("closedLoopToggle").checked = closedLoop;
+            document.getElementById("rankingMethodSelect").value = rankingMethod;
             seedResources();
             seedIncidents();
             updateBriefing("Tap Briefing or Report.");
@@ -1179,15 +1479,19 @@
         }
 
         function seedIncidents() {
+            // Fixed demo layout: methods can disagree; GAPD critical band stays visible.
             const incidentSeeds = [
-                { def: incidentTypes[0], x: 21, y: 15 },
-                { def: incidentTypes[1], x: 38, y: 29 },
-                { def: incidentTypes[2], x: 18, y: 38 },
-                { def: incidentTypes[3], x: 31, y: 10 },
-                { def: incidentTypes[4], x: 12, y: 27 }
+                { def: incidentTypes[0], x: 24, y: 17, urgency: 96, people: 6 },  // Flood near flooded-road risk
+                { def: incidentTypes[1], x: 42, y: 10, urgency: 91, people: 3 },  // Medical near Medical Depot
+                { def: incidentTypes[2], x: 10, y: 41, urgency: 58, people: 14 }, // Food — lower band (GAPD)
+                { def: incidentTypes[3], x: 36, y: 36, urgency: 74, people: 20 }, // Shelter near debris
+                { def: incidentTypes[4], x: 14, y: 20, urgency: 82, people: 7 }   // Evacuation mid/high
             ];
             incidentSeeds.forEach((item, index) => {
-                state.incidents.push(new Incident(index + 1, item.def, item.x, item.y));
+                const incident = new Incident(index + 1, item.def, item.x, item.y);
+                incident.urgency = item.urgency;
+                incident.people = item.people;
+                state.incidents.push(incident);
             });
         }
 
@@ -1242,16 +1546,32 @@
         }
 
         async function runAuction() {
-            const pending = state.incidents
-                .filter(incident => incident.status === "pending")
-                .sort((a, b) => b.urgency - a.urgency);
-
+            const pending = state.incidents.filter(incident => incident.status === "pending");
             if (!pending.length) return;
 
-            for (const incident of pending.slice(0, 2)) {
+            const ordered = [...pending].sort((a, b) => {
+                if (state.useGapdPriority) {
+                    const geoA = Math.max(
+                        ...state.resources
+                            .filter(r => r.status === "available")
+                            .map(r => geometryScoreForMethod(r, a, state.rankingMethod)),
+                        0
+                    );
+                    const geoB = Math.max(
+                        ...state.resources
+                            .filter(r => r.status === "available")
+                            .map(r => geometryScoreForMethod(r, b, state.rankingMethod)),
+                        0
+                    );
+                    return gapdPriorityKey(b, geoB) - gapdPriorityKey(a, geoA);
+                }
+                return b.urgency - a.urgency;
+            });
+
+            for (const incident of ordered.slice(0, 2)) {
                 let bids = state.resources.map(resource => ({
                     resource,
-                    score: scoreResource(resource, incident)
+                    score: scoreResource(resource, incident, state.strategy, { method: state.rankingMethod })
                 })).sort((a, b) => b.score.total - a.score.total);
 
                 bids = await applyAgentCouncil(incident, bids);
@@ -1309,6 +1629,9 @@
                 topRejected,
                 outcome,
                 strategy: state.strategy,
+                rankingMethod: state.rankingMethod,
+                priorityBand: priorityBand(incident.urgency),
+                useGapdPriority: state.useGapdPriority,
                 controlMode: isClosedLoop() ? "closed" : "open",
                 time: new Date().toLocaleTimeString(),
                 checks: winner ? winner.score.checks.checks : [],
@@ -1410,53 +1733,69 @@
                 return;
             }
 
-            const strategies = Object.keys(strategyWeights);
-            const rows = strategies.map(strategy => {
+            const methods = ["weighted", "ellipse", "polygon", "hybrid"];
+            const rows = methods.map(method => {
                 let response = 0;
                 let risk = 0;
                 let fuel = 0;
                 let unmet = 0;
+                let coverage = 0;
+                const picks = [];
 
                 for (const incident of pending) {
                     const bids = state.resources
-                        .map(resource => ({ resource, score: scoreResource(resource, incident, strategy) }))
+                        .map(resource => ({
+                            resource,
+                            score: scoreResource(resource, incident, state.strategy, { method, skipPriorityGate: true })
+                        }))
                         .filter(bid => bid.resource.status === "available")
                         .sort((a, b) => b.score.total - a.score.total);
                     const best = bids[0];
                     if (!best) {
                         unmet += incident.urgency;
+                        picks.push(`${incident.type}: —`);
                         continue;
                     }
                     response += best.score.distance;
                     risk += best.score.routeRisk;
                     fuel += best.score.fuelCost;
+                    coverage += method === "polygon"
+                        ? best.score.polygonScore
+                        : method === "ellipse"
+                            ? best.score.ellipseScore
+                            : Math.round((best.score.ellipseScore + best.score.polygonScore) / 2);
                     unmet += best.score.canCommit ? 0 : incident.urgency * 0.4;
+                    picks.push(`I${incident.id}→R${best.resource.id}`);
                 }
 
                 const count = Math.max(pending.length, 1);
                 return {
-                    strategy,
+                    method,
                     response: Math.round(response / count),
                     risk: Math.round(risk / count),
                     fuel,
-                    unmet: Math.round(unmet)
+                    coverage: Math.round(coverage / count),
+                    unmet: Math.round(unmet),
+                    picks: picks.slice(0, 3).join(", ")
                 };
             });
 
             panel.innerHTML = `
-                <div class="whatif-row">
-                    <div>Strategy</div><div>Resp.</div><div>Risk</div><div>Fuel</div><div>Unmet</div>
+                <div class="whatif-row" style="grid-template-columns:1.2fr repeat(5,0.7fr);">
+                    <div>Method</div><div>Resp.</div><div>Risk</div><div>Fuel</div><div>Cover</div><div>Unmet</div>
                 </div>
                 ${rows.map(row => `
-                    <div class="whatif-row">
-                        <div><strong>${formatStrategy(row.strategy)}</strong></div>
+                    <div class="whatif-row" style="grid-template-columns:1.2fr repeat(5,0.7fr);">
+                        <div><strong>${formatRankingMethod(row.method)}</strong></div>
                         <div>${row.response}</div>
                         <div>${row.risk}</div>
                         <div>${row.fuel}</div>
+                        <div>${row.coverage}</div>
                         <div>${row.unmet}</div>
                     </div>
+                    <div class="note" style="margin:2px 0 8px;">Picks: ${row.picks}</div>
                 `).join("")}
-                <div class="note" style="margin-top:8px;">Lower numbers are better for response, risk, fuel, and unmet urgency.</div>
+                <div class="note" style="margin-top:8px;">Lower is better for Resp/Risk/Fuel/Unmet. Higher Cover is better. Preview only — no actuation. GAPD still orders live dispatch by priority band.</div>
             `;
         }
 
@@ -1470,6 +1809,9 @@
                 traceId: trace.traceId,
                 time: trace.time || "",
                 strategy: trace.strategy || "",
+                rankingMethod: trace.rankingMethod || "weighted",
+                priorityBand: trace.priorityBand ?? 0,
+                useGapdPriority: trace.useGapdPriority !== false,
                 controlMode: trace.controlMode || "closed",
                 outcome: trace.outcome || "",
                 playbookHint: trace.playbookHint || "",
@@ -1493,6 +1835,9 @@
                 running: state.running,
                 speed: state.speed,
                 strategy: state.strategy,
+                rankingMethod: state.rankingMethod,
+                useGapdPriority: state.useGapdPriority,
+                showGeometryOverlay: state.showGeometryOverlay,
                 tick: state.tick,
                 useAgentCouncil: state.useAgentCouncil,
                 closedLoopControl: state.closedLoopControl,
@@ -1555,7 +1900,11 @@
 
                 state.running = !!data.running;
                 state.speed = data.speed ?? 0.35;
-                state.strategy = data.strategy || "balanced";
+                state.strategy = "balanced";
+                state.rankingMethod = data.rankingMethod || "weighted";
+                state.useGapdPriority = true;
+                state.showGeometryOverlay = true;
+                state.speed = 0.35;
                 state.tick = data.tick || 0;
                 state.useAgentCouncil = data.useAgentCouncil !== false;
                 state.closedLoopControl = data.closedLoopControl !== false;
@@ -1574,8 +1923,7 @@
                 state.decisionTrace = data.decisionTrace || null;
                 state.traceStore = data.traceStore || [];
 
-                document.getElementById("strategySelect").value = state.strategy;
-                document.getElementById("speedSelect").value = String(state.speed);
+                document.getElementById("rankingMethodSelect").value = state.rankingMethod;
                 document.getElementById("agentCouncilToggle").checked = state.useAgentCouncil;
                 document.getElementById("closedLoopToggle").checked = state.closedLoopControl;
                 document.getElementById("toggleRunBtn").textContent = state.running ? "Pause" : "Resume";
@@ -1855,6 +2203,7 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             drawRiskZones();
+            drawGeometryOverlays();
             drawBases();
             drawRoutes();
             drawIncidents();
@@ -1962,6 +2311,8 @@
             document.getElementById("statResolved").textContent = state.resolved;
             document.getElementById("statScore").textContent = state.decisions ? Math.round(state.totalScore / state.decisions) : 0;
             document.getElementById("strategyBadge").textContent = formatStrategy(state.strategy);
+            const rankingBadge = document.getElementById("rankingBadge");
+            if (rankingBadge) rankingBadge.textContent = formatRankingMethod(state.rankingMethod);
             const modeBadge = document.getElementById("controlModeBadge");
             if (modeBadge) {
                 const open = !isClosedLoop();
@@ -1991,18 +2342,20 @@
 
             const incidents = document.getElementById("incidentList");
             const visible = state.incidents.filter(incident => incident.status !== "resolved");
-            incidents.innerHTML = visible.length ? visible.map(incident => `
+            incidents.innerHTML = visible.length ? visible.map(incident => {
+                const band = priorityBand(incident.urgency);
+                return `
                 <div class="card">
                     <div class="card-top">
                         <div>
                             <div class="card-title">${incident.type} I${incident.id}</div>
-                            <div class="meta">Need: ${incident.need} | People affected: ${incident.people}</div>
+                            <div class="meta">Need: ${incident.need} | People affected: ${incident.people} | GAPD: ${formatPriorityBand(band)}</div>
                         </div>
                         <span class="pill ${incident.urgency >= 85 ? "red" : "warn"}">urgency ${incident.urgency}</span>
                     </div>
                     <div class="meta">Status: ${incident.status}${incident.assignedResourceId ? ` | Assigned R${incident.assignedResourceId}` : ""}</div>
-                </div>
-            `).join("") : '<div class="note">All current incidents have been resolved.</div>';
+                </div>`;
+            }).join("") : '<div class="note">All current incidents have been resolved.</div>';
         }
 
         const AGENT_META = {
@@ -2112,7 +2465,16 @@
             const res = trace.winner.resource;
             const inc = trace.incident;
             const strategy = formatStrategy(trace.strategy);
-            let text = `Issued actuation for <strong>${res.type} R${res.id}</strong> to <strong>${inc.type}</strong> using <strong>${strategy}</strong> strategy. `;
+            const method = formatRankingMethod(trace.rankingMethod || score.rankingMethod || state.rankingMethod);
+            const band = formatPriorityBand(trace.priorityBand ?? score.priorityBand ?? priorityBand(inc.urgency));
+            let text = `Issued actuation for <strong>${res.type} R${res.id}</strong> to <strong>${inc.type}</strong> using <strong>${method}</strong> ranking (${strategy} weights`;
+            if (trace.useGapdPriority !== false && state.useGapdPriority) {
+                text += `, GAPD band <strong>${band}</strong>`;
+            }
+            text += `). `;
+            if (score.ellipseScore != null || score.polygonScore != null) {
+                text += `Geometry fits — ellipse <strong>${score.ellipseScore ?? "—"}</strong>, polygon <strong>${score.polygonScore ?? "—"}</strong>. `;
+            }
             if (score.councilDelta != null && score.councilDelta !== 0) {
                 const base = score.total - score.councilDelta;
                 text += `Suitability moved from <strong>${base}</strong> to <strong>${score.total}</strong> after council (${formatCouncilDelta(score.councilDelta)}). `;
@@ -2137,7 +2499,9 @@
 
         function renderAllocationChips(trace, score, passed, totalChecks) {
             const chips = [
-                `<span class="alloc-chip">${formatStrategy(trace.strategy)}</span>`
+                `<span class="alloc-chip">${formatRankingMethod(trace.rankingMethod || score.rankingMethod || state.rankingMethod)}</span>`,
+                `<span class="alloc-chip">${formatStrategy(trace.strategy)}</span>`,
+                `<span class="alloc-chip">${formatPriorityBand(trace.priorityBand ?? score.priorityBand ?? priorityBand(trace.incident.urgency))}</span>`
             ];
             if (trace.controlMode === "open") {
                 chips.push('<span class="alloc-chip warn">Open loop</span>');
@@ -2160,13 +2524,15 @@
             return `
                 <div class="alloc-section">
                     <div class="alloc-section-title">Suitability breakdown</div>
-                    <div class="alloc-explainer">Weighted score from urgency, distance, capability, fuel, and route safety.</div>
+                    <div class="alloc-explainer">Method <strong>${formatRankingMethod(score.rankingMethod || state.rankingMethod)}</strong> — weighted factors plus ellipse/polygon geometry fits.</div>
                     <div class="score-grid">
                         <div class="score"><span>Urgency</span><strong>${score.urgencyScore}</strong></div>
                         <div class="score"><span>Distance</span><strong>${score.distanceScore}</strong></div>
                         <div class="score"><span>Capability</span><strong>${score.capabilityScore}</strong></div>
                         <div class="score"><span>Fuel</span><strong>${score.fuelScore}</strong></div>
                         <div class="score"><span>Route</span><strong>${score.riskScore}</strong></div>
+                        <div class="score"><span>Ellipse</span><strong>${score.ellipseScore ?? "—"}</strong></div>
+                        <div class="score"><span>Polygon</span><strong>${score.polygonScore ?? "—"}</strong></div>
                         <div class="score total"><span>Total suitability</span><strong>${score.total}</strong></div>
                     </div>
                 </div>`;
@@ -2295,6 +2661,15 @@
             }[strategy] || strategy;
         }
 
+        function formatRankingMethod(method) {
+            return {
+                weighted: "Weighted",
+                ellipse: "Ellipse",
+                polygon: "Polygon",
+                hybrid: "Hybrid"
+            }[method] || method;
+        }
+
         function loop() {
             if (state.running) {
                 state.tick += 1;
@@ -2307,7 +2682,6 @@
 
         document.getElementById("startDemoBtn").addEventListener("click", () => resetDemo(true, true));
         document.getElementById("resetBtn").addEventListener("click", () => resetDemo(false, false));
-        document.getElementById("addIncidentBtn").addEventListener("click", addRandomIncident);
         document.getElementById("previewBtn").addEventListener("click", updateWhatIf);
         document.getElementById("briefingBtn").addEventListener("click", generateBriefing);
         document.getElementById("reportBtn").addEventListener("click", generateIncidentReport);
@@ -2315,13 +2689,12 @@
             state.running = !state.running;
             document.getElementById("toggleRunBtn").textContent = state.running ? "Pause" : "Resume";
         });
-        document.getElementById("strategySelect").addEventListener("change", event => {
-            state.strategy = event.target.value;
+        document.getElementById("rankingMethodSelect").addEventListener("change", event => {
+            state.rankingMethod = event.target.value;
+            state.useGapdPriority = true;
+            state.showGeometryOverlay = true;
             updateWhatIf();
             renderAll();
-        });
-        document.getElementById("speedSelect").addEventListener("change", event => {
-            state.speed = Number(event.target.value);
         });
         document.getElementById("agentCouncilToggle").addEventListener("change", event => {
             state.useAgentCouncil = event.target.checked;
@@ -2345,6 +2718,11 @@
 
         if (!restoreLiveSession()) {
             resetDemo(false);
+        } else {
+            state.strategy = "balanced";
+            state.speed = 0.35;
+            state.useGapdPriority = true;
+            state.showGeometryOverlay = true;
         }
         checkBackendHealth();
         lucide.createIcons();
