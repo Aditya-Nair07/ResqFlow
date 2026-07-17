@@ -1,0 +1,15 @@
+case_id,ranking_method,control_mode,priority_mode,scene,seed,assignments,repairs,unsafe_actuations,avg_distance,avg_route_risk,total_fuel_cost,critical_served
+method_weighted,weighted,closed,gapd,default,42,5,1,0,10.2,15.6,22,2
+method_ellipse,ellipse,closed,gapd,default,42,5,0,0,10.4,15.6,23,2
+method_polygon,polygon,closed,gapd,default,42,5,0,0,10.4,15.6,23,2
+method_hybrid,hybrid,closed,gapd,default,42,5,0,0,10.4,15.6,23,2
+control_closed,hybrid,closed,gapd,default,42,5,0,0,10.4,15.6,23,2
+control_open,hybrid,open,gapd,default,42,5,0,0,10.4,15.6,23,2
+control_closed_stress,hybrid,closed,gapd,stress,42,5,1,0,12.6,17.8,27,2
+control_open_stress,hybrid,open,gapd,stress,42,5,0,3,17,18.8,36,2
+priority_gapd,hybrid,closed,gapd,default,42,5,0,0,10.4,15.6,23,2
+priority_urgency,hybrid,closed,urgency,default,42,5,0,0,10.4,15.6,23,2
+scene_default,hybrid,closed,gapd,default,42,5,0,0,10.4,15.6,23,2
+scene_risk_heavy,hybrid,closed,gapd,risk_heavy,42,4,3,0,23,57.5,40,1
+scene_sparse,hybrid,closed,gapd,sparse,42,4,0,0,12,1.5,21,2
+scene_stress,hybrid,closed,gapd,stress,42,5,1,0,12.6,17.8,27,2
