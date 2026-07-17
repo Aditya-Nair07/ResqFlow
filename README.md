@@ -1,44 +1,68 @@
 # ResQFlow: Closed-Loop Cyber-Physical Orchestration for Disaster Resource Dispatch
 
-Single-file orchestration UI in `index.html` (brand: **ResQFlow**).
+Browser orchestration UI in `index.html` (brand: **ResQFlow**), with optional FastAPI backend for digital twin evidence, agent council, and AI briefing/report.
 
-## Phase 2 — Run with backend (optional)
+## What’s new (geometry + priority dispatch)
 
-The simulation runs fully in the browser. **Briefing** and **Report** can call a small FastAPI backend for AI-generated text, with automatic local fallback if the backend is offline.
+Dispatch ranking is no longer weighted-only. Controls expose a **Ranking method**:
+
+| Method | Idea |
+|--------|------|
+| **Weighted** | Multi-factor score (urgency, distance, capability, fuel, route safety) — Balanced weights |
+| **Ellipse** | Reachability ellipse with foci = nearest base + unit; major axis from fuel × speed |
+| **Polygon** | Hazard-aware service polygon (risk zones cut coverage); convex hull fit score |
+| **Hybrid** | `0.4·Weighted + 0.3·Ellipse + 0.3·Polygon` |
+
+**GAPD** (Geometry-Aware Priority Dispatch) is always on: incidents are ordered by priority band + geometry fit + people pressure (not urgency alone), with soft-reservation of capable units for critical cases.
+
+**Closed-loop verify-then-actuate** is unchanged: ranking proposes candidates; **8 physical checks** (including fuel-at-arrival and ETA vs urgency) decide actuation; failed top picks use transactional repair.
+
+**Method compare** (Preview) shows Weighted / Ellipse / Polygon / Hybrid side by side without committing.
+
+Map overlays draw ellipses (cyan) or service polygons (amber) when those ranking modes are selected.
+
+## Run with backend (optional)
+
+Simulation runs fully in the browser. Backend adds twin evidence, council, and AI text.
 
 ### 1. Backend setup
 
 ```bash
-cd disaster_response
+# from repo root (this folder)
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 cp .env.example .env
-# Edit disaster_response/.env — set AICREDITS_API_KEY (see below)
+# Edit .env — set AICREDITS_API_KEY if you want LLM text
 cd backend
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
 ```
 
 ### 2. Open the UI
 
-Open `index.html` in a browser (double-click or drag into Chrome/Firefox).
+```bash
+# another terminal, repo root
+python3 -m http.server 5500
+```
 
-The **Summary** panel shows backend status:
-- **Connected (aicredits)** — LLM key loaded; Briefing/Report use AI
-- **Connected (local text only)** — backend up but no API key
-- **Offline** — frontend uses built-in local text
+Open **http://localhost:5500/index.html**
 
-### 3. Health check (terminal)
+Summary status:
+- **Connected (aicredits)** — LLM key loaded; Briefing/Report use AI  
+- **Connected (local text only)** — backend up but no API key  
+- **Offline** — local text fallback; twin evidence unavailable  
+
+### 3. Health check
 
 ```bash
 curl http://localhost:8000/health
 ```
 
-Expected: `{"status":"ok","service":"resqflow-api","llm_configured":true/false,"provider":...}`
+Expected: `{"status":"ok","service":"resqflow-api",...,"graph":"networkx","agents":"council"}`
 
-### AICredits setup (OpenAI-compatible)
+### AICredits setup
 
-Put your key in **`disaster_response/.env`** (create by copying `.env.example`):
+In `.env` at repo root:
 
 ```env
 LLM_PROVIDER=aicredits
@@ -47,51 +71,40 @@ AICREDITS_BASE_URL=https://api.aicredits.in/v1
 AICREDITS_MODEL=gpt-4o-mini
 ```
 
-Restart the backend after editing `.env`. The API uses the same OpenAI chat-completions format; only the base URL and key change.
+Restart the backend after editing `.env`.
 
-## Phase 3 — Knowledge graph
+## Digital twin (`graph.html`)
 
-When the backend is running, each allocation fetches **graph evidence** from `POST /graph/evidence`:
-- **Evidence path** — base → resource → risk zone → incident (node/edge chain)
-- **Ripple check** — competing incidents, fuel pressure, coverage gaps
-- **2-hop subgraph** — neighborhood summary around the incident
+When the backend is running, each allocation can attach **graph evidence** (`POST /graph/evidence`): evidence path, ripple check, neighborhood subgraph. Traces save under `data/traces/`.
 
-Traces are saved to `disaster_response/data/traces/` as JSON for audit replay.
+Explorer (Focus view):
 
-Health check includes `"graph": "networkx"` and `"agents": "council"`.
+1. Backend + `python3 -m http.server 5500`
+2. **http://localhost:5500/index.html** → **Start scenario**
+3. Header **Digital twin** (or Latest allocation → Digital twin)
+4. Pick **Incident** / **Trace**, **Refresh**; pan/zoom with mouse (scroll = zoom, drag = pan)
 
-### Phase 4 — Agent council
+**Endpoints:** `POST /graph/full`, `POST /graph/evidence`, `GET /graph/traces`, `GET /graph/traces/{id}`, `POST /agents/council`
 
-With **Agent council** enabled (Controls checkbox), each allocation runs three graph-grounded reviewers before commit:
+## Agent council
 
-- **Medical** — capability & urgency  
-- **Logistics** — fuel & competing coverage  
-- **Route** — risk exposure  
-
-`POST /agents/council` returns merged score deltas; the UI re-ranks candidates. Uses your AICredits/OpenAI key when configured; otherwise rule-based council.
-
-### Knowledge Graph Explorer (`graph.html`)
-
-Visual explorer for reviewers — interactive node-link diagram (vis-network).
-
-1. Run backend + `python3 -m http.server 5500` in `disaster_response/`
-2. Open **http://localhost:5500/index.html** → **Start scenario**
-3. Click **Graph view** or header **Knowledge graph**
-4. On `graph.html`: pan/zoom graph, pick incident, trace, hops; see evidence path glow and ripple panel
-
-**Endpoints:** `POST /graph/full`, `GET /graph/traces`, `GET /graph/traces/{id}`
+With **Agent council** enabled, three twin-grounded reviewers (Medical / Logistics / Route) re-rank the top candidates before physical verification. LLM when configured; otherwise heuristic council.
 
 ## Run without backend
 
-Open `index.html` only. No server or API key required. Briefing and Report use local rule-based text.
+Open `index.html` only (or static server alone). Ranking, GAPD, overlays, and closed-loop still work. Briefing/Report use local text; twin evidence needs the API.
 
 ## Quick test
 
-1. Click **Start scenario**.
-2. Watch the **Operations map**: bases, risk zones, incidents, routes.
-3. Change **Strategy** and use **Preview** under **Strategy compare**.
-4. Use **Quick request** + **Add** for a one-line request, or **Add incident**.
-5. Read **Latest allocation** for scores, graph evidence path, and ripple notes.
-6. Under **Summary**, use **Briefing** and **Report** (backend optional).
+1. **Reset**, then **Method compare → Preview** — compare picks across Weighted / Ellipse / Polygon / Hybrid.  
+2. Set **Ranking method** to Ellipse or Polygon — see map overlays.  
+3. Keep **Closed-loop** on → **Start scenario**.  
+4. Read **Latest allocation** for method, GAPD band, Physical verify 8/8, and scores.  
+5. Open **Digital twin** for evidence path + ripple.  
+6. Optional: **Briefing** / **Report** under Summary.
 
-Playbook memory and full trace history still run in logic for scoring and reports; the sidebar panels were removed to reduce clutter.
+## Controls (decluttered)
+
+**Operations:** Start / Pause / Reset · Ranking method · Agent council · Closed-loop  
+
+Always on (no toggles): GAPD priority, geometry overlays for Ellipse/Polygon/Hybrid, Demo speed, Balanced weighted factors.
