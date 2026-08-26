@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResQFlow-Flood — Evidence Graph</title>
+  <script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>body { background:#030712; color:#e2e8f0; font-family:system-ui,sans-serif; }</style>
+</head>
+<body class="p-4 min-h-screen">
+  <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-sky-300">ResQFlow-Flood — Digital Twin</h1>
+      <p class="text-xs text-slate-400">Group → vehicle → route → shelter evidence chain</p>
+    </div>
+    <div class="flex gap-2">
+      <a href="flood.html" class="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-sm">← Simulation</a>
+      <select id="scenarioSelect" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"></select>
+      <select id="groupSelect" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"></select>
+      <button id="refreshBtn" class="px-3 py-2 rounded-lg bg-sky-700 text-sm font-semibold">Refresh</button>
+    </div>
+  </header>
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div id="network" class="lg:col-span-2 h-[520px] bg-slate-900/60 border border-slate-700 rounded-xl"></div>
+    <div class="space-y-3 text-sm">
+      <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-3">
+        <h2 class="font-semibold text-sky-300 mb-2">Evidence narrative</h2>
+        <p id="narrative" class="text-xs text-slate-300"></p>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-3">
+        <h2 class="font-semibold text-sky-300 mb-2">Ripple check</h2>
+        <pre id="ripple" class="text-[10px] text-slate-400 whitespace-pre-wrap"></pre>
+      </div>
+    </div>
+  </div>
+  <script>
+    const API = "http://127.0.0.1:8000";
+    let snapshot = null;
+
+    async function api(path, opts = {}) {
+      const res = await fetch(`${API}${path}`, { headers: { "Content-Type": "application/json" }, ...opts });
+      if (!res.ok) throw new Error(await res.text());
+      return res.json();
+    }
+
+    async function loadScenarios() {
+      const data = await api("/flood/scenarios");
+      const sel = document.getElementById("scenarioSelect");
+      sel.innerHTML = "";
+      for (const s of data.scenarios) {
+        const o = document.createElement("option");
+        o.value = s.id; o.textContent = s.name;
+        sel.appendChild(o);
+      }
+    }
+
+    function fillGroups() {
+      const sel = document.getElementById("groupSelect");
+      sel.innerHTML = "";
+      for (const g of snapshot?.groups || []) {
+        const o = document.createElement("option");
+        o.value = g.id; o.textContent = `${g.label || g.id} (${g.status})`;
+        sel.appendChild(o);
+      }
+    }
+
+    function renderGraph(evidence) {
+      const nodes = new vis.DataSet((evidence.evidence?.nodes || []).map(n => ({
+        id: n.id,
+        label: n.label || n.id,
+        color: n.kind === "EvacGroup" ? "#f97316" : n.kind === "Vehicle" ? "#a78bfa" : n.kind === "Shelter" ? "#22c55e" : "#64748b",
+        font: { color: "#e2e8f0", size: 11 },
+      })));
+      const edges = new vis.DataSet((evidence.evidence?.edges || []).map((e, i) => ({
+        id: i,
+        from: e.source,
+        to: e.target,
+        label: e.type || "",
+        arrows: "to",
+        color: { color: "#38bdf8" },
+        font: { color: "#94a3b8", size: 10 },
+      })));
+      new vis.Network(document.getElementById("network"), { nodes, edges }, {
+        physics: { stabilization: true },
+        interaction: { hover: true },
+      });
+    }
+
+    async function refresh() {
+      const scenarioId = document.getElementById("scenarioSelect").value;
+      snapshot = await api(`/flood/snapshot?scenarioId=${encodeURIComponent(scenarioId)}`);
+      fillGroups();
+      const groupId = document.getElementById("groupSelect").value || snapshot.groups?.[0]?.id;
+      const evidence = await api(`/flood/graph/evidence?scenarioId=${encodeURIComponent(scenarioId)}&groupId=${encodeURIComponent(groupId)}`);
+      document.getElementById("narrative").textContent = evidence.evidence?.narrative || "No assignment yet — run simulation from flood.html";
+      document.getElementById("ripple").textContent = JSON.stringify(evidence.ripple, null, 2);
+      if (evidence.available) renderGraph(evidence);
+    }
+
+    document.getElementById("refreshBtn").addEventListener("click", () => refresh().catch(console.error));
+    document.getElementById("scenarioSelect").addEventListener("change", () => refresh().catch(console.error));
+    document.getElementById("groupSelect").addEventListener("change", () => refresh().catch(console.error));
+
+    (async () => {
+      await loadScenarios();
+      await refresh();
+    })();
+  </script>
+</body>
+</html>

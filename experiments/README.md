@@ -5,10 +5,12 @@ Offline, deterministic benchmarks of the auction dispatch core (geometry ranking
 ## Run
 
 ```bash
-node experiments/run_benchmarks.js
+node experiments/run_benchmarks.js          # general ResQFlow
+python3 experiments/run_flood_benchmark.py  # flood evacuation
+# or: node experiments/run_flood_benchmarks.js
 ```
 
-Writes `experiments/results/benchmark_results.csv`. Re-runs produce identical CSV (seed `42`, no RNG).
+General writes `experiments/results/benchmark_results.csv`. Flood writes `experiments/results/flood_benchmark_results.csv`. Re-runs are deterministic.
 
 ## Metrics (7)
 

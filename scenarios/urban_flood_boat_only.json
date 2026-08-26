@@ -1,0 +1,43 @@
+{
+  "id": "urban_flood_boat_only",
+  "seed": 42,
+  "name": "Deep flood — bus blocked, boat required",
+  "gridSize": 25,
+  "cellSize": 2,
+  "rainfallPerTick": 0.65,
+  "drainRate": 0.005,
+  "depthSpread": 0.22,
+  "lowPoints": [
+    { "x": 12, "y": 14, "weight": 1.5 },
+    { "x": 10, "y": 16, "weight": 1.2 }
+  ],
+  "roadEdges": [
+    { "id": "e1", "from": [4, 4], "to": [8, 4], "travelTime": 4 },
+    { "id": "e2", "from": [8, 4], "to": [12, 4], "travelTime": 4 },
+    { "id": "e3", "from": [12, 4], "to": [16, 4], "travelTime": 4 },
+    { "id": "e4", "from": [8, 8], "to": [12, 8], "travelTime": 4, "closureDepthCm": 20 },
+    { "id": "e5", "from": [8, 12], "to": [12, 12], "travelTime": 4, "closureDepthCm": 20 },
+    { "id": "e6", "from": [12, 12], "to": [16, 12], "travelTime": 4 },
+    { "id": "e7", "from": [16, 12], "to": [20, 12], "travelTime": 4 },
+    { "id": "e8", "from": [20, 12], "to": [20, 8], "travelTime": 4 }
+  ],
+  "boatLinks": [
+    { "id": "b1", "from": [8, 14], "to": [12, 14], "travelTime": 4 },
+    { "id": "b2", "from": [12, 14], "to": [16, 14], "travelTime": 4 },
+    { "id": "b3", "from": [16, 14], "to": [20, 12], "travelTime": 5 }
+  ],
+  "depots": [
+    { "id": "depot_n", "label": "North", "x": 4, "y": 4 },
+    { "id": "depot_w", "label": "Water base", "x": 8, "y": 14 }
+  ],
+  "shelters": [
+    { "id": "shelter_dry", "label": "Dry zone hall", "x": 20, "y": 12, "capacity": 40, "node": [20, 12] }
+  ],
+  "groups": [
+    { "id": "g1", "label": "Canal-side trapped", "x": 12, "y": 14, "node": [12, 14], "people": 10, "vulnerability": 94, "mobility": "ambulatory", "deadlineTick": 22 }
+  ],
+  "vehicles": [
+    { "id": 1, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 80, "depotNode": [4, 4], "x": 4, "y": 4 },
+    { "id": 2, "type": "Rescue Boat", "mode": "water", "maxDepthCm": 200, "capacity": 12, "speed": 0.8, "fuel": 90, "depotNode": [8, 14], "x": 8, "y": 14 }
+  ]
+}

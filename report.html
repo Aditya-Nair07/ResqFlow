@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResQFlow-Flood — Citizen report</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; }
+  </style>
+</head>
+<body class="p-4 min-h-screen max-w-lg mx-auto">
+  <header class="mb-6">
+    <h1 class="text-xl font-bold text-sky-300">Report waterlogging</h1>
+    <p class="text-xs text-slate-400 mt-1">
+      Software sensor for the demo — residents report street flooding. No hardware required.
+      This updates the same flood simulation used by the ops dashboard.
+    </p>
+  </header>
+
+  <form id="reportForm" class="space-y-4 bg-slate-900/60 border border-slate-700 rounded-xl p-4">
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">Scenario (must match ops dashboard)</label>
+      <select id="scenarioId" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm"></select>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Grid X (0–24)</label>
+        <input id="x" type="number" min="0" max="24" value="12" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm" required />
+      </div>
+      <div>
+        <label class="block text-xs text-slate-400 mb-1">Grid Y (0–24)</label>
+        <input id="y" type="number" min="0" max="24" value="10" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm" required />
+      </div>
+    </div>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">How deep is the water?</label>
+      <select id="severity" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm">
+        <option value="shallow">Shallow — just started</option>
+        <option value="rising" selected>Rising — street filling</option>
+        <option value="knee_deep">Knee-deep — hard for cars/buses</option>
+        <option value="impassable">Impassable — road closed</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">People needing help (optional)</label>
+      <input id="people" type="number" min="0" max="200" value="0" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm" />
+    </div>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">Your name / role (optional)</label>
+      <input id="reporter" type="text" value="resident" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm" />
+    </div>
+    <div>
+      <label class="block text-xs text-slate-400 mb-1">Street / note (optional)</label>
+      <input id="note" type="text" placeholder="e.g. Canal Road near Block A" class="w-full bg-slate-950 border border-slate-600 rounded-lg px-3 py-2 text-sm" />
+    </div>
+    <button type="submit" class="w-full py-2.5 rounded-lg bg-sky-600 hover:bg-sky-500 font-semibold text-sm">
+      Send report to ResQFlow
+    </button>
+  </form>
+
+  <p id="result" class="mt-4 text-sm text-slate-300 whitespace-pre-wrap"></p>
+  <p class="mt-6 text-xs text-slate-500">
+    Tips for demo: use X=12, Y=10 on the default scenario, severity “Knee-deep”, then open
+    <a class="text-sky-400 underline" href="flood.html">flood.html</a> and watch depth / closed roads update.
+  </p>
+  <p class="mt-2"><a class="text-sky-400 text-sm underline" href="flood.html">← Back to ops dashboard</a></p>
+
+  <script>
+    const API = "http://127.0.0.1:8000";
+
+    async function loadScenarios() {
+      const sel = document.getElementById("scenarioId");
+      try {
+        const res = await fetch(`${API}/flood/scenarios`);
+        const data = await res.json();
+        sel.innerHTML = "";
+        for (const s of data.scenarios || []) {
+          const o = document.createElement("option");
+          o.value = s.id;
+          o.textContent = s.name;
+          sel.appendChild(o);
+        }
+      } catch {
+        sel.innerHTML = '<option value="urban_flood_default">urban_flood_default</option>';
+      }
+    }
+
+    document.getElementById("reportForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const body = {
+        scenarioId: document.getElementById("scenarioId").value,
+        x: Number(document.getElementById("x").value),
+        y: Number(document.getElementById("y").value),
+        severity: document.getElementById("severity").value,
+        people: Number(document.getElementById("people").value) || 0,
+        reporter: document.getElementById("reporter").value || "resident",
+        note: document.getElementById("note").value || "",
+      };
+      const out = document.getElementById("result");
+      out.textContent = "Sending…";
+      try {
+        const res = await fetch(`${API}/flood/report`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        const data = await res.json();
+        const r = data.report;
+        const fx = r.effects || {};
+        out.textContent =
+          "Report received by ResQFlow.\n\n" +
+          r.message + "\n" +
+          `Depth at location: ${fx.depthAtReport} cm\n` +
+          `Cells updated: ${fx.cellsTouched}\n` +
+          (fx.roadsForcedClosed?.length ? `Roads forced closed: ${fx.roadsForcedClosed.join(", ")}\n` : "") +
+          (fx.groupCreated ? `New evacuation group: ${fx.groupCreated}\n` : "") +
+          "\nOpen the ops dashboard — “Last sensed feedback” should show this report.";
+      } catch (err) {
+        out.textContent = "Failed: " + err.message + "\nIs the backend running on port 8000?";
+      }
+    });
+
+    loadScenarios();
+  </script>
+</body>
+</html>

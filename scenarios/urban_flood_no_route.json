@@ -1,0 +1,29 @@
+{
+  "id": "urban_flood_no_route",
+  "seed": 42,
+  "name": "Isolated group — no safe route remains",
+  "gridSize": 25,
+  "cellSize": 2,
+  "rainfallPerTick": 0.8,
+  "drainRate": 0.0,
+  "depthSpread": 0.25,
+  "lowPoints": [{ "x": 18, "y": 18, "weight": 2.0 }],
+  "roadEdges": [
+    { "id": "e1", "from": [4, 4], "to": [8, 4], "travelTime": 4 },
+    { "id": "e2", "from": [8, 4], "to": [12, 4], "travelTime": 4, "closureDepthCm": 15 },
+    { "id": "e3", "from": [12, 4], "to": [16, 4], "travelTime": 4, "closureDepthCm": 15 },
+    { "id": "e4", "from": [16, 4], "to": [20, 4], "travelTime": 4 },
+    { "id": "e5", "from": [20, 4], "to": [20, 8], "travelTime": 4 }
+  ],
+  "boatLinks": [],
+  "depots": [{ "id": "depot_n", "label": "North", "x": 4, "y": 4 }],
+  "shelters": [
+    { "id": "shelter_a", "label": "Safe hall", "x": 20, "y": 8, "capacity": 50, "node": [20, 8] }
+  ],
+  "groups": [
+    { "id": "g1", "label": "Cut-off peninsula", "x": 18, "y": 18, "node": [18, 18], "people": 8, "vulnerability": 98, "mobility": "ambulatory", "deadlineTick": 12 }
+  ],
+  "vehicles": [
+    { "id": 1, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 100, "depotNode": [4, 4], "x": 4, "y": 4 }
+  ]
+}

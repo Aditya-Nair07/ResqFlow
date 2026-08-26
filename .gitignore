@@ -15,10 +15,23 @@ __pycache__/
 .idea/
 .vscode/
 
-# Docs — only README.md is tracked on GitHub
+# Docs — keep README + project docs; ignore other local notes
 *.md
 !README.md
 !experiments/results/summary.md
+!docs/**/*.md
+!ARCHITECTURE-FLOOD.md
+!BASELINE.md
+!data/chennai/PROVENANCE.md
+
+# Friend reference download (source is GitHub; do not re-upload)
+ResqFlow-main/
+ResqFlow-main.zip
+
+# Frontend build deps
+web/node_modules/
+web/dist/
+web/tsconfig.tsbuildinfo
 
 # Optional: local demo trace JSON (remove these 3 lines if you want traces in the repo)
 data/traces/*.json

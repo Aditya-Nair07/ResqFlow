@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ResQFlow-Flood — Urban Evacuation</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #0f172a; color: #e2e8f0; font-family: system-ui, sans-serif; }
+    canvas { background: #1e293b; border-radius: 12px; border: 1px solid #334155; }
+    .chip { font-size: 10px; padding: 2px 8px; border-radius: 999px; background: #1e293b; border: 1px solid #475569; }
+  </style>
+</head>
+<body class="p-4 min-h-screen">
+  <header class="mb-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <h1 class="text-xl font-bold text-sky-300">ResQFlow-Flood</h1>
+      <p class="text-xs text-slate-400">Closed-loop urban flood evacuation — groups → vehicles → shelters</p>
+    </div>
+    <div class="flex flex-wrap gap-2 items-center">
+      <select id="scenarioSelect" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm"></select>
+      <select id="rankingMethod" class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-sm">
+        <option value="weighted">Weighted</option>
+        <option value="ellipse">Ellipse</option>
+        <option value="polygon">Polygon</option>
+        <option value="hybrid" selected>Hybrid</option>
+      </select>
+      <label class="text-xs flex items-center gap-1"><input type="checkbox" id="closedLoop" checked /> Closed-loop</label>
+      <button id="resetBtn" class="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-sm">Reset</button>
+      <button id="stepBtn" class="px-3 py-2 rounded-lg bg-sky-700 text-sm font-semibold">Step</button>
+      <button id="runBtn" class="px-3 py-2 rounded-lg bg-emerald-700 text-sm font-semibold">Start</button>
+      <button id="pauseBtn" class="px-3 py-2 rounded-lg bg-amber-800 text-sm">Pause</button>
+      <a href="report.html" class="px-3 py-2 rounded-lg bg-cyan-800 text-sm font-semibold">Citizen report</a>
+      <a href="flood-graph.html" class="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-sm">Twin</a>
+      <a href="index.html" class="px-3 py-2 rounded-lg bg-slate-800 border border-slate-600 text-xs">General demo</a>
+    </div>
+  </header>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+    <div class="lg:col-span-2">
+      <canvas id="map" width="700" height="520"></canvas>
+      <p id="statusLine" class="text-xs text-slate-400 mt-2">API: checking…</p>
+    </div>
+    <div class="space-y-3 text-sm">
+      <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-3">
+        <h2 class="font-semibold text-sky-300 mb-2">Last sensed feedback</h2>
+        <p class="text-[10px] text-slate-500 mb-1">Citizen report = software sensor (no hardware)</p>
+        <pre id="citizenFeedback" class="text-[10px] text-cyan-200 whitespace-pre-wrap">—</pre>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-3">
+        <h2 class="font-semibold text-sky-300 mb-2">Metrics</h2>
+        <div id="metrics" class="text-xs space-y-1"></div>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-3 max-h-48 overflow-auto">
+        <h2 class="font-semibold text-sky-300 mb-2">Evacuation groups</h2>
+        <div id="groups" class="text-xs space-y-2"></div>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-3 max-h-40 overflow-auto">
+        <h2 class="font-semibold text-sky-300 mb-2">Shelters</h2>
+        <div id="shelters" class="text-xs space-y-1"></div>
+      </div>
+      <div class="bg-slate-900/60 border border-slate-700 rounded-xl p-3 max-h-40 overflow-auto">
+        <h2 class="font-semibold text-sky-300 mb-2">Latest trace</h2>
+        <pre id="trace" class="text-[10px] text-slate-300 whitespace-pre-wrap"></pre>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/flood/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+{
+  "rainfallMmHour": 14.5,
+  "forecastRainMmNext3h": 32.0,
+  "note": "Deterministic offline rainfall fixture for review demos"
+}

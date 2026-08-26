@@ -1,0 +1,50 @@
+{
+  "id": "urban_flood_stress",
+  "seed": 42,
+  "name": "Heavy rainfall — main artery floods early",
+  "gridSize": 25,
+  "cellSize": 2,
+  "rainfallPerTick": 0.55,
+  "drainRate": 0.01,
+  "depthSpread": 0.18,
+  "lowPoints": [
+    { "x": 12, "y": 8, "weight": 1.2 },
+    { "x": 12, "y": 12, "weight": 1.0 },
+    { "x": 10, "y": 10, "weight": 0.9 }
+  ],
+  "roadEdges": [
+    { "id": "e1", "from": [4, 4], "to": [8, 4], "travelTime": 4 },
+    { "id": "e2", "from": [8, 4], "to": [12, 4], "travelTime": 4 },
+    { "id": "e3", "from": [12, 4], "to": [16, 4], "travelTime": 4, "closureDepthCm": 20 },
+    { "id": "e4", "from": [16, 4], "to": [20, 4], "travelTime": 4 },
+    { "id": "e5", "from": [12, 4], "to": [12, 8], "travelTime": 4, "closureDepthCm": 22 },
+    { "id": "e6", "from": [12, 8], "to": [12, 12], "travelTime": 4 },
+    { "id": "e7", "from": [8, 8], "to": [12, 8], "travelTime": 4 },
+    { "id": "e8", "from": [8, 8], "to": [8, 12], "travelTime": 4 },
+    { "id": "e9", "from": [16, 8], "to": [20, 8], "travelTime": 4 },
+    { "id": "e10", "from": [4, 8], "to": [8, 8], "travelTime": 4 },
+    { "id": "e11", "from": [12, 12], "to": [16, 12], "travelTime": 4 },
+    { "id": "e12", "from": [8, 12], "to": [12, 12], "travelTime": 4 }
+  ],
+  "boatLinks": [
+    { "id": "b1", "from": [8, 12], "to": [12, 12], "travelTime": 5 },
+    { "id": "b2", "from": [12, 12], "to": [16, 12], "travelTime": 5 }
+  ],
+  "depots": [
+    { "id": "depot_north", "label": "North Depot", "x": 4, "y": 4 },
+    { "id": "depot_east", "label": "East Depot", "x": 20, "y": 4 }
+  ],
+  "shelters": [
+    { "id": "shelter_a", "label": "Community Hall", "x": 20, "y": 8, "capacity": 60, "node": [20, 8] },
+    { "id": "shelter_b", "label": "School Gym", "x": 4, "y": 8, "capacity": 40, "node": [4, 8] }
+  ],
+  "groups": [
+    { "id": "g1", "label": "Central trapped", "x": 12, "y": 10, "node": [12, 10], "people": 35, "vulnerability": 95, "mobility": "ambulatory", "deadlineTick": 18 },
+    { "id": "g2", "label": "West ward", "x": 8, "y": 10, "node": [8, 10], "people": 20, "vulnerability": 85, "mobility": "ambulatory", "deadlineTick": 22 }
+  ],
+  "vehicles": [
+    { "id": 1, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 70, "depotNode": [4, 4], "x": 4, "y": 4 },
+    { "id": 2, "type": "High-Clearance Truck", "mode": "road", "maxDepthCm": 45, "capacity": 20, "speed": 0.85, "fuel": 80, "depotNode": [20, 4], "x": 20, "y": 4 },
+    { "id": 3, "type": "Rescue Boat", "mode": "water", "maxDepthCm": 200, "capacity": 12, "speed": 0.75, "fuel": 75, "depotNode": [8, 12], "x": 8, "y": 12 }
+  ]
+}

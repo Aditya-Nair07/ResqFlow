@@ -1,0 +1,11 @@
+id,name,location_lat,location_lon,address,area,total_capacity,wheelchair_access,type,priority
+shelter_001,"Government Higher Secondary School",12.9716,80.2421,"Velachery Main Road",Velachery,600,true,school,high
+shelter_002,"Sri Sankara Vidyalaya School",12.9689,80.2456,"100 Feet Road, Velachery",Velachery,450,true,school,high
+shelter_003,"Community Hall, T Nagar",13.0339,80.2376,"Thyagaraya Nagar",T Nagar,300,true,community_hall,medium
+shelter_004,"Government School, Saidapet",13.0067,80.2206,"Saidapet Main Road",Saidapet,400,true,school,high
+shelter_005,"Kalyana Mandapam, OMR",12.9352,80.2495,"Near Sholinganallur Junction",OMR,250,true,community_hall,medium
+shelter_006,"Government School, Mambalam",13.0293,80.2348,"Mambalam High Road",Mambalam,350,true,school,high
+shelter_007,"Adayar Community Centre",12.9411,80.2589,"Adayar Main Road",Adayar,280,true,community_hall,medium
+shelter_008,"Thoraipakkam Panchayat Office",12.9165,80.2425,"Rajiv Gandhi Salai",Thoraipakkam,200,false,government,low
+shelter_009,"Palavakkam School",12.9589,80.2678,"Palavakkam Main Road",Palavakkam,320,true,school,medium
+shelter_010,"Besant Nagar Community Hall",12.9591,80.2659,"Besant Nagar 3rd Avenue",Besant Nagar,270,true,community_hall,medium

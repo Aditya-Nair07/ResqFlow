@@ -1,0 +1,35 @@
+{
+  "id": "urban_flood_shelter_full",
+  "seed": 42,
+  "name": "Shelter fills — alternate destination required",
+  "gridSize": 25,
+  "cellSize": 2,
+  "rainfallPerTick": 0.3,
+  "drainRate": 0.02,
+  "depthSpread": 0.1,
+  "lowPoints": [{ "x": 12, "y": 10, "weight": 1.0 }],
+  "roadEdges": [
+    { "id": "e1", "from": [4, 4], "to": [8, 4], "travelTime": 3 },
+    { "id": "e2", "from": [8, 4], "to": [12, 4], "travelTime": 3 },
+    { "id": "e3", "from": [12, 4], "to": [16, 4], "travelTime": 3 },
+    { "id": "e4", "from": [16, 4], "to": [20, 4], "travelTime": 3 },
+    { "id": "e5", "from": [12, 4], "to": [12, 8], "travelTime": 3 },
+    { "id": "e6", "from": [12, 8], "to": [12, 12], "travelTime": 3 },
+    { "id": "e7", "from": [16, 4], "to": [16, 8], "travelTime": 3 },
+    { "id": "e8", "from": [16, 8], "to": [20, 8], "travelTime": 3 },
+    { "id": "e9", "from": [4, 4], "to": [4, 8], "travelTime": 3 },
+    { "id": "e10", "from": [4, 8], "to": [4, 12], "travelTime": 3 }
+  ],
+  "boatLinks": [],
+  "depots": [{ "id": "depot_n", "label": "North", "x": 4, "y": 4 }],
+  "shelters": [
+    { "id": "shelter_near", "label": "Near Hall (full)", "x": 20, "y": 8, "capacity": 10, "occupancy": 8, "node": [20, 8] },
+    { "id": "shelter_far", "label": "West Gym", "x": 4, "y": 12, "capacity": 50, "node": [4, 12] }
+  ],
+  "groups": [
+    { "id": "g1", "label": "East block", "x": 12, "y": 8, "node": [12, 8], "people": 15, "vulnerability": 90, "mobility": "ambulatory", "deadlineTick": 30 }
+  ],
+  "vehicles": [
+    { "id": 1, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 100, "depotNode": [4, 4], "x": 4, "y": 4 }
+  ]
+}

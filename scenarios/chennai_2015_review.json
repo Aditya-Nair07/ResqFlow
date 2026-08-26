@@ -1,0 +1,458 @@
+{
+  "id": "chennai_2015_review",
+  "seed": 2015,
+  "name": "Chennai 2015 Review \u2014 deterministic replay (demo fixtures)",
+  "gridSize": 25,
+  "cellSize": 2,
+  "rainfallPerTick": 0.35,
+  "drainRate": 0.02,
+  "depthSpread": 0.12,
+  "lowPoints": [
+    {
+      "x": 12,
+      "y": 10,
+      "weight": 1.0
+    },
+    {
+      "x": 8,
+      "y": 14,
+      "weight": 0.8
+    },
+    {
+      "x": 16,
+      "y": 12,
+      "weight": 0.7
+    }
+  ],
+  "roadEdges": [
+    {
+      "id": "e1",
+      "from": [
+        4,
+        4
+      ],
+      "to": [
+        8,
+        4
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e2",
+      "from": [
+        8,
+        4
+      ],
+      "to": [
+        12,
+        4
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e3",
+      "from": [
+        12,
+        4
+      ],
+      "to": [
+        16,
+        4
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e4",
+      "from": [
+        16,
+        4
+      ],
+      "to": [
+        20,
+        4
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e5",
+      "from": [
+        8,
+        4
+      ],
+      "to": [
+        8,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e6",
+      "from": [
+        8,
+        8
+      ],
+      "to": [
+        8,
+        12
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e7",
+      "from": [
+        8,
+        12
+      ],
+      "to": [
+        8,
+        16
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e8",
+      "from": [
+        12,
+        4
+      ],
+      "to": [
+        12,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e9",
+      "from": [
+        12,
+        8
+      ],
+      "to": [
+        12,
+        12
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e10",
+      "from": [
+        12,
+        12
+      ],
+      "to": [
+        12,
+        16
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e11",
+      "from": [
+        16,
+        4
+      ],
+      "to": [
+        16,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e12",
+      "from": [
+        16,
+        8
+      ],
+      "to": [
+        16,
+        12
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e13",
+      "from": [
+        4,
+        4
+      ],
+      "to": [
+        4,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e14",
+      "from": [
+        4,
+        8
+      ],
+      "to": [
+        8,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e15",
+      "from": [
+        12,
+        8
+      ],
+      "to": [
+        16,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e16",
+      "from": [
+        8,
+        12
+      ],
+      "to": [
+        12,
+        12
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e17",
+      "from": [
+        12,
+        12
+      ],
+      "to": [
+        16,
+        12
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e18",
+      "from": [
+        20,
+        4
+      ],
+      "to": [
+        20,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e19",
+      "from": [
+        20,
+        8
+      ],
+      "to": [
+        16,
+        8
+      ],
+      "travelTime": 4
+    },
+    {
+      "id": "e20",
+      "from": [
+        4,
+        8
+      ],
+      "to": [
+        4,
+        12
+      ],
+      "travelTime": 4,
+      "boatOnly": false
+    }
+  ],
+  "boatLinks": [
+    {
+      "id": "b1",
+      "from": [
+        8,
+        16
+      ],
+      "to": [
+        12,
+        16
+      ],
+      "travelTime": 5
+    },
+    {
+      "id": "b2",
+      "from": [
+        12,
+        16
+      ],
+      "to": [
+        16,
+        16
+      ],
+      "travelTime": 5
+    }
+  ],
+  "depots": [
+    {
+      "id": "depot_north",
+      "label": "North Depot",
+      "x": 4,
+      "y": 4
+    },
+    {
+      "id": "depot_east",
+      "label": "East Depot",
+      "x": 20,
+      "y": 4
+    }
+  ],
+  "shelters": [
+    {
+      "id": "shelter_a",
+      "label": "Velachery School Shelter",
+      "x": 20,
+      "y": 8,
+      "capacity": 80,
+      "node": [
+        20,
+        8
+      ]
+    },
+    {
+      "id": "shelter_b",
+      "label": "Saidapet Community Hall",
+      "x": 4,
+      "y": 12,
+      "capacity": 50,
+      "node": [
+        4,
+        12
+      ]
+    }
+  ],
+  "groups": [
+    {
+      "id": "g1",
+      "label": "Velachery low-lying block",
+      "x": 12,
+      "y": 10,
+      "node": [
+        12,
+        10
+      ],
+      "people": 24,
+      "vulnerability": 92,
+      "mobility": "ambulatory",
+      "deadlineTick": 28,
+      "area": "Velachery"
+    },
+    {
+      "id": "g2",
+      "label": "Saidapet canal edge",
+      "x": 8,
+      "y": 14,
+      "node": [
+        8,
+        14
+      ],
+      "people": 18,
+      "vulnerability": 88,
+      "mobility": "ambulatory",
+      "deadlineTick": 24,
+      "area": "Saidapet"
+    },
+    {
+      "id": "g3",
+      "label": "OMR underpass pocket",
+      "x": 16,
+      "y": 12,
+      "node": [
+        16,
+        12
+      ],
+      "people": 12,
+      "vulnerability": 76,
+      "mobility": "wheelchair",
+      "deadlineTick": 32,
+      "area": "OMR"
+    },
+    {
+      "id": "g4",
+      "label": "T Nagar market crowd",
+      "x": 10,
+      "y": 8,
+      "node": [
+        10,
+        8
+      ],
+      "people": 30,
+      "vulnerability": 70,
+      "mobility": "ambulatory",
+      "deadlineTick": 36,
+      "area": "T Nagar"
+    }
+  ],
+  "vehicles": [
+    {
+      "id": 1,
+      "type": "Evacuation Bus",
+      "mode": "road",
+      "maxDepthCm": 25,
+      "capacity": 40,
+      "speed": 1.0,
+      "fuel": 100,
+      "depotNode": [
+        4,
+        4
+      ],
+      "x": 4,
+      "y": 4
+    },
+    {
+      "id": 2,
+      "type": "Evacuation Bus",
+      "mode": "road",
+      "maxDepthCm": 25,
+      "capacity": 40,
+      "speed": 1.0,
+      "fuel": 100,
+      "depotNode": [
+        20,
+        4
+      ],
+      "x": 20,
+      "y": 4
+    },
+    {
+      "id": 3,
+      "type": "High-Clearance Truck",
+      "mode": "road",
+      "maxDepthCm": 45,
+      "capacity": 20,
+      "speed": 0.85,
+      "fuel": 90,
+      "depotNode": [
+        4,
+        4
+      ],
+      "x": 4,
+      "y": 4
+    },
+    {
+      "id": 4,
+      "type": "Rescue Boat",
+      "mode": "water",
+      "maxDepthCm": 200,
+      "capacity": 12,
+      "speed": 0.75,
+      "fuel": 85,
+      "depotNode": [
+        8,
+        16
+      ],
+      "x": 8,
+      "y": 16
+    }
+  ]
+}

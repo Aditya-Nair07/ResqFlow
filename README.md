@@ -1,110 +1,138 @@
-# ResQFlow: Closed-Loop Cyber-Physical Orchestration for Disaster Resource Dispatch
+# ResQFlow / ResQFlow-Flood
 
-Browser orchestration UI in `index.html` (brand: **ResQFlow**), with optional FastAPI backend for digital twin evidence, agent council, and AI briefing/report.
+Closed-loop cyber-physical orchestration for disaster resource dispatch.
 
-## What’s new (geometry + priority dispatch)
+| Mode | UI | Scope |
+|------|-----|--------|
+| **ResQFlow** (general) | [`index.html`](index.html) | Generic incidents → resources, geometry ranking, GAPD |
+| **ResQFlow-Flood** | [`flood.html`](flood.html) | Urban flood evacuation: groups → vehicles → shelters under dynamic road inundation |
 
-Dispatch ranking is no longer weighted-only. Controls expose a **Ranking method**:
+The general demo is preserved as a reference ([`BASELINE.md`](BASELINE.md)). Flood specialization reuses the same closed-loop pattern with flood-specific simulation, routing, verification and twin evidence.
+
+## ResQFlow-Flood (primary specialization)
+
+**Working title:** *ResQFlow-Flood: Closed-Loop Urban Flood Evacuation under Dynamic Road Inundation*
+
+### Runtime loop
+
+1. **Sense** — deterministic flood grid, road depth, groups, shelters, vehicles  
+2. **Prioritize** — Flood-GAPD (evacuation band, vulnerability, deadline, people)  
+3. **Rank** — Weighted / Ellipse / Polygon / Hybrid over vehicle–route–shelter candidates  
+4. **Twin evidence** — NetworkX graph (`CAN_EVACUATE`, `DELIVERS_TO`, `ROUTE_BLOCKED_BY`)  
+5. **Verify** — 8 flood-evacuation checks before actuation  
+6. **Actuate** — dispatch, move vehicles, load groups, deliver to shelter  
+7. **Feedback** — advance flood tick; reroute or explicit failure on mid-route invalidation  
+
+All feedback is **software-only** (deterministic simulator). This is decision support, not a real flood forecast.
+
+### Run flood evacuation
+
+```bash
+# Terminal 1 — API (from repo root)
+source .venv/bin/activate          # if you haven't already
+pip install -r requirements.txt    # first time only
+cd backend
+python3 -m uvicorn main:app --reload --port 8000
+
+# Terminal 2 — unified React Operations Desk (friend UX on main API)
+cd web && npm install && npm run dev
+# http://localhost:5173
+
+# Optional — legacy static UI
+python3 -m http.server 5500
+# http://localhost:5500/flood.html  ·  report.html
+```
+
+If you see `uvicorn: command not found`, use `python3 -m uvicorn ...` as above, or activate `.venv` first.
+
+Merge notes: [`docs/UNIFIED-RESQFLOW-MERGE-CHECKLIST.md`](docs/UNIFIED-RESQFLOW-MERGE-CHECKLIST.md) · status [`docs/UNIFIED-IMPLEMENTATION-STATUS.md`](docs/UNIFIED-IMPLEMENTATION-STATUS.md).
+
+### Citizen sensing (no hardware)
+
+Use **Public Safety View** in the React app, or open **http://localhost:5500/report.html**.
+`POST /flood/reports/citizen` (alias `/flood/report`) updates the same plant used by dispatch. 
+
+### Flood API
+
+| Endpoint | Purpose |
+|----------|---------|
+| `GET /health` | includes `"mode": "flood-evacuation"` |
+| `GET /flood/scenarios` | list scenario fixtures |
+| `POST /flood/reset?scenarioId=` | reset session |
+| `GET /flood/snapshot` | current state |
+| `POST /flood/simulate/step` | advance ticks + dispatch |
+| `POST /flood/reports/citizen` | citizen sensing → plant |
+| `POST /flood/reports/operator` | field/operator sensing |
+| `GET /flood/incidents` | groups + reports |
+| `POST /flood/incidents/{id}/verify` | verify/reject |
+| `POST /flood/incidents/{id}/prioritize` | Flood-GAPD queue |
+| `POST /flood/plans/compare` | FASTEST / MAX COVERAGE / SAFE AND FAIR |
+| `POST /flood/plans/{id}/approve` | atomic commit (stale tick rejected) |
+| `POST /flood/field-updates` | high-trust field form |
+| `POST /flood/replan` | replan tick |
+| `POST /flood/weather` | Open-Meteo or fixture rainfall context |
+| `GET /flood/events` · `/flood/events/stream` | polling + SSE |
+| `POST /flood/route/plan` | plan pickup + shelter legs with verification |
+| `POST /flood/graph/evidence` | twin evidence for group assignment |
+| `GET /flood/traces` | in-session + saved traces |
+
+Traces persist under `data/traces/` as `FL-{scenario}-{tick}-{group}.json`.
+
+### Tests & benchmarks
+
+```bash
+python3 -m pytest tests/ -q
+node experiments/run_flood_benchmarks.js   # → experiments/results/flood_benchmark_results.csv
+```
+
+---
+
+## ResQFlow (general demo)
+
+Browser orchestration in [`index.html`](index.html) with optional FastAPI backend for digital twin evidence, agent council, and AI briefing/report.
+
+### Ranking methods
 
 | Method | Idea |
 |--------|------|
-| **Weighted** | Multi-factor score (urgency, distance, capability, fuel, route safety) — Balanced weights |
-| **Ellipse** | Reachability ellipse with foci = nearest base + unit; major axis from fuel × speed |
-| **Polygon** | Hazard-aware service polygon (risk zones cut coverage); convex hull fit score |
+| **Weighted** | Multi-factor score (urgency, distance, capability, fuel, route safety) |
+| **Ellipse** | Reachability ellipse from base + unit |
+| **Polygon** | Hazard-aware service polygon |
 | **Hybrid** | `0.4·Weighted + 0.3·Ellipse + 0.3·Polygon` |
 
-**GAPD** (Geometry-Aware Priority Dispatch) is always on: incidents are ordered by priority band + geometry fit + people pressure (not urgency alone), with soft-reservation of capable units for critical cases.
+**GAPD** orders incidents by priority band + geometry fit + people pressure.
 
-**Closed-loop verify-then-actuate** is unchanged: ranking proposes candidates; **8 physical checks** (including fuel-at-arrival and ETA vs urgency) decide actuation; failed top picks use transactional repair.
+**Closed-loop:** ranking proposes; **8 physical checks** decide actuation; transactional repair on failure.
 
-**Method compare** (Preview) shows Weighted / Ellipse / Polygon / Hybrid side by side without committing.
-
-Map overlays draw ellipses (cyan) or service polygons (amber) when those ranking modes are selected.
-
-## Run with backend (optional)
-
-Simulation runs fully in the browser. Backend adds twin evidence, council, and AI text.
-
-### 1. Backend setup
+### Backend setup
 
 ```bash
-# from repo root (this folder)
-python3 -m venv .venv
-source .venv/bin/activate
+python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env
-# Edit .env — set AICREDITS_API_KEY if you want LLM text
-cd backend
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+cd backend && python3 -m uvicorn main:app --reload --port 8000
 ```
 
-### 2. Open the UI
+Open **http://localhost:5500/index.html** (or **flood.html** for flood mode).
 
-```bash
-# another terminal, repo root
-python3 -m http.server 5500
+### Digital twin
+
+- General: [`graph.html`](graph.html) — `POST /graph/evidence`  
+- Flood: [`flood-graph.html`](flood-graph.html) — `POST /flood/graph/evidence`  
+
+## Architecture (flood)
+
+```
+scenarios/*.json
+    ↓
+backend/simulator/   — flood depth progression, state machine
+backend/routing/     — NetworkX road graph, Dijkstra + depth prediction
+backend/dispatch/    — Flood-GAPD, scoring, 8-check verify, repair, reroute
+backend/flood_graph.py — semantic evidence graph
+flood.html + js/flood/app.js — Canvas map (water, roads, groups, shelters, vehicles)
 ```
 
-Open **http://localhost:5500/index.html**
+## Limitations & ethics
 
-Summary status:
-- **Connected (aicredits)** — LLM key loaded; Briefing/Report use AI  
-- **Connected (local text only)** — backend up but no API key  
-- **Offline** — local text fallback; twin evidence unavailable  
-
-### 3. Health check
-
-```bash
-curl http://localhost:8000/health
-```
-
-Expected: `{"status":"ok","service":"resqflow-api",...,"graph":"networkx","agents":"council"}`
-
-### AICredits setup
-
-In `.env` at repo root:
-
-```env
-LLM_PROVIDER=aicredits
-AICREDITS_API_KEY=sk-your-aicredits-key
-AICREDITS_BASE_URL=https://api.aicredits.in/v1
-AICREDITS_MODEL=gpt-4o-mini
-```
-
-Restart the backend after editing `.env`.
-
-## Digital twin (`graph.html`)
-
-When the backend is running, each allocation can attach **graph evidence** (`POST /graph/evidence`): evidence path, ripple check, neighborhood subgraph. Traces save under `data/traces/`.
-
-Explorer (Focus view):
-
-1. Backend + `python3 -m http.server 5500`
-2. **http://localhost:5500/index.html** → **Start scenario**
-3. Header **Digital twin** (or Latest allocation → Digital twin)
-4. Pick **Incident** / **Trace**, **Refresh**; pan/zoom with mouse (scroll = zoom, drag = pan)
-
-**Endpoints:** `POST /graph/full`, `POST /graph/evidence`, `GET /graph/traces`, `GET /graph/traces/{id}`, `POST /agents/council`
-
-## Agent council
-
-With **Agent council** enabled, three twin-grounded reviewers (Medical / Logistics / Route) re-rank the top candidates before physical verification. LLM when configured; otherwise heuristic council.
-
-## Run without backend
-
-Open `index.html` only (or static server alone). Ranking, GAPD, overlays, and closed-loop still work. Briefing/Report use local text; twin evidence needs the API.
-
-## Quick test
-
-1. **Reset**, then **Method compare → Preview** — compare picks across Weighted / Ellipse / Polygon / Hybrid.  
-2. Set **Ranking method** to Ellipse or Polygon — see map overlays.  
-3. Keep **Closed-loop** on → **Start scenario**.  
-4. Read **Latest allocation** for method, GAPD band, Physical verify 8/8, and scores.  
-5. Open **Digital twin** for evidence path + ripple.  
-6. Optional: **Briefing** / **Report** under Summary.
-
-## Controls (decluttered)
-
-**Operations:** Start / Pause / Reset · Ranking method · Agent council · Closed-loop  
-
-Always on (no toggles): GAPD priority, geometry overlays for Ellipse/Polygon/Hybrid, Demo speed, Balanced weighted factors.
+- Simulated hydrology only; thresholds are illustrative  
+- No autonomous emergency command; human operators must validate plans  
+- No field hardware integration in this repository  
