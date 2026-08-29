@@ -117,8 +117,7 @@ export default function App() {
         snap={snap}
         onSwitchOps={() => setPublicMode(false)}
         onSubmitted={async () => {
-          await onMessage('Citizen report received — same plant updated for Operations Desk.');
-          setPublicMode(false);
+          await refresh();
         }}
       />
     );
