@@ -230,7 +230,15 @@ def apply_citizen_sensing(
     state.metrics["citizenReports"] = state.metrics.get("citizenReports", 0) + 1
     state.emit_event(
         "report_received",
-        {"reportId": report_id, "groupId": group_id, "status": status, "duplicateOf": dup},
+        {
+            "reportId": report_id,
+            "groupId": group_id,
+            "status": status,
+            "duplicateOf": dup,
+            "people": people,
+            "area": report.get("area"),
+            "landmark": landmark,
+        },
     )
     if closed_edges:
         state.emit_event("road_closed", {"edges": closed_edges, "source": source})
@@ -413,7 +421,23 @@ def apply_operator_sensing(
         "effects": effects,
     }
     state.field_updates.append(update)
-    state.emit_event("field_update", {"id": update["id"], "replanRequired": replan})
+    action = "field update"
+    if effects.get("recall"):
+        action = "site clear"
+    elif effects.get("peopleAdded"):
+        action = "more people"
+    elif effects.get("requestedMode") == "water":
+        action = "boat requested"
+    elif effects.get("roadClosed"):
+        action = "road blocked"
+    state.emit_event("field_update", {
+        "id": update["id"],
+        "groupId": update.get("groupId"),
+        "replanRequired": replan,
+        "action": action,
+        "note": note,
+        "source": source,
+    })
     return update
 
 

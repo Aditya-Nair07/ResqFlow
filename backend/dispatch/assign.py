@@ -5,10 +5,12 @@ from __future__ import annotations
 from typing import Any
 
 from dispatch.flood_gapd import sort_groups
+from dispatch.explain import build_decision_record, rejected_from_candidate
 from dispatch.scoring import rank_candidate
 from dispatch.verify import verify_evacuation_plan
 from graph_store import save_trace_analysis
 from routing.router import find_path
+from sensing.lifecycle import utc_now
 
 
 def run_dispatch_tick(state: Any) -> dict[str, Any]:
@@ -102,6 +104,7 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
         candidates.sort(key=lambda c: (c["score"], c["provisionalLoad"]), reverse=True)
         winner = None
         repair_note = None
+        rejected: list[dict[str, Any]] = []
 
         if state.closed_loop:
             for cand in candidates:
@@ -118,14 +121,31 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
                     winner = {**cand, "verification": v}
                     break
                 repairs += 1
+                rejected.append(rejected_from_candidate(cand, v))
                 repair_note = f"Repair: {cand['vehicle']['type']} failed — {', '.join(v['failed'])}"
         elif candidates:
             winner = {**candidates[0], "verification": {"passed": True, "checks": [], "failed": []}}
             state.metrics["unsafeActuations"] += 1
 
         if winner:
-            _actuate(state, group, winner)
+            decision = build_decision_record(
+                group=group,
+                winner=winner,
+                method=method,
+                tick=state.tick,
+                rejected=rejected,
+            )
+            _actuate(state, group, winner, decision=decision)
             assigned += 1
+            state.emit_event("unit_assigned", {
+                "groupId": group["id"],
+                "groupLabel": group.get("label") or group.get("area") or group["id"],
+                "vehicleId": winner["vehicle"]["id"],
+                "vehicleType": winner["vehicle"].get("type"),
+                "shelterId": winner["shelter"]["id"],
+                "load": decision.get("load"),
+                "summary": decision.get("summary"),
+            })
             trace = {
                 "groupId": group["id"],
                 "vehicleId": winner["vehicle"]["id"],
@@ -135,6 +155,7 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
                 "repairNote": repair_note,
                 "tick": state.tick,
                 "verification": winner.get("verification", {}),
+                "decision": decision,
             }
             state.traces.append(trace)
             traces.append(trace)
@@ -161,7 +182,12 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
     return {"assigned": assigned, "repairs": repairs, "traces": traces}
 
 
-def _actuate(state: Any, group: dict[str, Any], winner: dict[str, Any]) -> None:
+def _actuate(
+    state: Any,
+    group: dict[str, Any],
+    winner: dict[str, Any],
+    decision: dict[str, Any] | None = None,
+) -> None:
     v = winner["vehicle"]
     planned = winner.get("verification", {}).get("load")
     if planned is None:
@@ -201,3 +227,11 @@ def _actuate(state: Any, group: dict[str, Any], winner: dict[str, Any]) -> None:
     group["status"] = "assigned"
     group["assignedVehicleId"] = v["id"]
     group["assignedShelterId"] = winner["shelter"]["id"]
+    if decision:
+        group["lastDecision"] = decision
+        group.setdefault("audit", []).append({
+            "at": utc_now(),
+            "action": "Unit assigned",
+            "actor": "dispatch",
+            "detail": decision.get("summary", ""),
+        })

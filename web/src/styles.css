@@ -48,6 +48,23 @@
 .resource-card strong{display:block;font-size:15px;margin:5px 0 4px}
 .resource-card p{margin:0;color:#b8ceca;font-size:11px;line-height:1.45}
 .resource-card .core-logic{margin-top:7px;padding-top:7px;border-top:1px dashed #41645b;color:var(--mint);font:500 9.5px 'DM Mono';letter-spacing:.3px;line-height:1.5}
+.evidence-block,.why-block{background:#152628;border:1px solid #2d4748;padding:11px 12px;margin:0 0 12px}
+.evidence-block small,.why-block small{display:block;color:var(--muted);font:500 9px 'DM Mono';letter-spacing:.8px;margin-bottom:7px}
+.evidence-line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;font-size:11px;margin-bottom:8px}
+.trust-chip{font:500 9px 'DM Mono';padding:3px 6px;border:1px solid currentColor}
+.trust-chip.high{color:var(--mint)}.trust-chip.mid{color:var(--yellow)}.trust-chip.low{color:var(--coral)}
+.evidence-meta{color:var(--muted);font:10px 'DM Mono'}
+.audit-list{list-style:none;margin:0;padding:0}
+.audit-list li{display:grid;grid-template-columns:44px 1fr;gap:8px;padding:5px 0;border-top:1px solid #24383a;font-size:10px;color:var(--muted)}
+.audit-list li:first-child{border-top:0}
+.audit-list time{font:10px 'DM Mono';color:var(--yellow)}
+.audit-list b{color:var(--ink);font-weight:500}
+.evidence-empty{margin:0;color:var(--muted);font-size:11px}
+.why-block strong{display:block;font-size:13px;margin:2px 0 5px}
+.why-block p{margin:0;color:#b8ceca;font-size:11px;line-height:1.45}
+.why-rejected{margin-top:6px!important;color:var(--yellow)!important;font:10px 'DM Mono'!important}
+.check-grid.compact{margin-top:8px;grid-template-columns:1fr 1fr}
+.check-grid.compact .check-item{padding:5px 6px;font-size:9px}
 .crew-block small{display:block;color:var(--muted);font:500 9px 'DM Mono';letter-spacing:.8px;margin-bottom:8px}
 .incident-actions .stand-down{color:var(--yellow);border-color:#8a6d32}
 .review-ops .right-column{gap:12px}
@@ -73,6 +90,24 @@
 .public-report-meta .tag.amber{color:#5ab9c9}
 .public-report-meta .tag.muted{color:var(--muted)}
 .public-report-effect{margin-top:6px;font:10px 'DM Mono';color:var(--yellow);display:flex;align-items:center;gap:5px}
+
+/* Live ops log — quiet control-room strip under the map */
+.ops-log{padding:0}
+.ops-log-heading{padding:14px 18px 10px!important}
+.ops-log-heading h2{font-size:16px!important}
+.ops-log-meta{font:500 10px 'DM Mono';color:var(--muted);letter-spacing:.4px}
+.ops-log-empty{margin:0 18px 16px;color:var(--muted);font-size:11px;line-height:1.45}
+.ops-log-list{list-style:none;margin:0;padding:0 0 8px;max-height:168px;overflow:auto}
+.ops-log-row{display:grid;grid-template-columns:36px 72px 1fr;gap:10px;align-items:baseline;padding:7px 18px;border-top:1px solid #24383a;font-size:11px}
+.ops-log-row:first-child{border-top:0}
+.ops-log-tick{font:500 10px 'DM Mono';color:#5f7879}
+.ops-log-tag{font:500 9px 'DM Mono';letter-spacing:.6px}
+.ops-log-tag.mint,.ops-log-row.tone-mint .ops-log-tag{color:var(--mint)}
+.ops-log-tag.amber,.ops-log-row.tone-amber .ops-log-tag{color:var(--yellow)}
+.ops-log-tag.coral,.ops-log-row.tone-coral .ops-log-tag{color:var(--coral)}
+.ops-log-tag.muted,.ops-log-row.tone-muted .ops-log-tag{color:var(--muted)}
+.ops-log-text{color:#c5d5d1;line-height:1.35;overflow-wrap:anywhere}
+.public-reports-list{max-height:200px}
 
 /* Report markers on the flood map */
 .report-marker{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font:600 12px 'DM Mono';z-index:5;border:2px solid #fff}

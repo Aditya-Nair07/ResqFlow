@@ -1,18 +1,13 @@
 import { api, type Snapshot } from './api';
 import { resourceNeed } from './resourceNeed';
-
-function rankLabel(method?: string) {
-  switch ((method || 'hybrid').toLowerCase()) {
-    case 'weighted':
-      return 'Weighted';
-    case 'ellipse':
-      return 'Ellipse';
-    case 'polygon':
-      return 'Polygon';
-    default:
-      return 'Hybrid (Weighted + Ellipse + Polygon)';
-  }
-}
+import {
+  formatAuditTime,
+  recentAudit,
+  rejectedLine,
+  resolveDecision,
+  sourceLabel,
+  trustBand,
+} from './decisionExplain';
 
 function statusLabel(status: string) {
   const s = String(status || '').toLowerCase();
@@ -40,6 +35,12 @@ export default function OpsDesk({
   const waiting = snap.groups.filter((g) => !['evacuated', 'RESOLVED', 'REJECTED'].includes(g.status));
   const need = selected ? resourceNeed(snap, selected) : null;
   const cleared = selected && ['evacuated', 'RESOLVED', 'REJECTED'].includes(selected.status);
+
+  const trust = selected ? trustBand(selected.trust) : null;
+  const audit = selected ? recentAudit(selected.audit, 4) : [];
+  const decision = selected ? resolveDecision(selected, snap.recentTraces) : null;
+  const passedOver = rejectedLine(decision);
+  const showWhy = Boolean(decision && selected?.assignedVehicleId);
 
   async function crew(body: Record<string, unknown>, message: string) {
     if (!selected) return;
@@ -77,7 +78,10 @@ export default function OpsDesk({
                   {g.severity || 'MEDIUM'}
                 </span>
               </div>
-              <small>{g.people} people · {statusLabel(g.status)}</small>
+              <small>
+                {g.people} people · {statusLabel(g.status)}
+                {typeof g.trust === 'number' ? ` · trust ${g.trust}` : ''}
+              </small>
             </button>
           ))}
         </div>
@@ -108,13 +112,69 @@ export default function OpsDesk({
                 <small>RESOURCE NEEDED</small>
                 <strong>{need.unit}</strong>
                 <p>{need.band} · {need.depthCm} cm at pin. {need.reason}</p>
-                <p className="core-logic">
-                  Decision core: Flood-GAPD priority ·{' '}
-                  {rankLabel(snap.rankingMethod)} scoring · 8-check verified
-                  {typeof selected.gapdScore === 'number'
-                    ? ` · GAPD ${selected.gapdScore}`
+              </div>
+            )}
+
+            <div className="evidence-block">
+              <small>EVIDENCE</small>
+              <div className="evidence-line">
+                <span>{sourceLabel(selected.source)}</span>
+                {trust && <span className={`trust-chip ${trust.tone}`}>{trust.label} · {selected.trust ?? '—'}</span>}
+                {typeof selected.confidenceScore === 'number' && (
+                  <span className="evidence-meta">confidence {selected.confidenceScore}</span>
+                )}
+                {typeof selected.gapdScore === 'number' && (
+                  <span className="evidence-meta">GAPD {selected.gapdScore}</span>
+                )}
+              </div>
+              {audit.length > 0 ? (
+                <ul className="audit-list">
+                  {audit.map((row, idx) => (
+                    <li key={`${row.at}-${row.action}-${idx}`}>
+                      <time>{formatAuditTime(row.at)}</time>
+                      <span>
+                        <b>{row.action}</b>
+                        {row.detail ? ` — ${row.detail}` : ''}
+                        {row.actor ? ` · ${row.actor}` : ''}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="evidence-empty">No field notes yet.</p>
+              )}
+            </div>
+
+            {showWhy && decision && (
+              <div className="why-block">
+                <small>WHY THIS UNIT</small>
+                <strong>
+                  {decision.vehicleType || 'Unit'} {decision.vehicleId}
+                  {decision.shelterLabel || decision.shelterId
+                    ? ` → ${decision.shelterLabel || decision.shelterId}`
+                    : ''}
+                </strong>
+                <p>
+                  {decision.methodLabel || decision.method || 'Hybrid'}
+                  {typeof decision.score === 'number' ? ` · score ${decision.score}` : ''}
+                  {typeof decision.load === 'number' ? ` · load ${decision.load}` : ''}
+                  {typeof decision.checksPassed === 'number'
+                    ? ` · ${decision.checksPassed}/${decision.checksTotal ?? 8} checks passed`
                     : ''}
                 </p>
+                {passedOver && <p className="why-rejected">{passedOver}</p>}
+                {Array.isArray(decision.checks) && decision.checks.length > 0 && (
+                  <div className="check-grid compact">
+                    {decision.checks.map((c) => (
+                      <div
+                        key={c.label}
+                        className={`check-item ${c.passed ? 'ok' : 'bad'}`}
+                      >
+                        {c.passed ? '✓' : '✗'} {c.label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

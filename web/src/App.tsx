@@ -4,6 +4,7 @@ import { api, type Snapshot } from './api';
 import OpsDesk from './OpsDesk';
 import PublicSafety from './PublicSafety';
 import PublicReports from './PublicReports';
+import OpsLog from './OpsLog';
 import FloodMap from './FloodMap';
 
 const DEFAULT_SCENARIO = 'chennai_2015_review';
@@ -175,6 +176,7 @@ export default function App() {
           <div className="workspace-grid review-workspace">
             <div className="left-column">
               <FloodMap snap={snap} />
+              <OpsLog snap={snap} />
               <PublicReports snap={snap} />
             </div>
             <aside className="right-column">

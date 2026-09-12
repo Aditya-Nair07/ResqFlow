@@ -108,7 +108,16 @@ class FloodEvacState:
         out.setdefault("severity", "MEDIUM")
         out.setdefault("confidenceScore", 70)
         out.setdefault("audit", [])
+        out.setdefault("lastDecision", None)
         out.setdefault("createdTick", 0)
+        if not out["audit"]:
+            src = out.get("source") or "SIMULATOR"
+            out["audit"] = [{
+                "at": f"tick-{out.get('createdTick', 0)}",
+                "action": "On the board",
+                "actor": src.lower(),
+                "detail": f"Seeded from {src}",
+            }]
         return out
 
     @staticmethod
