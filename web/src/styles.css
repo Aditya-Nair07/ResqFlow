@@ -70,6 +70,20 @@
 .review-ops .right-column{gap:12px}
 @media(max-width:1050px){.review-workspace{grid-template-columns:1fr}}
 
+/* Slim operator planner tab */
+.review-planner{margin:0;padding:16px 18px;border:1px solid var(--line);background:var(--panel)}
+.review-planner .planner-heading h2{font-size:18px;margin:4px 0}
+.review-planner .planner-heading span{font-size:11px;line-height:1.4;max-width:420px;display:block}
+.review-planner .planner-metrics.slim{grid-template-columns:repeat(3,1fr);margin:12px 0}
+.review-planner .planner-metrics.slim b{font-size:18px}
+.review-planner .plan-row{grid-template-columns:1.5fr repeat(4,.55fr) .7fr;min-width:0}
+.review-planner .planner-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.review-planner .planner-empty{margin:8px 0 0;color:var(--muted);font-size:11px}
+.review-planner .ledger{margin-top:14px}
+.review-planner .ledger-head{color:var(--muted);font:500 9px 'DM Mono';text-transform:uppercase}
+.review-planner .ledger-row{grid-template-columns:repeat(5,1fr);min-width:0}
+.planner-workspace .adaptive-planner{min-height:420px}
+
 /* Public reports panel + report markers on map */
 .public-reports{padding:0}
 .public-reports .panel-heading{padding:16px 18px 12px}

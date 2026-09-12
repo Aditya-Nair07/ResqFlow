@@ -6,17 +6,23 @@ import PublicSafety from './PublicSafety';
 import PublicReports from './PublicReports';
 import OpsLog from './OpsLog';
 import FloodMap from './FloodMap';
+import PlannerPanel from './PlannerPanel';
 
 const DEFAULT_SCENARIO = 'chennai_2015_review';
+const RANKING_METHOD = 'hybrid';
+
+type DeskMode = 'operations' | 'planner';
 
 export default function App() {
   const [publicMode, setPublicMode] = useState(false);
+  const [deskMode, setDeskMode] = useState<DeskMode>('operations');
   const [scenarioId, setScenarioId] = useState(DEFAULT_SCENARIO);
   const [snap, setSnap] = useState<Snapshot | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState<string | null>(null);
+  const [plans, setPlans] = useState<any | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -32,6 +38,8 @@ export default function App() {
   useEffect(() => {
     setRunning(false);
     setSelectedGroupId(null);
+    setPlans(null);
+    setDeskMode('operations');
     api
       .reset(scenarioId)
       .then((r) => setSnap(r.snapshot || r))
@@ -47,7 +55,7 @@ export default function App() {
           scenarioId,
           steps: 1,
           running: true,
-          rankingMethod: 'hybrid',
+          rankingMethod: RANKING_METHOD,
           closedLoop: true,
         });
         setSnap(result.snapshot);
@@ -79,12 +87,23 @@ export default function App() {
     };
   }, [snap]);
 
+  function openOperations() {
+    setPublicMode(false);
+    setDeskMode('operations');
+  }
+
+  function openPlanner() {
+    setPublicMode(false);
+    setDeskMode('planner');
+    setRunning(false); // free units stay available for Approve
+  }
+
   if (publicMode) {
     return (
       <PublicSafety
         scenarioId={scenarioId}
         snap={snap}
-        onSwitchOps={() => setPublicMode(false)}
+        onSwitchOps={openOperations}
         onSubmitted={async (groupId?: string) => {
           if (groupId) setSelectedGroupId(groupId);
           await refresh();
@@ -93,7 +112,7 @@ export default function App() {
               ? `New rescue request ${groupId} is on the map. Press Run — a free unit will be assigned automatically.`
               : 'New public report received — visible on the map and in Public reports panel.',
           );
-          setPublicMode(false);
+          openOperations();
         }}
       />
     );
@@ -110,7 +129,20 @@ export default function App() {
           </div>
         </div>
         <div className="mode-switch">
-          <button className="active" type="button">Operations</button>
+          <button
+            className={deskMode === 'operations' ? 'active' : ''}
+            type="button"
+            onClick={openOperations}
+          >
+            Operations
+          </button>
+          <button
+            className={deskMode === 'planner' ? 'active' : ''}
+            type="button"
+            onClick={openPlanner}
+          >
+            Planner
+          </button>
           <button type="button" onClick={() => setPublicMode(true)}>Public report</button>
         </div>
         <div className="scenario">
@@ -130,7 +162,11 @@ export default function App() {
         <div className="hero-row review-hero">
           <div>
             <p className="eyebrow">TICK {snap?.tick ?? 0}</p>
-            <h1>Move people before <i>the water does.</i></h1>
+            <h1>
+              {deskMode === 'planner'
+                ? <>Compare, then <i>commit.</i></>
+                : <>Move people before <i>the water does.</i></>}
+            </h1>
           </div>
           <div className="hero-actions">
             <button className={`button ${running ? 'pause' : 'primary'}`} type="button" onClick={() => setRunning((v) => !v)}>
@@ -142,6 +178,7 @@ export default function App() {
               title="Reset"
               onClick={async () => {
                 setRunning(false);
+                setPlans(null);
                 const r = await api.reset(scenarioId);
                 setSnap(r.snapshot || r);
                 setMessage('');
@@ -172,7 +209,7 @@ export default function App() {
           <div className="stat-card pink"><div><small>Stranded</small><strong>{metrics.stranded}</strong></div></div>
         </div>
 
-        {snap && (
+        {snap && deskMode === 'operations' && (
           <div className="workspace-grid review-workspace">
             <div className="left-column">
               <FloodMap snap={snap} />
@@ -209,6 +246,29 @@ export default function App() {
                   </div>
                 ))}
               </div>
+            </aside>
+          </div>
+        )}
+
+        {snap && deskMode === 'planner' && (
+          <div className="workspace-grid review-workspace planner-workspace">
+            <div className="left-column">
+              <FloodMap snap={snap} />
+              <OpsLog snap={snap} />
+            </div>
+            <aside className="right-column">
+              <PlannerPanel
+                plans={plans}
+                scenarioId={scenarioId}
+                tick={snap.tick}
+                snap={snap}
+                rankingMethod={RANKING_METHOD}
+                onPlans={setPlans}
+                onRefresh={refresh}
+                onMessage={async (msg) => {
+                  setMessage(msg);
+                }}
+              />
             </aside>
           </div>
         )}
