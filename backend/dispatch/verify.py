@@ -18,7 +18,16 @@ def verify_evacuation_plan(
 ) -> dict[str, Any]:
     checks = []
     remaining = group["people"] - group.get("evacuatedPeople", 0)
-    load = min(remaining, vehicle.get("capacity", 0) - vehicle.get("load", 0))
+    vehicle_seats = max(0, vehicle.get("capacity", 0) - vehicle.get("load", 0))
+    shelter_open = shelter.get("open", True)
+    shelter_cap = (
+        shelter.get("capacity", 0)
+        - shelter.get("occupancy", 0)
+        - shelter.get("reservedCapacity", 0)
+    )
+    # Every life matters: if a shelter only has 6 free seats and 10 are waiting,
+    # still send a unit for those 6 (partial load) instead of refusing everyone.
+    load = min(remaining, vehicle_seats, max(0, shelter_cap))
 
     checks.append({"label": "vehicle available", "passed": vehicle.get("status") == "available"})
     mobility_ok = group.get("mobility") != "wheelchair" or vehicle.get("mode") == "road"
@@ -27,13 +36,7 @@ def verify_evacuation_plan(
     checks.append({"label": "pickup route exists", "passed": path_pickup.get("ok", False)})
     depth_ok = path_pickup.get("ok") and path_shelter.get("ok")
     checks.append({"label": "route depth safe (now + predicted)", "passed": depth_ok})
-    shelter_open = shelter.get("open", True)
-    shelter_cap = (
-        shelter.get("capacity", 0)
-        - shelter.get("occupancy", 0)
-        - shelter.get("reservedCapacity", 0)
-    )
-    checks.append({"label": "shelter open with capacity", "passed": shelter_open and shelter_cap >= load})
+    checks.append({"label": "shelter open with capacity", "passed": shelter_open and load > 0})
     if not skip_priority_gate:
         higher = sort_groups(state.groups, tick=state.tick)
         top = higher[0]["id"] if higher else group["id"]
@@ -42,8 +45,14 @@ def verify_evacuation_plan(
         checks.append({"label": "priority gate", "passed": True})
     fuel_need = (path_pickup.get("travelTime", 0) + path_shelter.get("travelTime", 0)) * 2
     checks.append({"label": "fuel sufficient", "passed": vehicle.get("fuel", 0) > fuel_need + 10})
-    eta = path_pickup.get("etaTick", state.tick + 99) + path_shelter.get("travelTime", 0)
-    checks.append({"label": "deadline met", "passed": eta <= group.get("deadlineTick", 999)})
+    # Deadline applies to pickup: once people are aboard they are safe.
+    # Follow-up / stranded leftovers still get a chance — do not abandon remaining lives.
+    pickup_eta = path_pickup.get("etaTick", state.tick + 99)
+    deadline = group.get("deadlineTick", 999)
+    follow_up = group.get("evacuatedPeople", 0) > 0 or group.get("status") == "stranded"
+    deadline_ok = pickup_eta <= deadline or follow_up
+    checks.append({"label": "deadline met", "passed": deadline_ok})
+    eta = pickup_eta + path_shelter.get("travelTime", 0)
 
     passed = all(c["passed"] for c in checks)
     return {

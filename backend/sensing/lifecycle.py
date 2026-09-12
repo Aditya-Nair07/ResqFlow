@@ -70,7 +70,9 @@ ALLOWED_TRANSITIONS: dict[str, set[str]] = {
 }
 
 # Statuses that still compete for vehicles in Flood-GAPD.
-DISPATCHABLE = {"pending", "PRIORITIZED", "PLAN_PROPOSED", "REPLAN_REQUIRED"}
+# REPORTED/VERIFIED included so citizen rescue requests are dispatchable
+# immediately; source trust affects ranking, never eligibility.
+DISPATCHABLE = {"pending", "REPORTED", "VERIFIED", "PRIORITIZED", "PLAN_PROPOSED", "REPLAN_REQUIRED"}
 
 
 def utc_now() -> str:

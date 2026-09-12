@@ -98,7 +98,9 @@ def seed_chennai_reports_into_plant(state: Any, limit: int = 6) -> list[dict[str
         lon = float(loc.get("lon") or 80.24)
         x, y = latlng_to_grid(lat, lon, grid)
         depth_m = float(item.get("flood_depth_meters") or 0.5)
-        depth_cm = depth_m * 100.0
+        # Clamp seeded depth: historical fixtures should create local risk zones,
+        # not pre-drown the whole road network before the rehearsal starts.
+        depth_cm = min(depth_m * 100.0, 55.0)
         label = item.get("flood_depth") or "knee-deep"
         severity = DEPTH_TO_SEVERITY.get(label, "rising")
         # Demo people counts derived from depth severity (deterministic)

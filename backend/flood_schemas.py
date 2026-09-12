@@ -116,6 +116,7 @@ class FloodEvacSnapshot(BaseModel):
     difficulty: str = "normal"
     fixtureMeta: dict[str, Any] | None = None
     rainfallPerTick: float | None = None
+    closedEdgeIds: list[str] = Field(default_factory=list)
 
 
 class ScenarioListResponse(BaseModel):
@@ -209,6 +210,8 @@ class OperatorReportRequest(BaseModel):
     shelterFull: bool | None = None
     note: str = ""
     reinforcement: bool = False
+    requestedMode: str | None = None
+    standDown: bool = False
 
 
 class FieldUpdateRequest(OperatorReportRequest):

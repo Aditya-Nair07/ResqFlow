@@ -331,6 +331,8 @@ def flood_reports_operator(body: OperatorReportRequest):
         shelter_full=body.shelterFull,
         note=body.note,
         reinforcement=body.reinforcement,
+        requested_mode=body.requestedMode,
+        stand_down=body.standDown,
     )
     return {"update": update, "snapshot": state.to_snapshot()}
 
@@ -382,6 +384,73 @@ def flood_plans_compare(body: PlanCompareRequest):
         state.ranking_method = body.rankingMethod
     result = compare_plans(state, ranking_method=body.rankingMethod)
     return store_compared_plans(state, result)
+
+
+@app.post("/flood/dispatch/auto")
+def flood_dispatch_auto(body: PlanCompareRequest):
+    """One-shot: compare plans and immediately approve the recommended one.
+
+    Prevents tick races when Run is active — no stale-plan/stale-tick errors
+    because compare + approve happen against the same state.tick.
+    """
+    state = get_or_create_session(body.scenarioId)
+    if body.rankingMethod:
+        state.ranking_method = body.rankingMethod
+    result = compare_plans(state, ranking_method=body.rankingMethod)
+    stored = store_compared_plans(state, result)
+    plans = stored.get("plans") or []
+    plan = max(
+        plans,
+        key=lambda p: (len(p.get("assignments") or []), p.get("peopleReached") or 0),
+        default=None,
+    )
+    waiting = [
+        g for g in state.groups
+        if g.get("status") in ("pending", "REPORTED", "VERIFIED", "PRIORITIZED", "REPLAN_REQUIRED")
+    ]
+    busy = [v for v in state.vehicles if v.get("status") == "busy"]
+    free = [v for v in state.vehicles if v.get("status") == "available"]
+    if not plan or not plan.get("assignments"):
+        if busy:
+            reason = "Units are already on rescue runs. Press Run so they finish, then Dispatch again."
+        elif waiting and not free:
+            reason = "No rescue units available."
+        else:
+            reason = "No safe route right now — water is blocking pickup. Press Run, then try Dispatch again."
+        return {
+            "ok": False,
+            "reason": reason,
+            "waiting": [g["id"] for g in waiting],
+            "busyUnits": len(busy),
+            "rejected": (plan or {}).get("rejected", []),
+            "snapshot": state.to_snapshot(),
+            "explanation": stored.get("explanation"),
+        }
+    plan_id = plan["planId"]
+    stored["recommendedPlanId"] = plan_id
+    committed_result = approve_plan(
+        state,
+        plan_id,
+        plan_version=plan.get("planVersion"),
+        tick=state.tick,
+        actor="operator",
+    )
+    committed_result["planId"] = plan_id
+    committed_result["planName"] = plan.get("planName")
+    committed_result["explanation"] = stored.get("explanation")
+    committed_result["waitingLeft"] = [
+        g["id"] for g in state.groups
+        if g.get("status") in ("pending", "REPORTED", "VERIFIED", "PRIORITIZED", "REPLAN_REQUIRED")
+    ]
+    if not committed_result.get("committed"):
+        plan_rejected = plan.get("rejected", [])
+        if plan_rejected:
+            committed_result.setdefault("rejected", [])
+            committed_result["rejected"].extend(plan_rejected)
+        elif busy and not free:
+            committed_result["ok"] = False
+            committed_result["reason"] = "Units are already on rescue runs. Press Run so they finish, then Dispatch again."
+    return committed_result
 
 
 @app.post("/flood/plans/{plan_id}/approve")

@@ -27,6 +27,8 @@ export type Snapshot = {
   rankingMethod: string;
   closedLoop: boolean;
   roadEdgeStates: any[];
+  roadEdges?: any[];
+  boatLinks?: any[];
   recentTraces: any[];
   weather?: any;
   planVersion?: number;
@@ -42,6 +44,8 @@ export type Snapshot = {
   rainfallPerTick?: number;
   fieldUpdates?: any[];
   reservations?: any[];
+  depots?: any[];
+  closedEdgeIds?: string[];
 };
 
 export const api = {
@@ -54,10 +58,13 @@ export const api = {
   citizenReport: (body: Record<string, unknown>) => jsonFetch('/flood/reports/citizen', { method: 'POST', body: JSON.stringify(body) }),
   operatorUpdate: (body: Record<string, unknown>) => jsonFetch('/flood/reports/operator', { method: 'POST', body: JSON.stringify(body) }),
   fieldUpdate: (body: Record<string, unknown>) => jsonFetch('/flood/field-updates', { method: 'POST', body: JSON.stringify(body) }),
+  standDown: (id: string, body: Record<string, unknown>) =>
+    jsonFetch('/flood/field-updates', { method: 'POST', body: JSON.stringify({ ...body, groupId: id, standDown: true }) }),
   verify: (id: string, body: Record<string, unknown>) => jsonFetch(`/flood/incidents/${id}/verify`, { method: 'POST', body: JSON.stringify(body) }),
   prioritize: (id: string, body: Record<string, unknown>) => jsonFetch(`/flood/incidents/${id}/prioritize`, { method: 'POST', body: JSON.stringify(body) }),
   comparePlans: (body: Record<string, unknown>) => jsonFetch('/flood/plans/compare', { method: 'POST', body: JSON.stringify(body) }),
   approvePlan: (planId: string, body: Record<string, unknown>) => jsonFetch(`/flood/plans/${planId}/approve`, { method: 'POST', body: JSON.stringify(body) }),
+  dispatchAuto: (body: Record<string, unknown>) => jsonFetch('/flood/dispatch/auto', { method: 'POST', body: JSON.stringify(body) }),
   replan: (body: Record<string, unknown>) => jsonFetch('/flood/replan', { method: 'POST', body: JSON.stringify(body) }),
   weather: (body: Record<string, unknown>) => jsonFetch('/flood/weather', { method: 'POST', body: JSON.stringify(body) }),
   difficulty: (body: Record<string, unknown>) => jsonFetch('/flood/difficulty', { method: 'POST', body: JSON.stringify(body) }),

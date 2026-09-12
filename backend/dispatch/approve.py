@@ -77,19 +77,19 @@ def approve_plan(
         need = group["people"] - group.get("evacuatedPeople", 0)
         shelter.setdefault("reservedCapacity", 0)
         cap_left = shelter.get("capacity", 0) - shelter.get("occupancy", 0) - shelter.get("reservedCapacity", 0)
-        if cap_left < min(need, 1) or vehicle.get("status") != "available":
+        if cap_left < 1 or vehicle.get("status") != "available":
             rejected.append({"groupId": group["id"], "reason": "capacity or vehicle unavailable at commit"})
             continue
 
-        # Atomic reservation then actuate
-        shelter["reservedCapacity"] = shelter.get("reservedCapacity", 0) + min(need, vehicle.get("capacity", need))
+        # Atomic reservation lives inside _actuate (plannedLoad may be partial).
+        planned = verification.get("load") or min(need, vehicle.get("capacity", need), cap_left)
         winner = {
             "vehicle": vehicle,
             "shelter": shelter,
             "pathPickup": path_pickup,
             "pathShelter": path_shelter,
             "score": assignment.get("score", 0),
-            "verification": verification,
+            "verification": {**verification, "load": planned},
         }
         try:
             _actuate(state, group, winner)
@@ -97,20 +97,8 @@ def approve_plan(
             group.setdefault("audit", []).append(
                 {"at": utc_now(), "action": "Dispatch approved", "actor": actor, "detail": plan_id}
             )
-            reservation = {
-                "reservationId": f"RSV-{plan_id}-{group['id']}",
-                "planId": plan_id,
-                "incidentId": group["id"],
-                "vehicleId": vehicle["id"],
-                "shelterId": shelter["id"],
-                "people": min(need, vehicle.get("capacity", need)),
-                "status": "RESERVED",
-                "createdAt": utc_now(),
-            }
-            state.reservations.append(reservation)
             committed.append({"groupId": group["id"], "vehicleId": vehicle["id"], "shelterId": shelter["id"]})
         except Exception as exc:  # noqa: BLE001
-            shelter["reservedCapacity"] = max(0, shelter.get("reservedCapacity", 0) - min(need, vehicle.get("capacity", need)))
             rejected.append({"groupId": group["id"], "reason": str(exc)})
 
     state.emit_event(

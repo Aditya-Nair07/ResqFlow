@@ -59,7 +59,7 @@ export default function PublicSafety({
   scenarioId: string;
   snap: Snapshot | null;
   onSwitchOps: () => void;
-  onSubmitted: () => Promise<void>;
+  onSubmitted: (groupId?: string) => Promise<void>;
 }) {
   const [lang, setLang] = useState<Lang>('en');
   const [largeText, setLargeText] = useState(false);
@@ -130,7 +130,7 @@ export default function PublicSafety({
         groupId: result.report.groupId,
       });
       setFormMode(null);
-      await onSubmitted();
+      await onSubmitted(result.report.groupId);
     } catch (err) {
       setError(err instanceof Error ? err.message : t.error);
     } finally {

@@ -17,6 +17,7 @@ class RoadNetwork:
     def __init__(self):
         self.g = nx.MultiGraph()
         self.edge_meta: dict[tuple[str, str, int], dict[str, Any]] = {}
+        self.forced_closed: set[str] = set()
 
     @classmethod
     def from_scenario(cls, scenario: dict[str, Any]) -> RoadNetwork:
@@ -61,6 +62,8 @@ class RoadNetwork:
         max_depth_cm: float,
         at_tick: int | None = None,
     ) -> bool:
+        if meta.get("id") in self.forced_closed and not meta.get("water"):
+            return False
         if meta.get("water") and vehicle_mode != "water":
             return False
         if not meta.get("water") and vehicle_mode == "water":
@@ -108,11 +111,13 @@ class RoadNetwork:
                 continue
             seen.add(eid)
             d = self.edge_depth_cm(meta, flood)
+            forced = eid in self.forced_closed
             out.append({
                 "id": eid,
                 "depthCm": round(d, 2),
-                "closedForBus": d > 25,
-                "closedForTruck": d > 45,
+                "closedForBus": forced or d > 25,
+                "closedForTruck": forced or d > 45,
+                "forcedClosed": forced,
                 "water": meta.get("water", False),
             })
         return out

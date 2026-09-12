@@ -4,8 +4,8 @@
   "name": "Chennai 2015 Review \u2014 deterministic replay (demo fixtures)",
   "gridSize": 25,
   "cellSize": 2,
-  "rainfallPerTick": 0.35,
-  "drainRate": 0.02,
+  "rainfallPerTick": 0.7,
+  "drainRate": 0.06,
   "depthSpread": 0.12,
   "lowPoints": [
     {
@@ -35,7 +35,7 @@
         8,
         4
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e2",
@@ -47,7 +47,7 @@
         12,
         4
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e3",
@@ -59,7 +59,7 @@
         16,
         4
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e4",
@@ -71,7 +71,7 @@
         20,
         4
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e5",
@@ -83,7 +83,7 @@
         8,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e6",
@@ -95,7 +95,7 @@
         8,
         12
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e7",
@@ -107,7 +107,7 @@
         8,
         16
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e8",
@@ -119,7 +119,7 @@
         12,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e9",
@@ -131,7 +131,7 @@
         12,
         12
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e10",
@@ -143,7 +143,7 @@
         12,
         16
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e11",
@@ -155,7 +155,7 @@
         16,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e12",
@@ -167,7 +167,7 @@
         16,
         12
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e13",
@@ -179,7 +179,7 @@
         4,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e14",
@@ -191,7 +191,7 @@
         8,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e15",
@@ -203,7 +203,7 @@
         16,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e16",
@@ -215,7 +215,7 @@
         12,
         12
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e17",
@@ -227,7 +227,7 @@
         16,
         12
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e18",
@@ -239,7 +239,7 @@
         20,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e19",
@@ -251,7 +251,7 @@
         16,
         8
       ],
-      "travelTime": 4
+      "travelTime": 2
     },
     {
       "id": "e20",
@@ -263,7 +263,7 @@
         4,
         12
       ],
-      "travelTime": 4,
+      "travelTime": 2,
       "boatOnly": false
     }
   ],
@@ -278,7 +278,7 @@
         12,
         16
       ],
-      "travelTime": 5
+      "travelTime": 3
     },
     {
       "id": "b2",
@@ -290,7 +290,7 @@
         16,
         16
       ],
-      "travelTime": 5
+      "travelTime": 3
     }
   ],
   "depots": [
@@ -344,7 +344,7 @@
       "people": 24,
       "vulnerability": 92,
       "mobility": "ambulatory",
-      "deadlineTick": 28,
+      "deadlineTick": 80,
       "area": "Velachery"
     },
     {
@@ -359,7 +359,7 @@
       "people": 18,
       "vulnerability": 88,
       "mobility": "ambulatory",
-      "deadlineTick": 24,
+      "deadlineTick": 85,
       "area": "Saidapet"
     },
     {
@@ -373,8 +373,8 @@
       ],
       "people": 12,
       "vulnerability": 76,
-      "mobility": "wheelchair",
-      "deadlineTick": 32,
+      "mobility": "ambulatory",
+      "deadlineTick": 90,
       "area": "OMR"
     },
     {
@@ -389,7 +389,7 @@
       "people": 30,
       "vulnerability": 70,
       "mobility": "ambulatory",
-      "deadlineTick": 36,
+      "deadlineTick": 95,
       "area": "T Nagar"
     }
   ],
@@ -444,15 +444,47 @@
       "type": "Rescue Boat",
       "mode": "water",
       "maxDepthCm": 200,
-      "capacity": 12,
+      "capacity": 16,
       "speed": 0.75,
-      "fuel": 85,
+      "fuel": 120,
       "depotNode": [
         8,
         16
       ],
       "x": 8,
       "y": 16
+    },
+    {
+      "id": 5,
+      "type": "Rescue Boat",
+      "mode": "water",
+      "maxDepthCm": 200,
+      "capacity": 16,
+      "speed": 0.75,
+      "fuel": 120,
+      "depotNode": [
+        8,
+        16
+      ],
+      "x": 16,
+      "y": 16,
+      "label": "Rescue Boat 2"
+    },
+    {
+      "id": 6,
+      "type": "Rescue Boat",
+      "mode": "water",
+      "maxDepthCm": 200,
+      "capacity": 16,
+      "speed": 0.75,
+      "fuel": 120,
+      "depotNode": [
+        8,
+        16
+      ],
+      "x": 12,
+      "y": 16,
+      "label": "Rescue Boat 3"
     }
   ]
 }

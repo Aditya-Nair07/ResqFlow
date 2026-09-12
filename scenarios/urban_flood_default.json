@@ -47,10 +47,10 @@
     { "id": "shelter_b", "label": "School Gym", "x": 4, "y": 12, "capacity": 50, "node": [4, 12] }
   ],
   "groups": [
-    { "id": "g1", "label": "Riverside block A", "x": 12, "y": 10, "node": [12, 10], "people": 24, "vulnerability": 92, "mobility": "ambulatory", "deadlineTick": 28 },
-    { "id": "g2", "label": "Low-lying ward B", "x": 8, "y": 14, "node": [8, 14], "people": 18, "vulnerability": 88, "mobility": "ambulatory", "deadlineTick": 24 },
-    { "id": "g3", "label": "Canal-side C", "x": 16, "y": 12, "node": [16, 12], "people": 12, "vulnerability": 76, "mobility": "wheelchair", "deadlineTick": 32 },
-    { "id": "g4", "label": "Market district D", "x": 10, "y": 8, "node": [10, 8], "people": 30, "vulnerability": 70, "mobility": "ambulatory", "deadlineTick": 36 }
+    { "id": "g1", "label": "Riverside block A", "x": 12, "y": 10, "node": [12, 10], "people": 24, "vulnerability": 92, "mobility": "ambulatory", "deadlineTick": 80 },
+    { "id": "g2", "label": "Low-lying ward B", "x": 8, "y": 14, "node": [8, 14], "people": 18, "vulnerability": 88, "mobility": "ambulatory", "deadlineTick": 85 },
+    { "id": "g3", "label": "Canal-side C", "x": 16, "y": 12, "node": [16, 12], "people": 12, "vulnerability": 76, "mobility": "ambulatory", "deadlineTick": 90 },
+    { "id": "g4", "label": "Market district D", "x": 10, "y": 8, "node": [10, 8], "people": 30, "vulnerability": 70, "mobility": "ambulatory", "deadlineTick": 95 }
   ],
   "vehicles": [
     { "id": 1, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 100, "depotNode": [4, 4], "x": 4, "y": 4 },

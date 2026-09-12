@@ -1,4 +1,27 @@
 import { api, type Snapshot } from './api';
+import { resourceNeed } from './resourceNeed';
+
+function rankLabel(method?: string) {
+  switch ((method || 'hybrid').toLowerCase()) {
+    case 'weighted':
+      return 'Weighted';
+    case 'ellipse':
+      return 'Ellipse';
+    case 'polygon':
+      return 'Polygon';
+    default:
+      return 'Hybrid (Weighted + Ellipse + Polygon)';
+  }
+}
+
+function statusLabel(status: string) {
+  const s = String(status || '').toLowerCase();
+  if (s.includes('evacuat') || s === 'resolved') return 'Rescued';
+  if (s.includes('strand')) return 'Stranded';
+  if (s.includes('assign') || s.includes('dispatch') || s.includes('progress')) return 'En route';
+  if (s.includes('report') || s.includes('verif') || s.includes('prior') || s === 'pending') return 'Needs help';
+  return status;
+}
 
 export default function OpsDesk({
   snap,
@@ -14,20 +37,33 @@ export default function OpsDesk({
   onChange: (message: string) => Promise<void>;
 }) {
   const selected = snap.groups.find((g) => g.id === selectedId) || snap.groups[0];
-  const trace = snap.recentTraces.find((t) => t.groupId === selected?.id);
+  const waiting = snap.groups.filter((g) => !['evacuated', 'RESOLVED', 'REJECTED'].includes(g.status));
+  const need = selected ? resourceNeed(snap, selected) : null;
+  const cleared = selected && ['evacuated', 'RESOLVED', 'REJECTED'].includes(selected.status);
+
+  async function crew(body: Record<string, unknown>, message: string) {
+    if (!selected) return;
+    await api.fieldUpdate({
+      scenarioId,
+      groupId: selected.id,
+      actor: 'field_team',
+      source: 'FIELD_TEAM',
+      ...body,
+    });
+    await onChange(message);
+  }
 
   return (
-    <div className="incident-desk">
+    <div className="incident-desk review-desk">
       <div className="desk-heading">
         <div>
-          <p className="eyebrow">OPERATIONS</p>
-          <h2>Incident response queue</h2>
-          <span>Flood-GAPD · trust · eight-check verification from backend · includes seeded Chennai reports</span>
+          <p className="eyebrow">WHO NEEDS HELP</p>
+          <h2>People at risk</h2>
+          <span>{waiting.length} groups still need rescue</span>
         </div>
       </div>
-      <div className="incident-layout">
+      <div className="incident-layout review-incident-layout">
         <div className="incident-queue">
-          <div className="queue-heading"><span>QUEUE</span><span>{snap.groups.length}</span></div>
           {snap.groups.map((g) => (
             <button
               key={g.id}
@@ -36,15 +72,12 @@ export default function OpsDesk({
               onClick={() => onSelect(g.id)}
             >
               <div className="incident-card-top">
-                <span>{g.id}</span>
-                <b className={`severity ${(g.severity || 'MEDIUM').toLowerCase()}`}>{g.severity || g.status}</b>
+                <b>{g.label || g.area || g.id}</b>
+                <span className={`severity ${(g.severity || 'MEDIUM').toLowerCase()}`}>
+                  {g.severity || 'MEDIUM'}
+                </span>
               </div>
-              <b>{g.label || g.area || g.id}</b>
-              <small>{g.people} people · trust {g.trust ?? '—'} · {g.source || 'SIMULATOR'}</small>
-              <div className="incident-card-bottom">
-                <strong>{g.status}</strong>
-                <span>GAPD {g.gapdScore ?? '—'}</span>
-              </div>
+              <small>{g.people} people · {statusLabel(g.status)}</small>
             </button>
           ))}
         </div>
@@ -52,77 +85,83 @@ export default function OpsDesk({
           <div className="incident-detail">
             <div className="detail-heading">
               <div>
-                <small>{selected.id}</small>
                 <h3>{selected.label || selected.id}</h3>
-                <p>{selected.description || selected.area || selected.landmark || 'Evacuation group'}</p>
+                <p>{selected.area || selected.landmark || 'Flood-affected group'}</p>
               </div>
-              <div className="status-pill">{selected.status}</div>
+              <div className="status-pill">{statusLabel(selected.status)}</div>
             </div>
-            <div className="detail-grid">
+            <div className="detail-grid review-detail-grid">
               <div><small>PEOPLE</small><p>{selected.people}</p></div>
-              <div><small>VULNERABILITY</small><p>{selected.vulnerability}</p></div>
-              <div><small>TRUST / CONFIDENCE</small><p>{selected.trust ?? '—'} / {selected.confidenceScore ?? '—'}</p></div>
-              <div><small>DEADLINE TICK</small><p>{selected.deadlineTick}</p></div>
-              <div><small>GAPD BAND / SCORE</small><p>{selected.gapdBand ?? '—'} / {selected.gapdScore ?? '—'}</p></div>
-              <div><small>ASSIGNED</small><p>{selected.assignedVehicleId || '—'} → {selected.assignedShelterId || '—'}</p></div>
+              <div><small>STILL WAITING</small><p>{need?.waiting ?? 0}</p></div>
+              <div>
+                <small>VEHICLE</small>
+                <p>{selected.assignedVehicleId ? `Unit ${selected.assignedVehicleId}` : 'Not assigned'}</p>
+              </div>
+              <div>
+                <small>SHELTER</small>
+                <p>{selected.assignedShelterId || 'Not assigned'}</p>
+              </div>
             </div>
-            {(selected.severityReasons || []).length > 0 && (
-              <div className="severity-reasons">{(selected.severityReasons || []).join(' · ')}</div>
-            )}
-            {trace?.verification?.checks && (
-              <div className="check-grid">
-                {trace.verification.checks.map((c: any) => (
-                  <div key={c.label} className={`check-item ${c.passed ? 'ok' : 'bad'}`}>
-                    {c.passed ? '✓' : '✗'} {c.label}
-                  </div>
-                ))}
+
+            {need && !cleared && (
+              <div className="resource-card">
+                <small>RESOURCE NEEDED</small>
+                <strong>{need.unit}</strong>
+                <p>{need.band} · {need.depthCm} cm at pin. {need.reason}</p>
+                <p className="core-logic">
+                  Decision core: Flood-GAPD priority ·{' '}
+                  {rankLabel(snap.rankingMethod)} scoring · 8-check verified
+                  {typeof selected.gapdScore === 'number'
+                    ? ` · GAPD ${selected.gapdScore}`
+                    : ''}
+                </p>
               </div>
             )}
-            <div className="incident-actions">
-              <button
-                type="button"
-                onClick={async () => {
-                  await api.verify(selected.id, { scenarioId, accept: true, actor: 'operator' });
-                  await onChange(`Verified ${selected.id}`);
-                }}
-              >
-                Verify
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await api.prioritize(selected.id, { scenarioId, actor: 'operator' });
-                  await onChange(`Prioritized ${selected.id} into Flood-GAPD queue`);
-                }}
-              >
-                Prioritize
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  await api.operatorUpdate({
-                    scenarioId,
-                    groupId: selected.id,
-                    roadStatus: 'BLOCKED',
-                    actor: 'field_team',
-                    source: 'FIELD_TEAM',
-                    note: 'Road blocked near pickup',
-                  });
-                  await onChange(`Quick field: road blocked for ${selected.id}`);
-                }}
-              >
-                Quick: road blocked
-              </button>
-            </div>
-            <div className="audit">
-              <div className="audit-title"><b>Audit</b></div>
-              {(selected.audit || []).slice(-8).map((a: any, i: number) => (
-                <div className="audit-row" key={`${a.at}-${i}`}>
-                  <time>{String(a.at).slice(11, 19)}</time>
-                  <div><b>{a.action}</b>{a.detail}</div>
+
+            {!cleared && (
+              <div className="crew-block">
+                <small>CREW / CONTROL</small>
+                <div className="incident-actions">
+                  <button
+                    type="button"
+                    onClick={() => crew(
+                      { reinforcement: true, note: 'More people on site than first reported' },
+                      `Crew: +8 people at ${selected.label || selected.id}. Press Run if it is paused — leftover people get the next free unit.`,
+                    )}
+                  >
+                    More people here
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => crew(
+                      { requestedMode: 'water', note: 'Need a boat — road approach gone' },
+                      `Crew requested a boat for ${selected.label || selected.id}. Run will prefer a rescue boat.`,
+                    )}
+                  >
+                    Need a boat
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => crew(
+                      { roadStatus: 'BLOCKED', note: 'Road blocked near pickup' },
+                      'Road closed on the graph — buses will not use that edge.',
+                    )}
+                  >
+                    Road blocked
+                  </button>
+                  <button
+                    className="stand-down"
+                    type="button"
+                    onClick={() => crew(
+                      { standDown: true, note: 'Site already clear — stand down' },
+                      'Recall sent — site clear. En-route units stop unless people are already aboard.',
+                    )}
+                  >
+                    Site clear
+                  </button>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
         )}
       </div>

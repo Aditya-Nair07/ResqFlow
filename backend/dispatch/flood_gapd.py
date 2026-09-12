@@ -30,8 +30,22 @@ def flood_gapd_key(group: dict[str, Any], geometry_score: float = 50.0, tick: in
     if age > 12:
         freshness = max(20.0, 100.0 - age * 4)
     evidence = 0.6 * trust + 0.4 * freshness
+
+    # New emergencies coming through the field/citizen resource cards are
+    # treated as urgent: they are pushed ahead of routine groups so a
+    # freshly reported situation is served faster than usual.
+    urgency_boost = 0.0
+    status = group.get("status")
+    if status in ("REPORTED", "VERIFIED") and age <= 8:
+        urgency_boost += 700.0  # fresh field/citizen emergency
+    if group.get("backupNeeded"):
+        urgency_boost += 400.0  # crew pressed "More people here"
+    if group.get("requestedMode") == "water":
+        urgency_boost += 200.0  # boat explicitly requested
+
     return (
         1000 * band
+        + urgency_boost
         + 0.35 * geometry_score
         + 0.30 * urgency_from_deadline
         + 0.20 * people_pressure

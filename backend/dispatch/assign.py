@@ -17,8 +17,32 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
     repairs = 0
     traces = []
 
-    for group in sort_groups(state.groups, tick=state.tick)[:2]:
-        if group["status"] != "pending":
+    from sensing.lifecycle import DISPATCHABLE
+
+    # Re-open stranded leftovers only when some people were already rescued
+    # (partial trip) and shelter seats remain — never abandon those lives.
+    for group in state.groups:
+        remaining = group["people"] - group.get("evacuatedPeople", 0)
+        if (
+            group.get("status") == "stranded"
+            and remaining > 0
+            and group.get("evacuatedPeople", 0) > 0
+        ):
+            seats = sum(
+                max(0, s.get("capacity", 0) - s.get("occupancy", 0) - s.get("reservedCapacity", 0))
+                for s in state.shelters if s.get("open", True)
+            )
+            if seats > 0:
+                group["status"] = "pending"
+                group["deadlineTick"] = max(group.get("deadlineTick", 0), state.tick + 40)
+
+    # Assign every free unit that passes the 8-check. Priority order is
+    # Flood-GAPD; unreachable groups are skipped so later groups still get help.
+    free_slots = len(state.available_vehicles())
+    for group in sort_groups(state.groups, tick=state.tick):
+        if assigned >= free_slots:
+            break
+        if group["status"] not in DISPATCHABLE:
             continue
         remaining = group["people"] - group.get("evacuatedPeople", 0)
         if remaining <= 0:
@@ -27,10 +51,16 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
 
         candidates = []
         for vehicle in state.available_vehicles():
+            if group.get("requestedMode") == "water" and vehicle.get("mode") != "water":
+                continue
             for shelter in state.shelters:
                 if not shelter.get("open", True):
                     continue
-                cap_left = shelter.get("capacity", 0) - shelter.get("occupancy", 0)
+                cap_left = (
+                    shelter.get("capacity", 0)
+                    - shelter.get("occupancy", 0)
+                    - shelter.get("reservedCapacity", 0)
+                )
                 if cap_left <= 0:
                     continue
                 pickup_node = group.get("node", [int(group["x"]), int(group["y"])])
@@ -54,23 +84,35 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
                     method, vehicle, group, shelter, depot,
                     path_pickup, path_shelter, depth,
                 )
+                provisional_load = min(
+                    remaining,
+                    max(0, vehicle.get("capacity", 0) - vehicle.get("load", 0)),
+                    cap_left,
+                )
                 candidates.append({
                     "vehicle": vehicle,
                     "shelter": shelter,
                     "pathPickup": path_pickup,
                     "pathShelter": path_shelter,
                     "score": score,
+                    "provisionalLoad": provisional_load,
                 })
 
-        candidates.sort(key=lambda c: c["score"], reverse=True)
+        # Prefer higher score, then more lives saved this trip (partial seats).
+        candidates.sort(key=lambda c: (c["score"], c["provisionalLoad"]), reverse=True)
         winner = None
         repair_note = None
 
         if state.closed_loop:
             for cand in candidates:
+                # Priority is already enforced by iterating groups in
+                # Flood-GAPD order above; skipping the gate here prevents a
+                # reachable group from being starved behind a higher-priority
+                # group that no free unit can currently reach.
                 v = verify_evacuation_plan(
                     state, cand["vehicle"], group, cand["shelter"],
                     cand["pathPickup"], cand["pathShelter"],
+                    skip_priority_gate=True,
                 )
                 if v["passed"]:
                     winner = {**cand, "verification": v}
@@ -121,16 +163,41 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
 
 def _actuate(state: Any, group: dict[str, Any], winner: dict[str, Any]) -> None:
     v = winner["vehicle"]
+    planned = winner.get("verification", {}).get("load")
+    if planned is None:
+        remaining = group["people"] - group.get("evacuatedPeople", 0)
+        shelter = winner["shelter"]
+        shelter_cap = (
+            shelter.get("capacity", 0)
+            - shelter.get("occupancy", 0)
+            - shelter.get("reservedCapacity", 0)
+        )
+        planned = min(remaining, v.get("capacity", 0) - v.get("load", 0), max(0, shelter_cap))
     v["status"] = "busy"
     v["assignedGroupId"] = group["id"]
     v["targetShelterId"] = winner["shelter"]["id"]
+    v["plannedLoad"] = max(1, int(planned))
     v["phase"] = "to_pickup"
     v["route"] = [{"type": "transit", "ticks": winner["pathPickup"].get("travelTime", 4)}]
     v["routeTickProgress"] = 0
     v["routeSegmentIndex"] = 0
     v["activePath"] = winner["pathPickup"]
+    v["legStart"] = [v["x"], v["y"]]  # for on-map movement interpolation
     fuel_cost = winner["pathPickup"].get("travelTime", 0) * 2
     v["fuel"] = max(0, v.get("fuel", 0) - fuel_cost)
+    # Reserve only the seats this trip will actually use (partial loads OK).
+    shelter = winner["shelter"]
+    shelter.setdefault("reservedCapacity", 0)
+    shelter["reservedCapacity"] = shelter.get("reservedCapacity", 0) + v["plannedLoad"]
+    state.reservations.append({
+        "reservationId": f"RSV-auto-{group['id']}-{v['id']}-{state.tick}",
+        "incidentId": group["id"],
+        "vehicleId": v["id"],
+        "shelterId": shelter["id"],
+        "people": v["plannedLoad"],
+        "status": "RESERVED",
+        "createdAt": state.tick,
+    })
     group["status"] = "assigned"
     group["assignedVehicleId"] = v["id"]
     group["assignedShelterId"] = winner["shelter"]["id"]

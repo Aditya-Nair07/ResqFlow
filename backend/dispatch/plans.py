@@ -14,8 +14,12 @@ from sensing.lifecycle import DISPATCHABLE
 PLAN_STRATEGIES = ("FASTEST", "MAXIMUM_COVERAGE", "SAFE_AND_FAIR")
 
 
+_ELIGIBLE_STATUSES = DISPATCHABLE | {"pending", "REPORTED", "VERIFIED"}
+
+
 def _eligible_groups(groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    return [g for g in groups if g.get("status") in DISPATCHABLE or g.get("status") == "pending"]
+    """Include citizen REPORTED/VERIFIED groups so public rescue requests get dispatched."""
+    return [g for g in groups if g.get("status") in _ELIGIBLE_STATUSES]
 
 
 def compare_plans(state: Any, ranking_method: str | None = None) -> dict[str, Any]:
@@ -23,12 +27,17 @@ def compare_plans(state: Any, ranking_method: str | None = None) -> dict[str, An
     plans = []
     for strategy in PLAN_STRATEGIES:
         plans.append(_build_plan(state, strategy, method))
-    recommended = next((p for p in plans if p["planName"] == "SAFE_AND_FAIR"), plans[0])
+    # Operator "Dispatch help" should send the most people, not hold a reserve
+    # when that leaves waiting groups with no assignment.
+    recommended = max(
+        plans,
+        key=lambda p: (len(p.get("assignments") or []), p.get("peopleReached") or 0),
+    )
     unsafe = any(not a.get("verification", {}).get("passed", False) for a in recommended["assignments"])
     explanation = (
-        "NO SAFE PLAN FOUND — HUMAN ESCALATION REQUIRED."
+        "NO SAFE PLAN FOUND — units busy or routes flooded. Press Run, then Dispatch again."
         if not recommended["assignments"] or unsafe
-        else "SAFE_AND_FAIR recommended: critical groups first, flood tolerance, shelter capacity, reserve vehicle."
+        else f"{recommended['planName']} sends {len(recommended['assignments'])} unit(s) to waiting groups."
     )
     return {
         "plans": plans,
@@ -40,8 +49,10 @@ def compare_plans(state: Any, ranking_method: str | None = None) -> dict[str, An
 
 
 def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
-    reserve = 1 if strategy == "SAFE_AND_FAIR" else 0
     groups = _eligible_groups(state.groups)
+    available = [v for v in state.vehicles if v.get("status") == "available"]
+    # Hold a reserve only when we have spare units after covering waiters.
+    reserve = 1 if strategy == "SAFE_AND_FAIR" and len(available) > max(2, len(groups)) else 0
     if strategy == "MAXIMUM_COVERAGE":
         ordered = sorted(groups, key=lambda g: g.get("people", 0), reverse=True)
     elif strategy == "FASTEST":
@@ -52,10 +63,9 @@ def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
         ], tick=state.tick)
 
     used_vehicles: set[Any] = set()
-    used_shelters: set[str] = set()
+    planned_load: dict[str, int] = {}  # shelter can serve several groups if capacity allows
     assignments = []
     rejected = []
-    available = [v for v in state.vehicles if v.get("status") == "available"]
 
     for group in ordered[:6]:
         remaining_slots = len(available) - len(used_vehicles)
@@ -68,9 +78,14 @@ def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
             if vehicle["id"] in used_vehicles:
                 continue
             for shelter in state.shelters:
-                if shelter["id"] in used_shelters or not shelter.get("open", True):
+                if not shelter.get("open", True):
                     continue
-                cap_left = shelter.get("capacity", 0) - shelter.get("occupancy", 0) - shelter.get("reservedCapacity", 0)
+                cap_left = (
+                    shelter.get("capacity", 0)
+                    - shelter.get("occupancy", 0)
+                    - shelter.get("reservedCapacity", 0)
+                    - planned_load.get(shelter["id"], 0)
+                )
                 need = group["people"] - group.get("evacuatedPeople", 0)
                 if cap_left < min(need, 1):
                     continue
@@ -117,7 +132,7 @@ def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
                     }
         if best:
             used_vehicles.add(best["vehicleId"])
-            used_shelters.add(best["shelterId"])
+            planned_load[best["shelterId"]] = planned_load.get(best["shelterId"], 0) + (best.get("load") or 0)
             assignments.append(best)
         else:
             rejected.append({"groupId": group["id"], "reason": "no candidate passed capacity/route/checks"})

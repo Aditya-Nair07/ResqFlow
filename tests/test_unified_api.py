@@ -113,6 +113,102 @@ def test_weather_fixture_fallback(monkeypatch):
     assert "rainfallMmHour" in data
 
 
+def test_dispatch_auto_sends_units_for_citizen_report():
+    client.post("/flood/reset?scenarioId=urban_flood_default")
+    created = client.post("/flood/reports/citizen", json={
+        "scenarioId": "urban_flood_default",
+        "x": 10,
+        "y": 10,
+        "severity": "knee_deep",
+        "people": 9,
+        "note": "Families on the underpass",
+        "depthCm": 55,
+    }).json()
+    assert created["report"]["groupId"]
+    first = client.post("/flood/dispatch/auto", json={
+        "scenarioId": "urban_flood_default",
+        "rankingMethod": "hybrid",
+    }).json()
+    assert first.get("committed"), first
+    # A second public pin must still create a group and be dispatchable
+    # after the first units finish (or immediately if a unit is free).
+    second = client.post("/flood/reports/citizen", json={
+        "scenarioId": "urban_flood_default",
+        "x": 16,
+        "y": 8,
+        "severity": "rising",
+        "people": 6,
+        "note": "New street request",
+        "depthCm": 40,
+    }).json()
+    assert second["report"]["groupId"]
+    assert second["report"]["status"] in ("REPORTED", "DUPLICATE")
+    snap = client.get("/flood/snapshot?scenarioId=urban_flood_default").json()
+    waiting = [g for g in snap["groups"] if g["status"] in ("pending", "REPORTED", "VERIFIED", "PRIORITIZED")]
+    assert waiting, snap["groups"]
+
+
+def test_crew_more_people_stays_dispatchable():
+    client.post("/flood/reset?scenarioId=urban_flood_default")
+    before = client.get("/flood/snapshot?scenarioId=urban_flood_default").json()
+    people = next(g["people"] for g in before["groups"] if g["id"] == "g1")
+    r = client.post("/flood/field-updates", json={
+        "scenarioId": "urban_flood_default",
+        "groupId": "g1",
+        "reinforcement": True,
+        "source": "FIELD_TEAM",
+        "note": "More people on site",
+    })
+    assert r.status_code == 200
+    g = next(x for x in r.json()["snapshot"]["groups"] if x["id"] == "g1")
+    assert g["people"] == people + 8
+    assert g["status"] not in ("ESCALATED", "REJECTED")
+
+
+def test_road_block_force_closes_edge():
+    client.post("/flood/reset?scenarioId=urban_flood_default")
+    r = client.post("/flood/field-updates", json={
+        "scenarioId": "urban_flood_default",
+        "groupId": "g1",
+        "roadStatus": "BLOCKED",
+        "source": "FIELD_TEAM",
+    })
+    snap = r.json()["snapshot"]
+    assert snap["closedEdgeIds"]
+    assert any(s.get("forcedClosed") for s in snap["roadEdgeStates"])
+
+
+def test_stand_down_recalls_enroute_unit():
+    client.post("/flood/reset?scenarioId=urban_flood_default")
+    client.post("/flood/simulate/step", json={
+        "scenarioId": "urban_flood_default",
+        "steps": 1,
+        "running": True,
+        "rankingMethod": "hybrid",
+        "closedLoop": True,
+    })
+    snap = client.get("/flood/snapshot?scenarioId=urban_flood_default").json()
+    assigned = next((g for g in snap["groups"] if g["status"] == "assigned"), None)
+    assert assigned
+    r = client.post("/flood/field-updates", json={
+        "scenarioId": "urban_flood_default",
+        "groupId": assigned["id"],
+        "standDown": True,
+        "source": "OPERATOR",
+        "note": "Site already clear",
+    })
+    assert r.status_code == 200
+    after = r.json()["snapshot"]
+    g = next(x for x in after["groups"] if x["id"] == assigned["id"])
+    assert g["status"] == "evacuated"
+    vid = assigned.get("assignedVehicleId")
+    if vid is not None:
+        v = next(x for x in after["vehicles"] if x["id"] == vid)
+        assert v["status"] in ("available", "busy")
+        if v.get("phase") != "to_shelter":
+            assert v["status"] == "available"
+
+
 def test_chennai_scenario_lists():
     scenarios = client.get("/flood/scenarios").json()["scenarios"]
     ids = {s["id"] for s in scenarios}

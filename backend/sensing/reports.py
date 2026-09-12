@@ -59,7 +59,6 @@ def apply_citizen_sensing(
     ix = max(0, min(grid - 1, ix))
     iy = max(0, min(grid - 1, iy))
 
-    dup = duplicate_of(state.reports, float(ix), float(iy), state.tick)
     severity, sev_score, sev_reasons = severity_from_depth_and_people(
         depth_cm, people, elderly, children, disabled, pregnant, medical
     )
@@ -74,20 +73,25 @@ def apply_citizen_sensing(
     trust = trust_for(source)
     report_id = f"R-{state.tick}-{len(state.reports) + 1}"
 
-    boost = max(18.0, float(depth_cm) * 0.85)
-    radius = 3 if depth_cm >= 70 else 2 if depth_cm >= 40 else 1
+    # Snap to the road graph so a public pin is actually reachable.
+    node = state.road.resolve_node([ix, iy])
+    node_xy = [ix, iy]
+    if node:
+        parts = node.split(",")
+        node_xy = [int(parts[0]), int(parts[1])]
+        ix, iy = node_xy[0], node_xy[1]
+
+    dup = duplicate_of(state.reports, float(ix), float(iy), state.tick)
+
+    boost = max(18.0, min(40.0, float(depth_cm) * 0.7))
+    radius = 3 if depth_cm >= 70 else 2
     flood_info = state.flood.inject_waterlogging(ix, iy, boost, radius)
+    # Keep every road node bus-passable. Deep water stays on off-road cells
+    # so the map shows flooding without drowning the rescue route.
+    if hasattr(state, "keep_roads_serviceable"):
+        state.keep_roads_serviceable(22.0)
 
     closed_edges: list[str] = []
-    if depth_cm >= 48:
-        for edge in state.scenario.get("roadEdges", []):
-            fx, fy = edge["from"]
-            tx, ty = edge["to"]
-            near = abs(fx - ix) + abs(fy - iy) <= 3 or abs(tx - ix) + abs(ty - iy) <= 3
-            if near:
-                state.flood.inject_waterlogging(fx, fy, 35.0, radius=0)
-                state.flood.inject_waterlogging(tx, ty, 35.0, radius=0)
-                closed_edges.append(edge.get("id", f"{fx},{fy}-{tx},{ty}"))
 
     status = "DUPLICATE" if dup else "REPORTED"
     report = {
@@ -147,20 +151,43 @@ def apply_citizen_sensing(
     }
 
     group_id = None
-    if people > 0 and not dup:
+    if people > 0 and dup:
+        # Same street pin again: add people to the existing group instead of dropping the request.
+        existing = next((r for r in state.reports if r.get("id") == dup), None)
+        gid = existing.get("groupId") if existing else None
+        group = next((g for g in state.groups if g["id"] == gid), None) if gid else None
+        if not group:
+            group = next(
+                (g for g in state.groups if abs(g.get("x", 0) - ix) <= 1.5 and abs(g.get("y", 0) - iy) <= 1.5
+                 and g.get("status") not in ("evacuated", "RESOLVED", "REJECTED")),
+                None,
+            )
+        waiting_merge = group and group.get("status") in (
+            "pending", "REPORTED", "VERIFIED", "PRIORITIZED", "REPLAN_REQUIRED",
+        )
+        if waiting_merge:
+            group["people"] = group.get("people", 0) + people
+            if note:
+                group["description"] = note
+                group["label"] = note.strip()[:48] or group.get("label")
+            group["updatedAt"] = utc_now()
+            group_id = group["id"]
+            report["groupId"] = group_id
+            report["status"] = "REPORTED"
+            report["effects"]["groupCreated"] = group_id
+            report["effects"]["mergedInto"] = group_id
+            status = "REPORTED"
+            report["status"] = status
+
+    if people > 0 and not group_id:
         state.citizen_report_count += 1
         group_id = f"G-{report_id}"
-        node = state.road.resolve_node([ix, iy])
-        node_xy = [ix, iy]
-        if node:
-            parts = node.split(",")
-            node_xy = [int(parts[0]), int(parts[1])]
         vul = vulnerability_from_counts(elderly, children, disabled, pregnant, medical)
         group = {
             "id": group_id,
-            "label": note.strip() or f"Report @ ({ix},{iy})",
-            "x": float(ix),
-            "y": float(iy),
+            "label": (note.strip()[:48] if note else "") or landmark or f"Report @ ({ix},{iy})",
+            "x": float(node_xy[0]),
+            "y": float(node_xy[1]),
             "node": node_xy,
             "lat": lat,
             "lng": lng,
@@ -174,7 +201,7 @@ def apply_citizen_sensing(
             "medical": medical,
             "vulnerability": vul,
             "mobility": mobility,
-            "deadlineTick": state.tick + (10 if severity == "CRITICAL" else 18 if severity == "HIGH" else 28),
+            "deadlineTick": state.tick + (60 if severity == "CRITICAL" else 80 if severity == "HIGH" else 100),
             "status": "REPORTED",
             "evacuatedPeople": 0,
             "assignedVehicleId": None,
@@ -231,6 +258,8 @@ def apply_operator_sensing(
     shelter_full: bool | None = None,
     note: str = "",
     reinforcement: bool = False,
+    requested_mode: str | None = None,
+    stand_down: bool = False,
 ) -> dict[str, Any]:
     """High-trust field/operator update; may force REPLAN_REQUIRED."""
     trust = trust_for(source)
@@ -272,13 +301,16 @@ def apply_operator_sensing(
                     target = e
                     break
         if target:
-            fx, fy = target["from"]
-            tx, ty = target["to"]
-            boost = 80.0 if road_status == "BLOCKED" else 40.0
-            state.flood.inject_waterlogging(fx, fy, boost, radius=0)
-            state.flood.inject_waterlogging(tx, ty, boost, radius=0)
-            effects["roadClosed"] = target.get("id")
-            state.emit_event("road_closed", {"edgeId": target.get("id"), "status": road_status, "source": source})
+            eid = target.get("id")
+            if eid:
+                state.road.forced_closed.add(eid)
+            effects["roadClosed"] = eid
+            if group:
+                group["roadBlocked"] = True
+                group.setdefault("audit", []).append(
+                    {"at": utc_now(), "action": "Road blocked", "actor": actor, "detail": eid or ""}
+                )
+            state.emit_event("road_closed", {"edgeId": eid, "status": road_status, "source": source})
             replan = True
 
     if people_found is not None and group:
@@ -332,11 +364,25 @@ def apply_operator_sensing(
             state.emit_event("shelter_status_changed", effects["shelter"])
 
     if reinforcement and group:
-        try:
-            transition(group, "ESCALATED", actor, note or "Reinforcement requested")
-        except ValueError:
-            group["status"] = "ESCALATED"
-        replan = True
+        extra = 8
+        group["people"] = group.get("people", 0) + extra
+        group["backupNeeded"] = True
+        group.setdefault("audit", []).append(
+            {"at": utc_now(), "action": "Crew asked for more people", "actor": actor, "detail": f"+{extra}"}
+        )
+        effects["peopleAdded"] = extra
+        # Stay on the Run queue. Do not escalate (that hid groups from dispatch).
+
+    if (requested_mode == "water" or (note and "boat" in note.lower())) and group:
+        group["requestedMode"] = "water"
+        group.setdefault("audit", []).append(
+            {"at": utc_now(), "action": "Crew requested a boat", "actor": actor, "detail": note or "boat"}
+        )
+        effects["requestedMode"] = "water"
+
+    if stand_down and group:
+        effects["recall"] = state.recall_group(group["id"], actor=actor)
+        replan = False
 
     if replan and group and group.get("status") in ("DISPATCHED", "IN_PROGRESS", "assigned", "RESOURCE_RESERVED"):
         try:
