@@ -6,6 +6,8 @@ import PublicSafety from './PublicSafety';
 import PublicReports from './PublicReports';
 import OpsLog from './OpsLog';
 import FloodMap from './FloodMap';
+import FleetStrip from './FleetStrip';
+import ShelterBoard from './ShelterBoard';
 import PlannerPanel from './PlannerPanel';
 
 const DEFAULT_SCENARIO = 'chennai_2015_review';
@@ -213,6 +215,7 @@ export default function App() {
           <div className="workspace-grid review-workspace">
             <div className="left-column">
               <FloodMap snap={snap} />
+              <FleetStrip snap={snap} />
               <OpsLog snap={snap} />
               <PublicReports snap={snap} />
             </div>
@@ -227,25 +230,7 @@ export default function App() {
                   await refresh();
                 }}
               />
-              <div className="panel">
-                <div className="panel-heading">
-                  <div>
-                    <p className="eyebrow">SHELTERS</p>
-                    <h2>Safe places</h2>
-                  </div>
-                </div>
-                {snap.shelters.map((s) => (
-                  <div className="shelter-row" key={s.id}>
-                    <div className="shelter-info">
-                      <strong>{s.label || s.id}</strong>
-                      <small>{s.open === false ? 'Closed' : 'Open'}</small>
-                    </div>
-                    <div className="capacity">
-                      <b>{s.occupancy}/{s.capacity}</b>
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <ShelterBoard snap={snap} />
             </aside>
           </div>
         )}

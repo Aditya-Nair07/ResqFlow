@@ -172,9 +172,13 @@ def test_partial_shelter_seats_still_rescue_people():
         v["plannedLoad"] = None
     for s in st.shelters:
         if s["id"] == "shelter_a":
-            s["occupancy"], s["capacity"], s["reservedCapacity"] = 72, 80, 0
+            s["occupancy"], s["capacity"], s["reservedCapacity"], s["open"] = 72, 80, 0, True
+        elif s["id"] == "shelter_b":
+            s["occupancy"], s["capacity"], s["reservedCapacity"], s["open"] = 44, 50, 0, True
         else:
-            s["occupancy"], s["capacity"], s["reservedCapacity"] = 44, 50, 0
+            # Close the other shelters so only shelter_a (8 free) and shelter_b (6 free)
+            # are candidates — isolates the "still rescue the 8" behaviour under test.
+            s["occupancy"], s["capacity"], s["reservedCapacity"], s["open"] = s["capacity"], s["capacity"], 0, False
 
     boat = next(v for v in st.vehicles if v.get("mode") == "water")
     sh = next(s for s in st.shelters if s["id"] == "shelter_a")

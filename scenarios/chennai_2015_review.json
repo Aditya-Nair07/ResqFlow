@@ -8,483 +8,90 @@
   "drainRate": 0.06,
   "depthSpread": 0.12,
   "lowPoints": [
-    {
-      "x": 12,
-      "y": 10,
-      "weight": 1.0
-    },
-    {
-      "x": 8,
-      "y": 14,
-      "weight": 0.8
-    },
-    {
-      "x": 16,
-      "y": 12,
-      "weight": 0.7
-    }
+    { "x": 12, "y": 10, "weight": 1.0 },
+    { "x": 8, "y": 14, "weight": 0.8 },
+    { "x": 16, "y": 12, "weight": 0.7 },
+    { "x": 16, "y": 18, "weight": 0.6 }
   ],
   "roadEdges": [
-    {
-      "id": "e1",
-      "from": [
-        4,
-        4
-      ],
-      "to": [
-        8,
-        4
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e2",
-      "from": [
-        8,
-        4
-      ],
-      "to": [
-        12,
-        4
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e3",
-      "from": [
-        12,
-        4
-      ],
-      "to": [
-        16,
-        4
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e4",
-      "from": [
-        16,
-        4
-      ],
-      "to": [
-        20,
-        4
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e5",
-      "from": [
-        8,
-        4
-      ],
-      "to": [
-        8,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e6",
-      "from": [
-        8,
-        8
-      ],
-      "to": [
-        8,
-        12
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e7",
-      "from": [
-        8,
-        12
-      ],
-      "to": [
-        8,
-        16
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e8",
-      "from": [
-        12,
-        4
-      ],
-      "to": [
-        12,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e9",
-      "from": [
-        12,
-        8
-      ],
-      "to": [
-        12,
-        12
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e10",
-      "from": [
-        12,
-        12
-      ],
-      "to": [
-        12,
-        16
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e11",
-      "from": [
-        16,
-        4
-      ],
-      "to": [
-        16,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e12",
-      "from": [
-        16,
-        8
-      ],
-      "to": [
-        16,
-        12
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e13",
-      "from": [
-        4,
-        4
-      ],
-      "to": [
-        4,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e14",
-      "from": [
-        4,
-        8
-      ],
-      "to": [
-        8,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e15",
-      "from": [
-        12,
-        8
-      ],
-      "to": [
-        16,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e16",
-      "from": [
-        8,
-        12
-      ],
-      "to": [
-        12,
-        12
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e17",
-      "from": [
-        12,
-        12
-      ],
-      "to": [
-        16,
-        12
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e18",
-      "from": [
-        20,
-        4
-      ],
-      "to": [
-        20,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e19",
-      "from": [
-        20,
-        8
-      ],
-      "to": [
-        16,
-        8
-      ],
-      "travelTime": 2
-    },
-    {
-      "id": "e20",
-      "from": [
-        4,
-        8
-      ],
-      "to": [
-        4,
-        12
-      ],
-      "travelTime": 2,
-      "boatOnly": false
-    }
+    { "id": "e1", "from": [4, 4], "to": [8, 4], "travelTime": 2 },
+    { "id": "e2", "from": [8, 4], "to": [12, 4], "travelTime": 2 },
+    { "id": "e3", "from": [12, 4], "to": [16, 4], "travelTime": 2 },
+    { "id": "e4", "from": [16, 4], "to": [20, 4], "travelTime": 2 },
+    { "id": "e5", "from": [8, 4], "to": [8, 8], "travelTime": 2 },
+    { "id": "e6", "from": [8, 8], "to": [8, 12], "travelTime": 2 },
+    { "id": "e7", "from": [8, 12], "to": [8, 16], "travelTime": 2 },
+    { "id": "e8", "from": [12, 4], "to": [12, 8], "travelTime": 2 },
+    { "id": "e9", "from": [12, 8], "to": [12, 12], "travelTime": 2 },
+    { "id": "e10", "from": [12, 12], "to": [12, 16], "travelTime": 2 },
+    { "id": "e11", "from": [16, 4], "to": [16, 8], "travelTime": 2 },
+    { "id": "e12", "from": [16, 8], "to": [16, 12], "travelTime": 2 },
+    { "id": "e13", "from": [4, 4], "to": [4, 8], "travelTime": 2 },
+    { "id": "e14", "from": [4, 8], "to": [8, 8], "travelTime": 2 },
+    { "id": "e15", "from": [12, 8], "to": [16, 8], "travelTime": 2 },
+    { "id": "e16", "from": [8, 12], "to": [12, 12], "travelTime": 2 },
+    { "id": "e17", "from": [12, 12], "to": [16, 12], "travelTime": 2 },
+    { "id": "e18", "from": [20, 4], "to": [20, 8], "travelTime": 2 },
+    { "id": "e19", "from": [20, 8], "to": [16, 8], "travelTime": 2 },
+    { "id": "e20", "from": [4, 8], "to": [4, 12], "travelTime": 2, "boatOnly": false },
+
+    { "id": "e21", "from": [4, 12], "to": [4, 16], "travelTime": 2 },
+    { "id": "e22", "from": [4, 16], "to": [4, 20], "travelTime": 2 },
+    { "id": "e23", "from": [8, 16], "to": [8, 20], "travelTime": 2 },
+    { "id": "e24", "from": [12, 16], "to": [12, 20], "travelTime": 2 },
+    { "id": "e25", "from": [16, 12], "to": [16, 16], "travelTime": 2 },
+    { "id": "e26", "from": [16, 16], "to": [16, 20], "travelTime": 2 },
+    { "id": "e27", "from": [20, 8], "to": [20, 12], "travelTime": 2 },
+    { "id": "e28", "from": [20, 12], "to": [20, 16], "travelTime": 2 },
+    { "id": "e29", "from": [20, 16], "to": [20, 20], "travelTime": 2 },
+    { "id": "e30", "from": [4, 20], "to": [8, 20], "travelTime": 2 },
+    { "id": "e31", "from": [8, 20], "to": [12, 20], "travelTime": 2 },
+    { "id": "e32", "from": [12, 20], "to": [16, 20], "travelTime": 2 },
+    { "id": "e33", "from": [16, 20], "to": [20, 20], "travelTime": 2 },
+    { "id": "e34", "from": [4, 16], "to": [8, 16], "travelTime": 2 },
+    { "id": "e35", "from": [16, 16], "to": [20, 16], "travelTime": 2 },
+    { "id": "e36", "from": [20, 4], "to": [24, 4], "travelTime": 2 },
+    { "id": "e37", "from": [24, 4], "to": [24, 8], "travelTime": 2 },
+    { "id": "e38", "from": [24, 8], "to": [20, 8], "travelTime": 2 }
   ],
   "boatLinks": [
-    {
-      "id": "b1",
-      "from": [
-        8,
-        16
-      ],
-      "to": [
-        12,
-        16
-      ],
-      "travelTime": 3
-    },
-    {
-      "id": "b2",
-      "from": [
-        12,
-        16
-      ],
-      "to": [
-        16,
-        16
-      ],
-      "travelTime": 3
-    }
+    { "id": "b1", "from": [8, 16], "to": [12, 16], "travelTime": 3 },
+    { "id": "b2", "from": [12, 16], "to": [16, 16], "travelTime": 3 },
+    { "id": "b3", "from": [16, 16], "to": [20, 16], "travelTime": 3 },
+    { "id": "b4", "from": [4, 16], "to": [8, 16], "travelTime": 3 }
   ],
   "depots": [
-    {
-      "id": "depot_north",
-      "label": "North Depot",
-      "x": 4,
-      "y": 4
-    },
-    {
-      "id": "depot_east",
-      "label": "East Depot",
-      "x": 20,
-      "y": 4
-    }
+    { "id": "depot_north", "label": "North Depot", "x": 4, "y": 4 },
+    { "id": "depot_east", "label": "East Depot", "x": 20, "y": 4 },
+    { "id": "depot_south", "label": "South Depot", "x": 8, "y": 20 }
   ],
   "shelters": [
-    {
-      "id": "shelter_a",
-      "label": "Velachery School Shelter",
-      "x": 20,
-      "y": 8,
-      "capacity": 80,
-      "node": [
-        20,
-        8
-      ]
-    },
-    {
-      "id": "shelter_b",
-      "label": "Saidapet Community Hall",
-      "x": 4,
-      "y": 12,
-      "capacity": 50,
-      "node": [
-        4,
-        12
-      ]
-    }
+    { "id": "shelter_a", "label": "Velachery School Shelter", "x": 20, "y": 8, "capacity": 80, "node": [20, 8] },
+    { "id": "shelter_b", "label": "Saidapet Community Hall", "x": 4, "y": 12, "capacity": 50, "node": [4, 12] },
+    { "id": "shelter_c", "label": "Guindy Relief Centre", "x": 20, "y": 20, "capacity": 60, "node": [20, 20] },
+    { "id": "shelter_d", "label": "Adyar Community Hall", "x": 4, "y": 20, "capacity": 45, "node": [4, 20] },
+    { "id": "shelter_e", "label": "Mylapore Higher Secondary", "x": 12, "y": 20, "capacity": 50, "node": [12, 20] }
   ],
   "groups": [
-    {
-      "id": "g1",
-      "label": "Velachery low-lying block",
-      "x": 12,
-      "y": 10,
-      "node": [
-        12,
-        10
-      ],
-      "people": 24,
-      "vulnerability": 92,
-      "mobility": "ambulatory",
-      "deadlineTick": 80,
-      "area": "Velachery"
-    },
-    {
-      "id": "g2",
-      "label": "Saidapet canal edge",
-      "x": 8,
-      "y": 14,
-      "node": [
-        8,
-        14
-      ],
-      "people": 18,
-      "vulnerability": 88,
-      "mobility": "ambulatory",
-      "deadlineTick": 85,
-      "area": "Saidapet"
-    },
-    {
-      "id": "g3",
-      "label": "OMR underpass pocket",
-      "x": 16,
-      "y": 12,
-      "node": [
-        16,
-        12
-      ],
-      "people": 12,
-      "vulnerability": 76,
-      "mobility": "ambulatory",
-      "deadlineTick": 90,
-      "area": "OMR"
-    },
-    {
-      "id": "g4",
-      "label": "T Nagar market crowd",
-      "x": 10,
-      "y": 8,
-      "node": [
-        10,
-        8
-      ],
-      "people": 30,
-      "vulnerability": 70,
-      "mobility": "ambulatory",
-      "deadlineTick": 95,
-      "area": "T Nagar"
-    }
+    { "id": "g1", "label": "Velachery low-lying block", "x": 12, "y": 10, "node": [12, 10], "people": 24, "vulnerability": 92, "mobility": "ambulatory", "deadlineTick": 80, "area": "Velachery" },
+    { "id": "g2", "label": "Saidapet canal edge", "x": 8, "y": 14, "node": [8, 14], "people": 18, "vulnerability": 88, "mobility": "ambulatory", "deadlineTick": 85, "area": "Saidapet" },
+    { "id": "g3", "label": "OMR underpass pocket", "x": 16, "y": 12, "node": [16, 12], "people": 12, "vulnerability": 76, "mobility": "ambulatory", "deadlineTick": 90, "area": "OMR" },
+    { "id": "g4", "label": "T Nagar market crowd", "x": 10, "y": 8, "node": [10, 8], "people": 30, "vulnerability": 70, "mobility": "ambulatory", "deadlineTick": 95, "area": "T Nagar" },
+    { "id": "g5", "label": "Adyar riverbank huts", "x": 4, "y": 16, "node": [4, 16], "people": 20, "vulnerability": 84, "mobility": "ambulatory", "deadlineTick": 88, "area": "Adyar" },
+    { "id": "g6", "label": "Guindy industrial estate", "x": 20, "y": 12, "node": [20, 12], "people": 16, "vulnerability": 66, "mobility": "ambulatory", "deadlineTick": 96, "area": "Guindy" },
+    { "id": "g7", "label": "Kotturpuram flats", "x": 16, "y": 16, "node": [16, 16], "people": 22, "vulnerability": 80, "mobility": "ambulatory", "deadlineTick": 90, "area": "Kotturpuram" },
+    { "id": "g8", "label": "Mandaveli lane", "x": 16, "y": 20, "node": [16, 20], "people": 14, "vulnerability": 74, "mobility": "ambulatory", "deadlineTick": 100, "area": "Mandaveli" }
   ],
   "vehicles": [
-    {
-      "id": 1,
-      "type": "Evacuation Bus",
-      "mode": "road",
-      "maxDepthCm": 25,
-      "capacity": 40,
-      "speed": 1.0,
-      "fuel": 100,
-      "depotNode": [
-        4,
-        4
-      ],
-      "x": 4,
-      "y": 4
-    },
-    {
-      "id": 2,
-      "type": "Evacuation Bus",
-      "mode": "road",
-      "maxDepthCm": 25,
-      "capacity": 40,
-      "speed": 1.0,
-      "fuel": 100,
-      "depotNode": [
-        20,
-        4
-      ],
-      "x": 20,
-      "y": 4
-    },
-    {
-      "id": 3,
-      "type": "High-Clearance Truck",
-      "mode": "road",
-      "maxDepthCm": 45,
-      "capacity": 20,
-      "speed": 0.85,
-      "fuel": 90,
-      "depotNode": [
-        4,
-        4
-      ],
-      "x": 4,
-      "y": 4
-    },
-    {
-      "id": 4,
-      "type": "Rescue Boat",
-      "mode": "water",
-      "maxDepthCm": 200,
-      "capacity": 16,
-      "speed": 0.75,
-      "fuel": 120,
-      "depotNode": [
-        8,
-        16
-      ],
-      "x": 8,
-      "y": 16
-    },
-    {
-      "id": 5,
-      "type": "Rescue Boat",
-      "mode": "water",
-      "maxDepthCm": 200,
-      "capacity": 16,
-      "speed": 0.75,
-      "fuel": 120,
-      "depotNode": [
-        8,
-        16
-      ],
-      "x": 16,
-      "y": 16,
-      "label": "Rescue Boat 2"
-    },
-    {
-      "id": 6,
-      "type": "Rescue Boat",
-      "mode": "water",
-      "maxDepthCm": 200,
-      "capacity": 16,
-      "speed": 0.75,
-      "fuel": 120,
-      "depotNode": [
-        8,
-        16
-      ],
-      "x": 12,
-      "y": 16,
-      "label": "Rescue Boat 3"
-    }
+    { "id": 1, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 100, "depotNode": [4, 4], "x": 4, "y": 4 },
+    { "id": 2, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 100, "depotNode": [20, 4], "x": 20, "y": 4 },
+    { "id": 3, "type": "High-Clearance Truck", "mode": "road", "maxDepthCm": 45, "capacity": 20, "speed": 0.85, "fuel": 90, "depotNode": [4, 4], "x": 4, "y": 4 },
+    { "id": 4, "type": "Rescue Boat", "mode": "water", "maxDepthCm": 200, "capacity": 16, "speed": 0.75, "fuel": 120, "depotNode": [8, 16], "x": 8, "y": 16 },
+    { "id": 5, "type": "Rescue Boat", "mode": "water", "maxDepthCm": 200, "capacity": 16, "speed": 0.75, "fuel": 120, "depotNode": [8, 16], "x": 16, "y": 16, "label": "Rescue Boat 2" },
+    { "id": 6, "type": "Rescue Boat", "mode": "water", "maxDepthCm": 200, "capacity": 16, "speed": 0.75, "fuel": 120, "depotNode": [8, 16], "x": 12, "y": 16, "label": "Rescue Boat 3" },
+    { "id": 7, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 100, "depotNode": [8, 20], "x": 8, "y": 20, "label": "Evacuation Bus 4" },
+    { "id": 8, "type": "High-Clearance Truck", "mode": "road", "maxDepthCm": 45, "capacity": 20, "speed": 0.85, "fuel": 90, "depotNode": [20, 4], "x": 20, "y": 4, "label": "High-Clearance Truck 2" },
+    { "id": 9, "type": "Rescue Boat", "mode": "water", "maxDepthCm": 200, "capacity": 16, "speed": 0.75, "fuel": 120, "depotNode": [16, 16], "x": 16, "y": 16, "label": "Rescue Boat 4" },
+    { "id": 10, "type": "Evacuation Bus", "mode": "road", "maxDepthCm": 25, "capacity": 40, "speed": 1.0, "fuel": 100, "depotNode": [4, 4], "x": 4, "y": 4, "label": "Evacuation Bus 5" }
   ]
 }

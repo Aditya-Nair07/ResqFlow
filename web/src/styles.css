@@ -142,7 +142,7 @@
 .plant-badge.cyan{color:#67e8f9;background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.25)}
 .plant-badge.green{color:#34d399;background:rgba(16,185,129,.1);border-color:rgba(16,185,129,.25)}
 .plant-badge.amber{color:#fbbf24;background:rgba(245,158,11,.1);border-color:rgba(245,158,11,.25)}
-.plant-map-wrap{margin:0 18px 8px;min-height:480px;background:#020617;border:1px solid #1e293b;border-radius:12px;overflow:hidden}
+.plant-map-wrap{margin:0 18px 8px;height:auto;min-height:480px;background:#081416;border:1px solid #1e293b;border-radius:12px;overflow:hidden}
 .plant-map-canvas{display:block;width:100%;background:#020617}
 .plant-legend{display:flex;flex-wrap:wrap;gap:12px 18px;padding:12px 22px 18px;border-top:1px solid #1e293b;color:#94a3b8;font:600 11px 'Space Grotesk',sans-serif}
 .plant-legend span{display:inline-flex;align-items:center;gap:7px}
@@ -152,7 +152,46 @@
 .plant-legend .lg.assigned{background:#f59e0b;border-radius:50%}
 .plant-legend .lg.critical{background:#ef4444;transform:rotate(45deg)}
 .plant-legend .lg.risk{background:#8b5cf6}
-.plant-legend .lg.route{width:18px;height:0;border-top:2px dashed #cbd5e1;border-radius:0;background:transparent}
+.plant-legend .lg.route{width:18px;height:0;border-top:2px solid #b0c4be;border-radius:0;background:transparent}
+.plant-legend .lg.closed{width:18px;height:0;border-top:2px dashed #e67852;border-radius:0;background:transparent}
+.plant-legend .lg.water{width:18px;height:6px;border-radius:3px;background:rgba(56,150,180,.5)}
 .plant-legend .lg.ellipse{width:14px;height:8px;border:1.5px solid #22d3ee;border-radius:50%;background:transparent}
 .plant-legend .lg.poly{border:1.5px solid #fbbf24;background:rgba(251,191,36,.12)}
 @media(max-width:700px){.plant-map-wrap{margin:0 12px 8px}.plant-legend{padding:12px 14px 16px;gap:10px}}
+
+/* Fleet strip — read-only unit chips */
+.fleet-panel{padding:0}
+.fleet-heading{padding:14px 18px 10px}
+.fleet-heading h2{font-size:16px}
+.fleet-summary{font:500 10px 'DM Mono';color:var(--muted);letter-spacing:.3px}
+.fleet-summary b{font-weight:500}.fleet-summary b.mint{color:var(--mint)}.fleet-summary b.amber{color:var(--yellow)}
+.fleet-strip{display:flex;gap:8px;overflow-x:auto;padding:0 16px 16px;scrollbar-width:thin}
+.fleet-chip{flex:0 0 auto;min-width:150px;display:flex;align-items:center;gap:9px;background:#17292b;border:1px solid #2b4142;border-left:3px solid #2b4142;padding:9px 11px}
+.fleet-chip.busy{border-left-color:var(--yellow)}
+.fleet-chip.free{border-left-color:var(--mint)}
+.fleet-chip .chip-tag{font:700 9px 'DM Mono';letter-spacing:.5px;padding:4px 5px;border:1px solid currentColor}
+.fleet-chip.kind-boat .chip-tag{color:#34d399}
+.fleet-chip.kind-truck .chip-tag{color:#c4b5fd}
+.fleet-chip.kind-bus .chip-tag{color:#7dd3fc}
+.fleet-chip.kind-unit .chip-tag{color:var(--muted)}
+.fleet-chip .chip-body{flex:1;min-width:0}
+.fleet-chip .chip-body strong{display:block;font-size:11px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fleet-chip .chip-body small{display:block;font:10px 'DM Mono';color:var(--muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fleet-chip .chip-load{font:500 10px 'DM Mono';color:var(--ink)}
+.fleet-chip.free .chip-load{color:var(--muted)}
+
+/* Shelter board — occupancy bars */
+.shelter-board{padding:0 0 8px}
+.shelter-line{padding:11px 20px;border-top:1px solid #253638}
+.shelter-line:first-of-type{border-top:0}
+.shelter-line-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.shelter-line-top strong{font-size:12px;font-weight:500}
+.shelter-seats{font:500 10px 'DM Mono';color:var(--mint);white-space:nowrap}
+.shelter-line.tone-tight .shelter-seats{color:var(--yellow)}
+.shelter-line.tone-full .shelter-seats,.shelter-line.tone-closed .shelter-seats{color:var(--coral)}
+.shelter-bar{position:relative;display:flex;height:6px;background:#22383a;margin:8px 0 5px;overflow:hidden}
+.shelter-bar .occ{height:100%;background:var(--mint)}
+.shelter-line.tone-tight .shelter-bar .occ{background:var(--yellow)}
+.shelter-line.tone-full .shelter-bar .occ,.shelter-line.tone-closed .shelter-bar .occ{background:var(--coral)}
+.shelter-bar .res{height:100%;background:repeating-linear-gradient(45deg,rgba(247,185,85,.55) 0 4px,transparent 4px 8px)}
+.shelter-line small{font:10px 'DM Mono';color:var(--muted)}
