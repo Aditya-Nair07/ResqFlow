@@ -105,6 +105,11 @@ def approve_plan(
         "dispatch_approved",
         {"planId": plan_id, "committed": committed, "rejected": rejected, "override": override, "overrideReason": override_reason},
     )
+    # Keep the committed strategy active so scarce-seat Run matches the card.
+    if getattr(state, "scarce_seats", False):
+        state.active_strategy = plan.get("planName")
+    else:
+        state.active_strategy = None
     # Invalidate cached plans after commit
     state.proposed_plans.clear()
     state.plan_version += 1
@@ -115,4 +120,5 @@ def approve_plan(
         "rejected": rejected,
         "snapshot": state.to_snapshot(),
         "overrideLogged": bool(override and override_reason),
+        "activeStrategy": state.active_strategy,
     }

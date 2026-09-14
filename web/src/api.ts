@@ -46,6 +46,8 @@ export type Snapshot = {
   reservations?: any[];
   depots?: any[];
   closedEdgeIds?: string[];
+  scarceSeats?: boolean;
+  activeStrategy?: string | null;
 };
 
 export const api = {
@@ -68,6 +70,7 @@ export const api = {
   replan: (body: Record<string, unknown>) => jsonFetch('/flood/replan', { method: 'POST', body: JSON.stringify(body) }),
   weather: (body: Record<string, unknown>) => jsonFetch('/flood/weather', { method: 'POST', body: JSON.stringify(body) }),
   difficulty: (body: Record<string, unknown>) => jsonFetch('/flood/difficulty', { method: 'POST', body: JSON.stringify(body) }),
+  scarceSeats: (body: Record<string, unknown>) => jsonFetch('/flood/scarce-seats', { method: 'POST', body: JSON.stringify(body) }),
   chennaiFixtures: () => jsonFetch('/flood/chennai/fixtures'),
   events: (scenarioId: string, after = 0) => jsonFetch(`/flood/events?scenarioId=${encodeURIComponent(scenarioId)}&after=${after}`),
   scenarios: () => jsonFetch('/flood/scenarios'),

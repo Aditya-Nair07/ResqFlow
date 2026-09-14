@@ -82,6 +82,12 @@ def _project_full_run(base_state: Any, plan: dict[str, Any]) -> dict[str, Any]:
     """
     sim = deepcopy(base_state)
     _apply_plan_to_clone(sim, plan)
+    # Keep the strategy active for the rest of the run when scarce seats is on
+    # (otherwise totals converge and the demo switch does nothing).
+    if getattr(sim, "scarce_seats", False):
+        sim.active_strategy = plan.get("planName")
+    else:
+        sim.active_strategy = None
     sim.running = True
     start_tick = sim.tick
     last_rescued = int(sim.metrics.get("peopleEvacuated", 0))
@@ -99,15 +105,11 @@ def _project_full_run(base_state: Any, plan: dict[str, Any]) -> dict[str, Any]:
         sim.step_simulation(project=True)
 
     rescued = int(sim.metrics.get("peopleEvacuated", 0))
-    stranded = sum(
-        max(0, g["people"] - g.get("evacuatedPeople", 0))
-        for g in sim.groups
-        if g.get("status") in ("stranded", "REJECTED")
-    )
+    left_behind = sum(max(0, g["people"] - g.get("evacuatedPeople", 0)) for g in sim.groups)
     return {
         "projectedRescued": rescued,
         "projectedTicks": max(0, sim.tick - start_tick),
-        "projectedStranded": stranded,
+        "projectedStranded": left_behind,
     }
 
 
@@ -164,8 +166,13 @@ def compare_plans(state: Any, ranking_method: str | None = None) -> dict[str, An
 def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
     groups = _eligible_groups(state.groups)
     available = [v for v in state.vehicles if v.get("status") == "available"]
+    scarce = bool(getattr(state, "scarce_seats", False))
     # Hold a reserve only when we have spare units after covering waiters.
-    reserve = 1 if strategy == "SAFE_AND_FAIR" and len(available) > max(2, len(groups)) else 0
+    if strategy == "SAFE_AND_FAIR":
+        reserve = 3 if scarce and len(available) > 3 else (1 if len(available) > max(2, len(groups)) else 0)
+    else:
+        reserve = 0
+    max_assign = 3 if scarce and strategy == "FASTEST" else 6
     if strategy == "MAXIMUM_COVERAGE":
         ordered = sorted(groups, key=lambda g: g.get("people", 0), reverse=True)
     elif strategy == "FASTEST":
@@ -180,7 +187,7 @@ def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
     assignments = []
     rejected = []
 
-    for group in ordered[:6]:
+    for group in ordered[:max_assign]:
         remaining_slots = len(available) - len(used_vehicles)
         if remaining_slots <= reserve and strategy == "SAFE_AND_FAIR":
             rejected.append({"groupId": group["id"], "reason": "reserve capacity protected"})
@@ -193,11 +200,13 @@ def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
             for shelter in state.shelters:
                 if not shelter.get("open", True):
                     continue
+                hold = int(shelter.get("capacity", 0) * 0.45) if scarce and strategy == "SAFE_AND_FAIR" else 0
                 cap_left = (
                     shelter.get("capacity", 0)
                     - shelter.get("occupancy", 0)
                     - shelter.get("reservedCapacity", 0)
                     - planned_load.get(shelter["id"], 0)
+                    - hold
                 )
                 need = group["people"] - group.get("evacuatedPeople", 0)
                 if cap_left < min(need, 1):
@@ -219,14 +228,27 @@ def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
                 depot = state.depots[0] if state.depots else {"x": vehicle["x"], "y": vehicle["y"]}
                 depth = state.flood.depth_at(group["x"], group["y"])
                 score = rank_candidate(method, vehicle, group, shelter, depot, path_pickup, path_shelter, depth)
-                if strategy == "FASTEST":
+                load_cap = min(need, vehicle.get("capacity", 0), cap_left)
+                if scarce and strategy == "FASTEST":
+                    load_cap = min(load_cap, 10)
                     score -= path_pickup.get("travelTime", 99) * 2
-                if strategy == "MAXIMUM_COVERAGE":
+                if scarce and strategy == "MAXIMUM_COVERAGE":
+                    score += load_cap * 4
+                if strategy == "FASTEST" and not scarce:
+                    score -= path_pickup.get("travelTime", 99) * 2
+                if strategy == "MAXIMUM_COVERAGE" and not scarce:
                     score += min(vehicle.get("capacity", 0), need)
+                old_res = shelter.get("reservedCapacity", 0)
+                if hold:
+                    shelter["reservedCapacity"] = old_res + hold
                 verification = verify_evacuation_plan(
                     state, vehicle, group, shelter, path_pickup, path_shelter, skip_priority_gate=True
                 )
+                shelter["reservedCapacity"] = old_res
                 if state.closed_loop and not verification["passed"]:
+                    continue
+                load = min(verification.get("load") or load_cap, load_cap)
+                if load < 1:
                     continue
                 if score > best_score:
                     best_score = score
@@ -236,8 +258,8 @@ def _build_plan(state: Any, strategy: str, method: str) -> dict[str, Any]:
                         "shelterId": shelter["id"],
                         "score": round(score, 2),
                         "etaTick": verification.get("etaTick"),
-                        "load": verification.get("load"),
-                        "verification": verification,
+                        "load": load,
+                        "verification": {**verification, "load": load},
                         "pathPickup": path_pickup,
                         "pathShelter": path_shelter,
                         "gapd": flood_gapd_key(group, tick=state.tick),

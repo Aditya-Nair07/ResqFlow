@@ -21,6 +21,7 @@ from flood_schemas import (
     ResetRequest,
     RoutePlanRequest,
     RoutePlanResponse,
+    ScarceSeatsRequest,
     ScenarioListResponse,
     SimulateStepRequest,
     SimulateStepResponse,
@@ -35,7 +36,7 @@ from dispatch.approve import approve_plan, store_compared_plans
 from routing.router import find_path, route_risk
 from sensing.reports import apply_operator_sensing, prioritize_incident, verify_incident
 from sensing.weather import fetch_open_meteo, weather_to_rainfall_nudge
-from sensing.chennai_fixtures import apply_difficulty, fixture_meta, load_citizen_reports, load_shelter_summary
+from sensing.chennai_fixtures import apply_difficulty, apply_scarce_seats, fixture_meta, load_citizen_reports, load_shelter_summary
 from council import run_council
 from schemas import (
     CouncilRequest,
@@ -190,6 +191,16 @@ def flood_difficulty(body: DifficultyRequest):
     state = get_or_create_session(body.scenarioId)
     info = apply_difficulty(state, body.difficulty)
     return {"difficulty": info, "snapshot": state.to_snapshot()}
+
+
+@app.post("/flood/scarce-seats")
+def flood_scarce_seats(body: ScarceSeatsRequest):
+    """Demo toggle: tighten shelter seats + fuel so Planner strategies diverge."""
+    state = get_or_create_session(body.scenarioId)
+    info = apply_scarce_seats(state, body.enabled)
+    # Clear stale plans — seat/fuel change invalidates projections.
+    state.proposed_plans.clear()
+    return {"scarceSeats": info, "snapshot": state.to_snapshot()}
 
 
 @app.get("/flood/chennai/fixtures")

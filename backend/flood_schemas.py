@@ -117,6 +117,8 @@ class FloodEvacSnapshot(BaseModel):
     fixtureMeta: dict[str, Any] | None = None
     rainfallPerTick: float | None = None
     closedEdgeIds: list[str] = Field(default_factory=list)
+    scarceSeats: bool = False
+    activeStrategy: str | None = None
 
 
 class ScenarioListResponse(BaseModel):
@@ -135,6 +137,11 @@ class SimulateStepRequest(BaseModel):
 class DifficultyRequest(BaseModel):
     scenarioId: str = "chennai_2015_review"
     difficulty: Literal["normal", "heavy", "crisis"] = "normal"
+
+
+class ScarceSeatsRequest(BaseModel):
+    scenarioId: str = "chennai_2015_review"
+    enabled: bool = True
 
 
 class ResetRequest(BaseModel):

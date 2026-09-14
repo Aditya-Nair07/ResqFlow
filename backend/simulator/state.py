@@ -72,6 +72,8 @@ class FloodEvacState:
         self.reservations: list[dict[str, Any]] = []
         self.difficulty = "normal"
         self.fixture_meta: dict[str, Any] | None = None
+        self.scarce_seats = False
+        self.active_strategy: str | None = None
         self._seed_visible_flood()
         if self.scenario_id.startswith("chennai"):
             from sensing.chennai_fixtures import fixture_meta, seed_chennai_reports_into_plant
@@ -521,4 +523,6 @@ class FloodEvacState:
             "fixtureMeta": getattr(self, "fixture_meta", None),
             "rainfallPerTick": getattr(self.flood, "rainfall_per_tick", None),
             "closedEdgeIds": sorted(self.road.forced_closed),
+            "scarceSeats": bool(getattr(self, "scarce_seats", False)),
+            "activeStrategy": getattr(self, "active_strategy", None),
         }

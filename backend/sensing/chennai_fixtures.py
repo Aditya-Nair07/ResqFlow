@@ -148,3 +148,49 @@ def apply_difficulty(state: Any, difficulty: str) -> dict[str, Any]:
         "rainfallPerTick": state.flood.rainfall_per_tick,
         "shelterCapacityFactor": factor,
     }
+
+
+# Demo rehearsal: tight seats + limited fuel so strategies diverge on lives saved.
+_SCARCE_SEAT_FACTOR = 0.32
+_SCARCE_FUEL = 26
+
+
+def apply_scarce_seats(state: Any, enabled: bool) -> dict[str, Any]:
+    """Toggle scarce-shelter demo mode on the live plant.
+
+    Cuts shelter seats and unit fuel so FASTEST / MAX COVERAGE / SAFE & FAIR
+    finish with different rescued counts. Run matches Planner projections when
+    the committed plan's strategy stays active.
+    """
+    enabled = bool(enabled)
+    state.scarce_seats = enabled
+    if not enabled:
+        state.active_strategy = None
+
+    for shelter in state.shelters:
+        original = shelter.get("_baseCapacity") or shelter.get("capacity", 0)
+        shelter["_baseCapacity"] = original
+        if enabled:
+            shelter["capacity"] = max(8, int(round(original * _SCARCE_SEAT_FACTOR)))
+            # Occupancy cannot exceed the new tighter capacity.
+            shelter["occupancy"] = min(shelter.get("occupancy", 0), shelter["capacity"])
+        else:
+            shelter["capacity"] = original
+
+    for vehicle in state.vehicles:
+        original_fuel = vehicle.get("_baseFuel")
+        if original_fuel is None:
+            original_fuel = vehicle.get("fuel", 100)
+            vehicle["_baseFuel"] = original_fuel
+        if enabled:
+            vehicle["fuel"] = min(int(original_fuel), _SCARCE_FUEL)
+        else:
+            vehicle["fuel"] = int(original_fuel)
+
+    seats = sum(max(0, s.get("capacity", 0) - s.get("occupancy", 0) - s.get("reservedCapacity", 0)) for s in state.shelters)
+    state.emit_event("scarce_seats_toggled", {"enabled": enabled, "shelterSeatsLeft": seats, "fuelCap": _SCARCE_FUEL if enabled else None})
+    return {
+        "scarceSeats": enabled,
+        "shelterSeatsLeft": seats,
+        "fuelCap": _SCARCE_FUEL if enabled else None,
+    }

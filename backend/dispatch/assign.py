@@ -13,6 +13,56 @@ from routing.router import find_path
 from sensing.lifecycle import utc_now
 
 
+def _ordered_groups(state: Any) -> list[dict[str, Any]]:
+    """Flood-GAPD by default; Planner strategies override when active."""
+    strategy = getattr(state, "active_strategy", None)
+    groups = list(state.groups)
+    if strategy == "MAXIMUM_COVERAGE":
+        return sorted(
+            groups,
+            key=lambda g: g.get("people", 0) - g.get("evacuatedPeople", 0),
+            reverse=True,
+        )
+    if strategy == "FASTEST":
+        return sorted(
+            groups,
+            key=lambda g: (
+                g.get("deadlineTick", 999),
+                g.get("people", 0) - g.get("evacuatedPeople", 0),
+            ),
+        )
+    if strategy == "SAFE_AND_FAIR":
+        return sort_groups(
+            [{**g, "status": "pending"} if g.get("status") != "pending" else g for g in groups],
+            tick=state.tick,
+        )
+    return sort_groups(groups, tick=state.tick)
+
+
+def _scarce_mode(state: Any) -> bool:
+    return bool(getattr(state, "scarce_seats", False))
+
+
+def _strategy_free_slots(state: Any) -> int:
+    available = len(state.available_vehicles())
+    strategy = getattr(state, "active_strategy", None)
+    scarce = _scarce_mode(state)
+    if scarce and strategy == "SAFE_AND_FAIR":
+        return max(0, available - 3)
+    if scarce and strategy == "FASTEST":
+        # Speed focus: only a few units — fewer total seats moved before fuel runs out.
+        return min(3, available)
+    if strategy == "SAFE_AND_FAIR":
+        return max(0, available - 1) if available > 2 else available
+    return available
+
+
+def _shelter_holdback(state: Any, shelter: dict[str, Any]) -> int:
+    if _scarce_mode(state) and getattr(state, "active_strategy", None) == "SAFE_AND_FAIR":
+        return int(shelter.get("capacity", 0) * 0.45)
+    return 0
+
+
 def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
     """One dispatch cycle. When ``project`` is True this runs on a throw-away
     clone for planner projections, so it skips disk trace writes / heavy
@@ -21,6 +71,8 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
     assigned = 0
     repairs = 0
     traces = []
+    strategy = getattr(state, "active_strategy", None)
+    scarce = _scarce_mode(state)
 
     from sensing.lifecycle import DISPATCHABLE
 
@@ -34,7 +86,7 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
             and group.get("evacuatedPeople", 0) > 0
         ):
             seats = sum(
-                max(0, s.get("capacity", 0) - s.get("occupancy", 0) - s.get("reservedCapacity", 0))
+                max(0, s.get("capacity", 0) - s.get("occupancy", 0) - s.get("reservedCapacity", 0) - _shelter_holdback(state, s))
                 for s in state.shelters if s.get("open", True)
             )
             if seats > 0:
@@ -42,9 +94,9 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
                 group["deadlineTick"] = max(group.get("deadlineTick", 0), state.tick + 40)
 
     # Assign every free unit that passes the 8-check. Priority order is
-    # Flood-GAPD; unreachable groups are skipped so later groups still get help.
-    free_slots = len(state.available_vehicles())
-    for group in sort_groups(state.groups, tick=state.tick):
+    # Flood-GAPD unless a Planner strategy is active (scarce-seat demo).
+    free_slots = _strategy_free_slots(state)
+    for group in _ordered_groups(state):
         if assigned >= free_slots:
             break
         if group["status"] not in DISPATCHABLE:
@@ -61,10 +113,12 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
             for shelter in state.shelters:
                 if not shelter.get("open", True):
                     continue
+                hold = _shelter_holdback(state, shelter)
                 cap_left = (
                     shelter.get("capacity", 0)
                     - shelter.get("occupancy", 0)
                     - shelter.get("reservedCapacity", 0)
+                    - hold
                 )
                 if cap_left <= 0:
                     continue
@@ -94,6 +148,14 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
                     max(0, vehicle.get("capacity", 0) - vehicle.get("load", 0)),
                     cap_left,
                 )
+                if scarce and strategy == "FASTEST":
+                    # Partial loads: quick pickups, but fewer people per trip.
+                    provisional_load = min(provisional_load, 10)
+                    score -= path_pickup.get("travelTime", 99) * 5
+                elif scarce and strategy == "MAXIMUM_COVERAGE":
+                    score += provisional_load * 6
+                    if provisional_load < min(remaining, 8):
+                        score -= 40  # avoid tiny loads when covering max people
                 candidates.append({
                     "vehicle": vehicle,
                     "shelter": shelter,
@@ -101,6 +163,7 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
                     "pathShelter": path_shelter,
                     "score": score,
                     "provisionalLoad": provisional_load,
+                    "_hold": hold,
                 })
 
         # Prefer higher score, then more lives saved this trip (partial seats).
@@ -112,25 +175,36 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
         if state.closed_loop:
             for cand in candidates:
                 # Priority is already enforced by iterating groups in
-                # Flood-GAPD order above; skipping the gate here prevents a
-                # reachable group from being starved behind a higher-priority
-                # group that no free unit can currently reach.
+                # Flood-GAPD / strategy order above; skipping the gate here
+                # prevents a reachable group from being starved behind a
+                # higher-priority group that no free unit can currently reach.
+                hold = cand.get("_hold", 0)
+                shelter = cand["shelter"]
+                old_res = shelter.get("reservedCapacity", 0)
+                if hold:
+                    shelter["reservedCapacity"] = old_res + hold
                 v = verify_evacuation_plan(
                     state, cand["vehicle"], group, cand["shelter"],
                     cand["pathPickup"], cand["pathShelter"],
                     skip_priority_gate=True,
                 )
+                shelter["reservedCapacity"] = old_res
                 if v["passed"]:
-                    winner = {**cand, "verification": v}
+                    load = min(v.get("load") or cand["provisionalLoad"], cand["provisionalLoad"])
+                    winner = {**cand, "verification": {**v, "load": load}}
                     break
                 repairs += 1
                 rejected.append(rejected_from_candidate(cand, v))
                 repair_note = f"Repair: {cand['vehicle']['type']} failed — {', '.join(v['failed'])}"
         elif candidates:
-            winner = {**candidates[0], "verification": {"passed": True, "checks": [], "failed": []}}
+            winner = {**candidates[0], "verification": {"passed": True, "checks": [], "failed": [], "load": candidates[0]["provisionalLoad"]}}
             state.metrics["unsafeActuations"] += 1
 
         if winner:
+            hold = winner.pop("_hold", 0)
+            shelter = winner["shelter"]
+            if hold:
+                shelter["reservedCapacity"] = shelter.get("reservedCapacity", 0) + hold
             decision = build_decision_record(
                 group=group,
                 winner=winner,
@@ -139,6 +213,8 @@ def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
                 rejected=rejected,
             )
             _actuate(state, group, winner, decision=decision)
+            if hold:
+                shelter["reservedCapacity"] = max(0, shelter.get("reservedCapacity", 0) - hold)
             assigned += 1
             state.emit_event("unit_assigned", {
                 "groupId": group["id"],

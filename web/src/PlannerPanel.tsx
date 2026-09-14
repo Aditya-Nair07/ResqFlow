@@ -28,6 +28,7 @@ export default function PlannerPanel({
 }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const scarceOn = Boolean(snap.scarceSeats);
 
   useEffect(() => {
     if (plans?.recommendedPlanId) setExpanded(plans.recommendedPlanId);
@@ -54,6 +55,24 @@ export default function PlannerPanel({
       await onMessage(result.explanation || 'Plans ready — compare and pick one.');
     } catch (err) {
       await onMessage(`Compare failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function toggleScarce(next: boolean) {
+    setBusy('scarce');
+    try {
+      await api.scarceSeats({ scenarioId, enabled: next });
+      onPlans(null);
+      await onRefresh();
+      await onMessage(
+        next
+          ? 'Scarce seats ON — shelter seats and fuel are limited. Recompute to see strategies rescue different numbers.'
+          : 'Scarce seats OFF — full seats and fuel restored. Recompute for the normal equal-rescue comparison.',
+      );
+    } catch (err) {
+      await onMessage(`Scarce seats toggle failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setBusy(null);
     }
@@ -98,22 +117,44 @@ export default function PlannerPanel({
             commit it and press Run — pick the one you want.
           </span>
         </div>
-        <button
-          className="compute-button"
-          type="button"
-          disabled={busy === 'compute'}
-          onClick={() => void compute()}
-        >
-          <RefreshCw size={16} /> {list.length ? 'Recompute' : 'Compute plans'}
-        </button>
+        <div className="planner-heading-actions">
+          <label className={`scarce-toggle ${scarceOn ? 'on' : ''}`}>
+            <input
+              type="checkbox"
+              checked={scarceOn}
+              disabled={busy === 'scarce'}
+              onChange={(e) => void toggleScarce(e.target.checked)}
+            />
+            <span>Scarce seats (demo)</span>
+          </label>
+          <button
+            className="compute-button"
+            type="button"
+            disabled={busy === 'compute'}
+            onClick={() => void compute()}
+          >
+            <RefreshCw size={16} /> {list.length ? 'Recompute' : 'Compute plans'}
+          </button>
+        </div>
       </div>
 
       <div className="planner-situation">
         <div><small>Still waiting</small><b>{waiting}</b><em>{waitingGroups} groups</em></div>
         <div><small>Free units</small><b>{freeUnits}</b><em>of {snap.vehicles?.length || 0}</em></div>
-        <div><small>Shelter seats</small><b>{totalSeats}</b><em>{snap.shelters?.length || 0} shelters</em></div>
+        <div>
+          <small>Shelter seats</small>
+          <b className={scarceOn ? 'warn' : ''}>{totalSeats}</b>
+          <em>{scarceOn ? 'scarce demo on' : `${snap.shelters?.length || 0} shelters`}</em>
+        </div>
         <div><small>Ranking</small><b>{rankingMethod}</b><em>Flood-GAPD + 8-check</em></div>
       </div>
+
+      {scarceOn && (
+        <div className="planner-note scarce-note">
+          Scarce seats demo: limited shelter capacity and fuel. The three strategies should now show
+          <b> different</b> rescue totals — compare who saves more vs who keeps a reserve.
+        </div>
+      )}
 
       {!list.length && (
         <p className="planner-empty">

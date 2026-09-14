@@ -202,6 +202,13 @@
 /* Planner tab — side-by-side strategy comparison */
 .planner-tab{padding:20px 22px 22px}
 .planner-tab .planner-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:14px}
+.planner-heading-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.scarce-toggle{display:flex;align-items:center;gap:8px;border:1px solid var(--line);padding:9px 12px;font:500 11px 'DM Mono';color:var(--muted);cursor:pointer;user-select:none}
+.scarce-toggle.on{border-color:var(--yellow);color:var(--yellow);background:#2a2920}
+.scarce-toggle input{accent-color:var(--yellow)}
+.planner-note.scarce-note{border-color:#8a7340;background:#2a2920;color:#e6cb83}
+.planner-note.scarce-note b{color:var(--ink)}
+.planner-situation b.warn{color:var(--yellow)}
 .planner-tab .planner-heading h2{margin:4px 0 2px;font-size:22px;font-weight:500}
 .planner-tab .planner-heading span{color:var(--muted);font-size:11px;max-width:520px;display:block}
 .planner-tab .compute-button{background:var(--mint);border:1px solid var(--mint);color:#10221f;padding:11px 14px;font:600 12px 'Space Grotesk';display:flex;align-items:center;gap:7px;cursor:pointer;white-space:nowrap}
