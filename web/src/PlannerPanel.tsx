@@ -3,8 +3,9 @@ import { Check, RefreshCw } from 'lucide-react';
 import { api, type Snapshot } from './api';
 
 /**
- * Operator commit path: Compare → Select → Approve → Ledger.
- * Crew feedback lives on Operations desk — keep this panel focused.
+ * Planner tab — honest "what-if" comparison of the three dispatch strategies
+ * over the exact same plant state. Operator picks one and commits it; Run
+ * continues from there. Compare/commit rules are backend-authoritative.
  */
 export default function PlannerPanel({
   plans,
@@ -25,168 +26,228 @@ export default function PlannerPanel({
   onPlans: (plans: any) => void;
   onRefresh: () => Promise<void>;
 }) {
-  const [selectedPlanId, setSelectedPlanId] = useState(plans?.recommendedPlanId || '');
-  const [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
-    if (plans?.recommendedPlanId) setSelectedPlanId(plans.recommendedPlanId);
+    if (plans?.recommendedPlanId) setExpanded(plans.recommendedPlanId);
   }, [plans?.recommendedPlanId]);
 
-  const selected = (plans?.plans || []).find((p: any) => p.planId === selectedPlanId) || (plans?.plans || [])[0];
   const waiting = snap.groups
     .filter((g) => !['RESOLVED', 'REJECTED', 'DUPLICATE', 'evacuated'].includes(g.status))
     .reduce((sum, g) => sum + Math.max(0, (g.people || 0) - (g.evacuatedPeople || 0)), 0);
+  const waitingGroups = snap.groups.filter(
+    (g) => !['RESOLVED', 'REJECTED', 'DUPLICATE', 'evacuated'].includes(g.status),
+  ).length;
   const freeUnits = (snap.vehicles || []).filter((v) => v.status === 'available').length;
+  const totalSeats = (snap.shelters || []).reduce(
+    (sum, s) => sum + Math.max(0, (s.capacity || 0) - (s.occupancy || 0) - (s.reservedCapacity || 0)),
+    0,
+  );
   const reserved = (snap.reservations || []).filter((r) => r.status === 'RESERVED');
 
   async function compute() {
-    setBusy(true);
+    setBusy('compute');
     try {
       const result = await api.comparePlans({ scenarioId, rankingMethod });
       onPlans(result);
-      setSelectedPlanId(result.recommendedPlanId);
-      await onMessage(result.explanation || 'Plans compared — pick one and Approve.');
+      await onMessage(result.explanation || 'Plans ready — compare and pick one.');
     } catch (err) {
       await onMessage(`Compare failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  async function approve() {
-    if (!selected || !plans) return;
-    setBusy(true);
+  async function approve(plan: any) {
+    if (!plan || !plans) return;
+    setBusy(plan.planId);
     try {
-      const result = await api.approvePlan(selected.planId, {
+      const result = await api.approvePlan(plan.planId, {
         scenarioId,
-        planId: selected.planId,
-        planVersion: selected.planVersion ?? plans.planVersion,
+        planId: plan.planId,
+        planVersion: plan.planVersion ?? plans.planVersion,
         tick,
         actor: 'operator',
       });
       await onRefresh();
+      const target = plan.projectedRescued ?? 0;
       await onMessage(
-        `Approved ${selected.planName}: ${result.committed?.length || 0} committed`
-          + (result.rejected?.length ? `, ${result.rejected.length} rejected` : '')
-          + '. Check the ledger and map.',
+        `Committed ${plan.planName.replace(/_/g, ' ')} — ${result.committed?.length || 0} unit(s) sent now. `
+          + `Press Run and this plan will rescue ${target} people.`,
       );
       onPlans(null);
     } catch (err) {
-      await onMessage(`Approve failed: ${err instanceof Error ? err.message : String(err)}`);
+      await onMessage(`Commit failed: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
-      setBusy(false);
+      setBusy(null);
     }
   }
 
-  async function replan() {
-    setBusy(true);
-    try {
-      await api.replan({ scenarioId, rankingMethod, closedLoop: true });
-      await onRefresh();
-      await onMessage('Replan tick done — free units may pick up leftovers.');
-    } catch (err) {
-      await onMessage(`Replan failed: ${err instanceof Error ? err.message : String(err)}`);
-    } finally {
-      setBusy(false);
-    }
-  }
+  const list: any[] = plans?.plans || [];
+  const recommendedId = plans?.recommendedPlanId;
 
   return (
-    <section className="adaptive-planner review-planner">
-      <div className="planner-heading">
+    <section className="planner-tab panel">
+      <div className="panner-heading planner-heading">
         <div>
-          <p className="eyebrow">OPERATOR COMMIT</p>
-          <h2>Response planner</h2>
+          <p className="eyebrow">PLANNER (WHAT-IF)</p>
+          <h2>Compare rescue strategies</h2>
           <span>
-            Compare three strategies, approve one. Pause Run first so free units stay available.
-            Ranking = {rankingMethod}.
+            Same flood, three strategies. Each number is exactly how many people that plan rescues once you
+            commit it and press Run — pick the one you want.
           </span>
         </div>
-        <button className="compute-button" type="button" disabled={busy} onClick={() => void compute()}>
-          <RefreshCw size={16} /> Compute plans
+        <button
+          className="compute-button"
+          type="button"
+          disabled={busy === 'compute'}
+          onClick={() => void compute()}
+        >
+          <RefreshCw size={16} /> {list.length ? 'Recompute' : 'Compute plans'}
         </button>
       </div>
 
-      <div className="planner-metrics slim">
-        <div><small>Still waiting</small><b>{waiting}</b></div>
-        <div><small>Free units</small><b>{freeUnits}</b></div>
-        <div><small>Reserved seats</small><b>{reserved.reduce((s, r) => s + (r.people || 0), 0)}</b></div>
+      <div className="planner-situation">
+        <div><small>Still waiting</small><b>{waiting}</b><em>{waitingGroups} groups</em></div>
+        <div><small>Free units</small><b>{freeUnits}</b><em>of {snap.vehicles?.length || 0}</em></div>
+        <div><small>Shelter seats</small><b>{totalSeats}</b><em>{snap.shelters?.length || 0} shelters</em></div>
+        <div><small>Ranking</small><b>{rankingMethod}</b><em>Flood-GAPD + 8-check</em></div>
       </div>
 
-      {plans?.plans?.length ? (
-        <>
-          <div className="weight-note">{plans.explanation}</div>
-          <div className="plan-table">
-            <div className="plan-row plan-header">
-              <span>Plan</span>
-              <span>People</span>
-              <span>Assign</span>
-              <span>Left</span>
-              <span>Rejected</span>
-              <span />
-            </div>
-            {plans.plans.map((plan: any) => (
-              <div
-                className={`plan-row ${selected?.planId === plan.planId ? 'selected' : ''}`}
-                key={plan.planId}
-              >
-                <b>{plan.planName}</b>
-                <span>{plan.peopleReached}</span>
-                <span>{plan.assignments?.length || 0}</span>
-                <span>{plan.vehiclesLeftInReserve}</span>
-                <span>{plan.rejected?.length || 0}</span>
-                <button type="button" onClick={() => setSelectedPlanId(plan.planId)}>Select</button>
-              </div>
-            ))}
-          </div>
-
-          <div className="plan-explanation">
-            <b>{selected?.planName ?? 'No plan selected'}</b>
-            <span>
-              {(selected?.assignments || []).length
-                ? (selected.assignments || []).map((a: any) => (
-                  <span key={`${a.groupId}-${a.vehicleId}`}>
-                    {a.groupId} → unit {a.vehicleId} / {a.shelterId}
-                    {a.verification ? ` (${a.verification.passed ? '8/8' : (a.verification.failed || []).join(',')})` : ''}
-                    {' · '}
-                  </span>
-                ))
-                : 'No assignments in this plan.'}
-            </span>
-            <div className="planner-actions">
-              <button
-                className="approve-action"
-                type="button"
-                disabled={!selected || busy || !(selected.assignments || []).length}
-                onClick={() => void approve()}
-              >
-                <Check size={14} /> Approve selected plan
-              </button>
-              <button className="replan-button" type="button" disabled={busy} onClick={() => void replan()}>
-                Replan tick
-              </button>
-            </div>
-          </div>
-
-          {selected?.rejected?.length ? (
-            <div className="planner-warning">
-              No safe assignment for: {selected.rejected.map((r: any) => r.groupId).join(', ')}.
-            </div>
-          ) : null}
-        </>
-      ) : (
-        <div className="weight-note">
-          Compute to compare FASTEST · MAXIMUM COVERAGE · SAFE AND FAIR on the live plant.
-        </div>
+      {!list.length && (
+        <p className="planner-empty">
+          Press <b>Compute plans</b>. Three strategies (FASTEST, MAX COVERAGE, SAFE &amp; FAIR) will
+          run on the same map so you can compare rescued count, speed, and reserves before committing.
+        </p>
       )}
 
-      <div className="ledger">
+      {plans?.explanation && list.length ? (
+        <div className="planner-note">{plans.explanation}</div>
+      ) : null}
+
+      {list.length ? (
+        <div className="plan-cards">
+          {list.map((plan: any) => {
+            const isRecommended = plan.planId === recommendedId;
+            const rescued = plan.projectedRescued ?? 0;
+            const leftBehind = plan.projectedStranded ?? 0;
+            const isOpen = expanded === plan.planId;
+            const noPlan = !(plan.assignments || []).length && !rescued;
+            return (
+              <article
+                key={plan.planId}
+                className={`plan-card ${isRecommended ? 'recommended' : ''} ${noPlan ? 'empty' : ''}`}
+              >
+                <header className="plan-card-head">
+                  <p className="eyebrow">{isRecommended ? '★ RECOMMENDED' : 'STRATEGY'}</p>
+                  <h3>{plan.planName.replace(/_/g, ' ')}</h3>
+                  <small>{plan.goal}</small>
+                </header>
+
+                <div className="plan-headline">
+                  <span className="ph-label">Rescues</span>
+                  <b>{rescued}</b>
+                  <span className="ph-unit">people</span>
+                  {plan.projectedTicks != null && (
+                    <span className="ph-sub">finishes in about {plan.projectedTicks} ticks</span>
+                  )}
+                </div>
+
+                <ul className="plan-facts">
+                  <li>
+                    <small>Units sent now</small>
+                    <b>{plan.assignments?.length || 0}</b>
+                    <em>{plan.vehiclesLeftInReserve ?? 0} kept in reserve</em>
+                  </li>
+                  <li>
+                    <small>First pickup</small>
+                    <b>{plan.firstPickupTicks != null ? `${plan.firstPickupTicks}t` : '—'}</b>
+                    <em>{plan.avgPickupTicks != null ? `avg ${plan.avgPickupTicks}t` : ''}</em>
+                  </li>
+                  <li>
+                    <small>Groups helped</small>
+                    <b>{plan.assignments?.length || 0}</b>
+                    <em>of {plan.totalWaitingGroups ?? waitingGroups} waiting</em>
+                  </li>
+                  <li>
+                    <small>Left behind</small>
+                    <b className={leftBehind ? 'warn' : ''}>{leftBehind}</b>
+                    <em>{leftBehind ? 'no safe route in time' : 'everyone reachable'}</em>
+                  </li>
+                </ul>
+
+                <p className="plan-tradeoff">{plan.tradeoff}</p>
+
+                <div className="plan-actions">
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => setExpanded(isOpen ? null : plan.planId)}
+                  >
+                    {isOpen ? 'Hide assignments' : 'Show assignments'}
+                  </button>
+                  <button
+                    type="button"
+                    className="approve-action"
+                    disabled={noPlan || busy === plan.planId}
+                    onClick={() => void approve(plan)}
+                  >
+                    <Check size={14} /> {busy === plan.planId ? 'Committing…' : 'Commit this plan'}
+                  </button>
+                </div>
+
+                {isOpen && (
+                  <div className="plan-detail">
+                    {(plan.assignments || []).length ? (
+                      <ul>
+                        {plan.assignments.map((a: any) => {
+                          const group = snap.groups.find((g) => g.id === a.groupId);
+                          const shelter = snap.shelters.find((s) => s.id === a.shelterId);
+                          const vehicle = snap.vehicles.find((v) => String(v.id) === String(a.vehicleId));
+                          const pickup = a.pathPickup?.travelTime;
+                          const seats = a.load ?? 0;
+                          return (
+                            <li key={`${a.groupId}-${a.vehicleId}`}>
+                              <b>{group?.label || a.groupId}</b>
+                              <span>
+                                {vehicle?.type || `Unit ${a.vehicleId}`} → {shelter?.label || a.shelterId}
+                                {' · '}
+                                {seats} seats
+                                {pickup != null ? ` · pickup in ${pickup}t` : ''}
+                                {' · '}
+                                {a.verification?.passed ? '8/8 checks' : (a.verification?.failed || []).join(', ') || 'unverified'}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="plan-empty">
+                        No safe assignments could be built for this strategy right now.
+                        Try Run for a tick to let flooded routes settle, then Recompute.
+                      </p>
+                    )}
+                    {plan.rejected?.length ? (
+                      <p className="plan-warn">
+                        Unreachable this round: {plan.rejected.map((r: any) => `${r.groupId} (${r.reason})`).join(' · ')}
+                      </p>
+                    ) : null}
+                  </div>
+                )}
+              </article>
+            );
+          })}
+        </div>
+      ) : null}
+
+      <div className="ledger planner-ledger">
         <div className="planner-subheading">
           <b>RESERVATION LEDGER</b>
           <span>{reserved.length ? `${reserved.length} active` : 'None active'}</span>
         </div>
         {reserved.length === 0 ? (
-          <p className="planner-empty">Approve a plan to reserve shelter seats for assigned trips.</p>
+          <p className="planner-empty subtle">Commit a plan to reserve shelter seats for its assigned trips.</p>
         ) : (
           <>
             <div className="ledger-row ledger-head">

@@ -13,7 +13,10 @@ from routing.router import find_path
 from sensing.lifecycle import utc_now
 
 
-def run_dispatch_tick(state: Any) -> dict[str, Any]:
+def run_dispatch_tick(state: Any, project: bool = False) -> dict[str, Any]:
+    """One dispatch cycle. When ``project`` is True this runs on a throw-away
+    clone for planner projections, so it skips disk trace writes / heavy
+    snapshotting while keeping the exact same assignment logic."""
     method = state.ranking_method
     assigned = 0
     repairs = 0
@@ -159,21 +162,22 @@ def run_dispatch_tick(state: Any) -> dict[str, Any]:
             }
             state.traces.append(trace)
             traces.append(trace)
-            trace_id = f"FL-{state.scenario_id}-{state.tick}-{group['id']}"
-            try:
-                save_trace_analysis(trace_id, {
-                    "trace_id": trace_id,
-                    "mode": "flood-evacuation",
-                    "scenario_id": state.scenario_id,
-                    "group_id": group["id"],
-                    "vehicle_id": winner["vehicle"]["id"],
-                    "shelter_id": winner["shelter"]["id"],
-                    "tick": state.tick,
-                    "snapshot": state.to_snapshot(),
-                    "trace": trace,
-                })
-            except OSError:
-                pass
+            if not project:
+                trace_id = f"FL-{state.scenario_id}-{state.tick}-{group['id']}"
+                try:
+                    save_trace_analysis(trace_id, {
+                        "trace_id": trace_id,
+                        "mode": "flood-evacuation",
+                        "scenario_id": state.scenario_id,
+                        "group_id": group["id"],
+                        "vehicle_id": winner["vehicle"]["id"],
+                        "shelter_id": winner["shelter"]["id"],
+                        "tick": state.tick,
+                        "snapshot": state.to_snapshot(),
+                        "trace": trace,
+                    })
+                except OSError:
+                    pass
         elif group.get("deadlineTick", 999) <= state.tick:
             group["status"] = "stranded"
             state.metrics["strandedGroups"] += 1

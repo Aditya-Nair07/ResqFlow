@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
 from typing import Any
 
 from dispatch.flood_gapd import flood_gapd_key, sort_groups
@@ -13,6 +14,9 @@ from sensing.lifecycle import DISPATCHABLE
 
 PLAN_STRATEGIES = ("FASTEST", "MAXIMUM_COVERAGE", "SAFE_AND_FAIR")
 
+# Cap the projection so a permanently-stranded group can never loop forever.
+_PROJECTION_MAX_TICKS = 160
+
 
 _ELIGIBLE_STATUSES = DISPATCHABLE | {"pending", "REPORTED", "VERIFIED"}
 
@@ -22,29 +26,138 @@ def _eligible_groups(groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return [g for g in groups if g.get("status") in _ELIGIBLE_STATUSES]
 
 
+STRATEGY_GOALS = {
+    "FASTEST": "Reach the most urgent group first — smallest ETA wins.",
+    "MAXIMUM_COVERAGE": "Rescue the largest number of people in this round.",
+    "SAFE_AND_FAIR": "Balance priority and vulnerability; keep a reserve unit when possible.",
+}
+
+STRATEGY_TRADEOFFS = {
+    "FASTEST": "Quickest first pickup, but leaves big groups for later rounds.",
+    "MAXIMUM_COVERAGE": "Covers more people per round, but the first pickup may take longer.",
+    "SAFE_AND_FAIR": "Even priority across groups; slightly fewer units deployed if a reserve is kept.",
+}
+
+
+def _apply_plan_to_clone(sim: Any, plan: dict[str, Any]) -> None:
+    """Commit this plan's first-round assignments onto a cloned plant, using the
+    same verify + actuate path as the real approve endpoint."""
+    from dispatch.assign import _actuate  # local import avoids a cycle
+
+    for a in plan.get("assignments", []):
+        group = next((g for g in sim.groups if g["id"] == a["groupId"]), None)
+        vehicle = next((v for v in sim.vehicles if v["id"] == a["vehicleId"]), None)
+        shelter = next((s for s in sim.shelters if s["id"] == a["shelterId"]), None)
+        if not group or not vehicle or not shelter or vehicle.get("status") != "available":
+            continue
+        path_pickup = a.get("pathPickup") or {}
+        path_shelter = a.get("pathShelter") or {}
+        verification = verify_evacuation_plan(
+            sim, vehicle, group, shelter, path_pickup, path_shelter, skip_priority_gate=True
+        )
+        if sim.closed_loop and not verification["passed"]:
+            continue
+        shelter.setdefault("reservedCapacity", 0)
+        cap_left = shelter.get("capacity", 0) - shelter.get("occupancy", 0) - shelter.get("reservedCapacity", 0)
+        if cap_left < 1:
+            continue
+        need = group["people"] - group.get("evacuatedPeople", 0)
+        planned = verification.get("load") or min(need, vehicle.get("capacity", need), cap_left)
+        _actuate(sim, group, {
+            "vehicle": vehicle,
+            "shelter": shelter,
+            "pathPickup": path_pickup,
+            "pathShelter": path_shelter,
+            "score": a.get("score", 0),
+            "verification": {**verification, "load": planned},
+        })
+        group["lifecycle"] = "DISPATCHED"
+
+
+def _project_full_run(base_state: Any, plan: dict[str, Any]) -> dict[str, Any]:
+    """Deterministically fast-forward the *whole* run for this plan on a clone.
+
+    The plant has no RNG, so committing this plan and pressing Run produces the
+    exact number returned here — that is what the Planner headline shows.
+    """
+    sim = deepcopy(base_state)
+    _apply_plan_to_clone(sim, plan)
+    sim.running = True
+    start_tick = sim.tick
+    last_rescued = int(sim.metrics.get("peopleEvacuated", 0))
+    stall = 0
+    for _ in range(_PROJECTION_MAX_TICKS):
+        busy = any(v.get("status") == "busy" for v in sim.vehicles)
+        current = int(sim.metrics.get("peopleEvacuated", 0))
+        if not busy and current == last_rescued:
+            stall += 1
+            if stall >= 2:  # no one moving and no progress → run is effectively done
+                break
+        else:
+            stall = 0
+        last_rescued = current
+        sim.step_simulation(project=True)
+
+    rescued = int(sim.metrics.get("peopleEvacuated", 0))
+    stranded = sum(
+        max(0, g["people"] - g.get("evacuatedPeople", 0))
+        for g in sim.groups
+        if g.get("status") in ("stranded", "REJECTED")
+    )
+    return {
+        "projectedRescued": rescued,
+        "projectedTicks": max(0, sim.tick - start_tick),
+        "projectedStranded": stranded,
+    }
+
+
 def compare_plans(state: Any, ranking_method: str | None = None) -> dict[str, Any]:
     method = ranking_method or state.ranking_method
+    total_waiting_people = sum(
+        max(0, g.get("people", 0) - g.get("evacuatedPeople", 0))
+        for g in _eligible_groups(state.groups)
+    )
+    total_waiting_groups = len(_eligible_groups(state.groups))
     plans = []
     for strategy in PLAN_STRATEGIES:
-        plans.append(_build_plan(state, strategy, method))
-    # Operator "Dispatch help" should send the most people, not hold a reserve
-    # when that leaves waiting groups with no assignment.
+        plan = _build_plan(state, strategy, method)
+        plan["goal"] = STRATEGY_GOALS.get(strategy, "")
+        plan["tradeoff"] = STRATEGY_TRADEOFFS.get(strategy, "")
+        plan["totalWaitingPeople"] = total_waiting_people
+        plan["totalWaitingGroups"] = total_waiting_groups
+        etas = [a.get("etaTick") for a in plan.get("assignments", []) if a.get("etaTick") is not None]
+        pickups = [a.get("pathPickup", {}).get("travelTime") for a in plan.get("assignments", []) if a.get("pathPickup")]
+        plan["avgEtaTicks"] = round(sum(etas) / len(etas) - state.tick, 1) if etas else None
+        plan["avgPickupTicks"] = round(sum(pickups) / len(pickups), 1) if pickups else None
+        plan["firstPickupTicks"] = min(pickups) if pickups else None
+        plan["seatsUsed"] = sum(a.get("load") or 0 for a in plan.get("assignments", []))
+        # Full-run projection — the honest "how many will actually be rescued".
+        plan.update(_project_full_run(state, plan))
+        plans.append(plan)
+    # Recommend the plan that ultimately rescues the most people (faster wins ties).
     recommended = max(
         plans,
-        key=lambda p: (len(p.get("assignments") or []), p.get("peopleReached") or 0),
+        key=lambda p: (
+            p.get("projectedRescued") or 0,
+            -(p.get("projectedTicks") or 9999),
+            len(p.get("assignments") or []),
+        ),
     )
-    unsafe = any(not a.get("verification", {}).get("passed", False) for a in recommended["assignments"])
-    explanation = (
-        "NO SAFE PLAN FOUND — units busy or routes flooded. Press Run, then Dispatch again."
-        if not recommended["assignments"] or unsafe
-        else f"{recommended['planName']} sends {len(recommended['assignments'])} unit(s) to waiting groups."
-    )
+    if not recommended["assignments"] and not recommended.get("projectedRescued"):
+        explanation = "No safe plan right now — units are busy or every route is flooded. Press Run for a tick, then Compute again."
+    else:
+        explanation = (
+            f"{recommended['planName'].replace('_', ' ')} rescues "
+            f"{recommended.get('projectedRescued', 0)} people if you commit it and press Run."
+        )
     return {
         "plans": plans,
         "recommendedPlanId": recommended["planId"],
         "explanation": explanation,
         "rankingMethod": method,
         "tick": state.tick,
+        "totalWaitingPeople": total_waiting_people,
+        "totalWaitingGroups": total_waiting_groups,
     }
 
 

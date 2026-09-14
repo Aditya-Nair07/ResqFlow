@@ -162,13 +162,16 @@ class FloodEvacState:
         self.tick = self.flood.tick
         return info
 
-    def step_simulation(self) -> dict[str, Any]:
-        """One tick: flood, move vehicles, dispatch if running."""
+    def step_simulation(self, project: bool = False) -> dict[str, Any]:
+        """One tick: flood, move vehicles, dispatch if running.
+
+        ``project`` forwards to the dispatch cycle so planner projections can
+        fast-forward on a clone without writing trace files to disk."""
         flood_info = self.advance_flood()
         reroute_events = self._move_vehicles()
         dispatch_info = {}
         if self.running:
-            dispatch_info = run_dispatch_tick(self)
+            dispatch_info = run_dispatch_tick(self, project=project)
         self._sweep_missed_deadlines()
         return {
             "tick": self.tick,

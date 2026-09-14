@@ -236,25 +236,23 @@ export default function App() {
         )}
 
         {snap && deskMode === 'planner' && (
-          <div className="workspace-grid review-workspace planner-workspace">
-            <div className="left-column">
+          <div className="planner-workspace">
+            <PlannerPanel
+              plans={plans}
+              scenarioId={scenarioId}
+              tick={snap.tick}
+              snap={snap}
+              rankingMethod={RANKING_METHOD}
+              onPlans={setPlans}
+              onRefresh={refresh}
+              onMessage={async (msg) => {
+                setMessage(msg);
+              }}
+            />
+            <div className="planner-context">
               <FloodMap snap={snap} />
               <OpsLog snap={snap} />
             </div>
-            <aside className="right-column">
-              <PlannerPanel
-                plans={plans}
-                scenarioId={scenarioId}
-                tick={snap.tick}
-                snap={snap}
-                rankingMethod={RANKING_METHOD}
-                onPlans={setPlans}
-                onRefresh={refresh}
-                onMessage={async (msg) => {
-                  setMessage(msg);
-                }}
-              />
-            </aside>
           </div>
         )}
       </main>
